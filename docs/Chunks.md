@@ -21,8 +21,9 @@ It follows four main phases: setup → Shopify integration → custom features �
 - `lib/shopify.ts` – Storefront client helper.
 - `lib/storage/` – Factory + Supabase adapter.
 - `lib/placement.ts` – mm/px utils, safe-zone, DPI check.
-- Folder structure `/app`, `/components` ready.
-**Done when:** Storefront API call works and Upload API endpoint exists.
+- Folder structure `/app`, `/components` ready.  
+**Done when:** Storefront API call works and Upload API endpoint exists.  
+**Status:** ✅ Completed
 
 ---
 
@@ -31,7 +32,8 @@ It follows four main phases: setup → Shopify integration → custom features �
 ### Chunk 3 – Catalog & Collections
 **Goal:** Homepage with categories and highlighted products.  
 **Tasks:** Query collections/products, display via `ProductCard` component.  
-**Done when:** Homepage shows product grid and categories.
+**Done when:** Homepage shows product grid and categories.  
+**Status:** ✅ Completed
 
 ### Chunk 4 – Product Detail Page (PDP)
 **Goal:** Functional PDP with variant selection.  
