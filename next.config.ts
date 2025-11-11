@@ -1,7 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+    reactStrictMode: true,
+    images: {
+        remotePatterns: [
+            {
+                protocol: "https",
+                hostname: "cdn.shopify.com",
+                port: "",
+                pathname: "/s/**",
+            },
+            {
+                protocol: "https",
+                hostname: "placehold.co",
+                port: "",
+                pathname: "/*/**",
+            },
+        ],
+    },
 };
 
 export default nextConfig;
