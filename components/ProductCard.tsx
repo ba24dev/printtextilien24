@@ -1,37 +1,43 @@
+import { ProductSummary } from "@/lib/shopify/types";
+import { Money } from "@shopify/hydrogen-react";
 import Image from "next/image";
-import React from "react";
+import Link from "next/link";
 
 interface ProductCardProps {
-    id: string;
-    title: string;
-    handle: string;
-    price: string;
-    currency: string;
-    imageUrl: string;
-    imageAlt: string | null;
+  product: ProductSummary;
 }
 
-const ProductCard: React.FC<ProductCardProps> = ({ title, handle, price, currency, imageUrl, imageAlt }) => {
-    return (
-        <div className="product-card">
-            <a href={`/products/${handle}`} className="block">
-                <div className="relative w-full h-64">
-                    <Image
-                        src={imageUrl}
-                        alt={imageAlt || `Image of ${title}`}
-                        fill={true}
-                        loading="eager"
-                        className="rounded-lg w-full object-cover"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    />
-                </div>
-                <h3 className="mt-4 text-lg font-medium">{title}</h3>
-                <p className="text-sm text-gray-500">
-                    {price} {currency}
-                </p>
-            </a>
-        </div>
-    );
-};
+export default function ProductCard({ product }: ProductCardProps) {
+  const image = product.featuredImage;
 
-export default ProductCard;
+  return (
+    <Link
+      href={`/products/${product.handle}`}
+      className="group block space-y-3"
+    >
+      <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
+        {image ? (
+          <Image
+            src={image.url}
+            alt={image.altText ?? product.title ?? "Product image"}
+            fill
+            loading="eager"
+            priority={false}
+            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center text-sm text-gray-400">
+            No image
+          </div>
+        )}
+      </div>
+
+      <h3 className="text-base font-semibold text-gray-900">{product.title}</h3>
+
+      <div className="text-sm text-gray-600">
+        <Money data={product.priceRange.minVariantPrice} />
+      </div>
+    </Link>
+  );
+}
