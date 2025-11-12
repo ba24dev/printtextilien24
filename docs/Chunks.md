@@ -38,7 +38,8 @@ It follows four main phases: setup → Shopify integration → custom features �
 ### Chunk 4 – Product Detail Page (PDP)
 **Goal:** Functional PDP with variant selection.  
 **Tasks:** `/products/[handle]` route, variant switcher, price, images, “Add to Cart.”  
-**Done when:** PDP adds correct variant to cart.
+**Done when:** PDP adds correct variant to cart.  
+**Status:** ✅ Completed – PDP renders via Hydrogen `ProductProvider`; variant selectors sync with Shopify and add-to-cart mutations target the selected variant.
 
 ### Chunk 5 – Cart & Checkout
 **Goal:** End-to-end cart.  
