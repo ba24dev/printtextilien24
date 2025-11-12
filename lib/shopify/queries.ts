@@ -72,6 +72,10 @@ export const PRODUCT_BY_HANDLE_QUERY = `#graphql
           }
         }
       }
+      options {
+        name
+        values
+      }
     }
   }
 `;

@@ -22,7 +22,7 @@ The development process is divided into chunks, as outlined in the `docs/Chunks.
 ### Prerequisites
 
 - Node.js 18+
-- npm or yarn
+- pnpm (preferred) or npm
 
 ### Installation
 
@@ -30,19 +30,44 @@ The development process is divided into chunks, as outlined in the `docs/Chunks.
    ```bash
    git clone <repository-url>
    ```
-2. Install dependencies:
+2. Install dependencies (pnpm preferred):
    ```bash
+   pnpm install
+   # or
    npm install
    ```
+
+### Environment Setup
+
+Copy `.env.example` to `.env.local` and provide your project values:
+
+- `NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL`
+- `NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN`
+- `NEXT_PUBLIC_SHOPIFY_PRIVATE_STOREFRONT_API_TOKEN` (for server routes)
+- `NEXT_PUBLIC_SHOPIFY_REVALIDATION_SECRET`
+- `NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION`
+- `NEXT_PUBLIC_SHOPIFY_COUNTRY_ISO_CODE` / `NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE`
+- `SUPABASE_URL` / `SUPABASE_ANON_KEY`
+
+Tokens should remain in environment files; non-secret storefront metadata can be elevated to a config module later if needed.
 
 ### Development
 
 Start the development server:
 ```bash
-npm run dev
+pnpm dev
+```
+
+Lint the project:
+```bash
+pnpm lint
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
+
+### Current Milestone
+
+Chunk 4 (Product Detail Page) is complete—the PDP loads variants via Hydrogen, and add-to-cart mutations target the selected variant. Chunk 5 will introduce the cart UI and checkout flow.
 
 ## Contributing
 
