@@ -1,6 +1,7 @@
+import { formatPrice } from "@/lib/helpers";
 import { CartLineQuantity, CartLineQuantityAdjustButton, useCartLine } from "@shopify/hydrogen-react";
 import Image from "next/image";
-import { CloseSVG, DecreaseSVG, IncreaseSVG } from "../SVG/Icons";
+import { DecreaseSVG, IncreaseSVG, TrashSVG } from "../SVG/Icons";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/160x160.png?text=No+Image";
 
@@ -55,33 +56,22 @@ export default function CartLineItem() {
                         </div>
                     </div>
                     <div className="flex max-w-[100px] items-center h-full font-medium text-sm text-gray-400">
-                        {formatPrice(merchandise.price?.amount)}€
+                        {formatPrice(merchandise.price?.amount, merchandise.price?.currencyCode)}
                     </div>
                     <div className="flex max-w-[100px] items-center h-full font-medium text-sm text-gray-100">
-                        {formatPrice(line.cost?.totalAmount?.amount)}€
+                        {formatPrice(line.cost?.totalAmount?.amount, line.cost?.totalAmount?.currencyCode)}
                     </div>
                 </div>
             </div>
 
             <CartLineQuantityAdjustButton
                 adjust="remove"
-                className="ml-4 rounded-lg border border-red-700 bg-red-900/90 p-0.5 text-xs text-red-300 hover:bg-red-700/90 absolute -top-2 -left-6 cursor-pointer"
+                className="rounded-lg p-1 text-sm text-gray-300 hover:text-red-500/90 hover:outline hover:outline-red-800/90 cursor-pointer absolute top-0 right-0 flex items-center justify-center"
                 type="button"
                 aria-label="Remove item"
             >
-                <CloseSVG />
+                <TrashSVG width={6} height={6} />
             </CartLineQuantityAdjustButton>
         </li>
     );
-}
-
-function formatPrice(amount: string | number | undefined) {
-    if (!amount) {
-        return "";
-    }
-
-    return Number(amount).toLocaleString(process.env.NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
 }
