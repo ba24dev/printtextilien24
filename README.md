@@ -67,7 +67,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ### Current Milestone
 
-Chunk 4 (Product Detail Page) is complete—the PDP loads variants via Hydrogen, and add-to-cart mutations target the selected variant. Chunk 5 will introduce the cart UI and checkout flow.
+Chunk 5 (Cart & Checkout) is now live. The site mounts a cart drawer fed by Hydrogen’s `CartProvider`, supports variant quantity changes and line removal, and links directly to Shopify checkout. Upcoming work moves on to Chunk 6 (Search Stub).
 
 ## Contributing
 
