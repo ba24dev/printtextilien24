@@ -1,42 +1,44 @@
 "use client";
 
 import { AddToCartButton, Money, useProduct } from "@shopify/hydrogen-react";
+import { ShoppingCart } from "lucide-react";
 import VariantSelector from "./VariantSelector";
 
 export default function ProductInfo() {
     const { product, selectedVariant } = useProduct();
 
-    if (!product || !selectedVariant) {
-        return null;
-    }
+    if (!product) return null;
 
-    const price = selectedVariant.price ?? product.priceRange?.minVariantPrice;
+    const price = selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
+    const available = selectedVariant?.availableForSale ?? false;
 
     return (
-        <div className="space-y-6">
-            <div>
-                <h1 className="text-3xl font-semibold">{product.title}</h1>
-                <div
-                    className="prose prose-sm mt-4 text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: product.descriptionHtml ?? "" }}
-                />
-            </div>
-
-            {price && (
-                <div className="text-2xl font-medium">
-                    <Money data={price} />
+        <aside className="rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
+            <div className="space-y-6">
+                <div>
+                    <h1 className="text-3xl font-semibold text-foreground">{product.title}</h1>
+                    {product.vendor ? <p className="mt-2 text-sm text-foreground/60">by {product.vendor}</p> : null}
                 </div>
-            )}
 
-            <VariantSelector />
+                {price ? (
+                    <div className="text-2xl font-semibold text-primary-200">
+                        <Money data={price} />
+                    </div>
+                ) : null}
 
-            <AddToCartButton
-                variantId={selectedVariant.id}
-                disabled={!selectedVariant.availableForSale}
-                className="mt-4 inline-block w-full bg-blue-600 text-white py-3 px-6 rounded-md text-center font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-                {selectedVariant.availableForSale ? "Add to Cart" : "Sold Out"}
-            </AddToCartButton>
-        </div>
+                <VariantSelector />
+
+                {selectedVariant ? (
+                    <AddToCartButton
+                        variantId={selectedVariant.id}
+                        disabled={!available}
+                        className="group mt-8 btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <ShoppingCart className="h-4 w-4" />
+                        {available ? "Add to cart" : "Sold out"}
+                    </AddToCartButton>
+                ) : null}
+            </div>
+        </aside>
     );
 }

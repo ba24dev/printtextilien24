@@ -1,0 +1,54 @@
+@theme {
+    /* Core surfaces */
+    --color-background: #e6e4e1;
+    --color-foreground: #1b1b1c;
+
+    /* Primary – #0c437b */
+    --color-primary-900: color-mix(in srgb, #0c437b 10%, white);
+    --color-primary-800: color-mix(in srgb, #0c437b 20%, white);
+    --color-primary-700: color-mix(in srgb, #0c437b 30%, white);
+    --color-primary-600: color-mix(in srgb, #0c437b 40%, white);
+    --color-primary-500: #0c437b;
+    --color-primary-400: color-mix(in srgb, #0c437b 60%, black);
+    --color-primary-300: color-mix(in srgb, #0c437b 70%, black);
+    --color-primary-200: color-mix(in srgb, #0c437b 80%, black);
+    --color-primary-100: color-mix(in srgb, #0c437b 90%, black);
+
+    /* Secondary – #9e9eb1 */
+    --color-secondary-900: color-mix(in srgb, #9e9eb1 10%, white);
+    --color-secondary-800: color-mix(in srgb, #9e9eb1 20%, white);
+    --color-secondary-700: color-mix(in srgb, #9e9eb1 30%, white);
+    --color-secondary-600: color-mix(in srgb, #9e9eb1 40%, white);
+    --color-secondary-500: #9e9eb1;
+    --color-secondary-400: color-mix(in srgb, #9e9eb1 60%, black);
+    --color-secondary-300: color-mix(in srgb, #9e9eb1 70%, black);
+    --color-secondary-200: color-mix(in srgb, #9e9eb1 80%, black);
+    --color-secondary-100: color-mix(in srgb, #9e9eb1 90%, black);
+}
+
+.dark {
+    --color-background: #1b1b1c;
+    --color-foreground: #e6e4e1;
+
+    /* Primary – #0c437b */
+    --color-primary-100: color-mix(in srgb, #0c437b 10%, white);
+    --color-primary-200: color-mix(in srgb, #0c437b 20%, white);
+    --color-primary-300: color-mix(in srgb, #0c437b 30%, white);
+    --color-primary-400: color-mix(in srgb, #0c437b 40%, white);
+    --color-primary-500: #0c437b;
+    --color-primary-600: color-mix(in srgb, #0c437b 60%, black);
+    --color-primary-700: color-mix(in srgb, #0c437b 70%, black);
+    --color-primary-800: color-mix(in srgb, #0c437b 80%, black);
+    --color-primary-900: color-mix(in srgb, #0c437b 90%, black);
+
+    /* Secondary – #9e9eb1 */
+    --color-secondary-100: color-mix(in srgb, #9e9eb1 10%, white);
+    --color-secondary-200: color-mix(in srgb, #9e9eb1 20%, white);
+    --color-secondary-300: color-mix(in srgb, #9e9eb1 30%, white);
+    --color-secondary-400: color-mix(in srgb, #9e9eb1 40%, white);
+    --color-secondary-500: #9e9eb1;
+    --color-secondary-600: color-mix(in srgb, #9e9eb1 60%, black);
+    --color-secondary-700: color-mix(in srgb, #9e9eb1 70%, black);
+    --color-secondary-800: color-mix(in srgb, #9e9eb1 80%, black);
+    --color-secondary-900: color-mix(in srgb, #9e9eb1 90%, black);
+}

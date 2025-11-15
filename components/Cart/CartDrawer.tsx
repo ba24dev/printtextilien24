@@ -24,19 +24,19 @@ export default function CartDrawer({ isOpen, onCloseAction }: CartDrawerProps) {
             className={`fixed inset-0 z-50  ${isOpen ? "pointer-events-auto" : "pointer-events-none"}`}
         >
             <div
-                className={`absolute inset-0 bg-black/50 transition-opacity ${isOpen ? "opacity-100" : "opacity-0"}`}
+                className={`absolute inset-0 bg-black/70 transition-opacity ${isOpen ? "opacity-100" : "opacity-0"}`}
                 onClick={onCloseAction}
                 role="presentation"
             />
             <aside
-                className={`absolute right-0 top-0 transform transition-transform duration-300  flex h-full w-full max-w-md flex-col bg-gray-800 shadow-xl ${
+                className={`absolute right-0 top-0 transform transition-transform duration-300  flex h-full w-full max-w-md flex-col bg-background shadow-xl ${
                     isOpen ? "translate-x-0" : "translate-x-full"
                 }`}
             >
-                <header className="flex items-center justify-between border-b px-6 py-4 h-16">
+                <header className="flex items-center justify-between border-b border-primary-500 px-6 py-4 h-16">
                     <h2 className="text-lg font-semibold">Your Cart ({quantity})</h2>
                     <button
-                        className="text-sm text-gray-500 cursor-pointer hover:text-gray-300"
+                        className="text-sm text-gray-500 cursor-pointer hover:text-gray-300 w-6 h-6"
                         type="button"
                         onClick={onCloseAction}
                     >
@@ -66,12 +66,12 @@ export default function CartDrawer({ isOpen, onCloseAction }: CartDrawerProps) {
                     )}
                 </section>
 
-                <footer className="border-t px-6 py-4">
+                <footer className="border-t px-6 py-4 border-primary-500">
                     <div className="flex items-center justify-between text-sm">
                         <span>Subtotal</span>
                         <CartCost amountType="subtotal" />
                     </div>
-                    <CartCheckoutButton className="mt-4 w-full rounded bg-black px-4 py-3 text-center text-sm font-medium text-white hover:bg-gray-900 cursor-pointer">
+                    <CartCheckoutButton className="mt-4 w-full rounded bg-primary-500 px-4 py-3 text-center text-sm font-medium text-white dark:hover:bg-primary-600 hover:bg-primary-400 cursor-pointer">
                         Checkout
                     </CartCheckoutButton>
                 </footer>

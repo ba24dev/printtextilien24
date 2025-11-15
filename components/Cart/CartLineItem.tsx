@@ -19,59 +19,60 @@ export default function CartLineItem() {
     const altText = "image" in merchandise && merchandise.image?.altText ? merchandise.image.altText : productTitle;
 
     return (
-        <li className="flex gap-4 relative">
-            <div className="relative h-20 w-20 overflow-hidden rounded bg-gray-100">
+        <li className="grid grid-cols-[80px_1fr_auto] grid-rows-[auto_auto] gap-4 relative px-4 py-3 rounded-lg border dark:border-secondary-900 border-secondary-500">
+            <div className="relative h-20 w-20 overflow-hidden rounded bg-secondary-100 row-span-2">
                 <Image src={imageUrl} alt={altText} fill sizes="80px" className="object-cover" />
             </div>
-            <div className="flex-1 space-y-2">
-                <p className="text-sm font-medium">{productTitle}</p>
-                {variantTitle ? <p className="text-xs text-gray-500">{variantTitle}</p> : null}
-                <div className="flex items-center gap-2 justify-between">
-                    <div className="flex flex-1 max-w-[100px] items-center h-full border rounded font-medium">
-                        <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
-                            <CartLineQuantityAdjustButton
-                                adjust="decrease"
-                                className="cursor-pointer hover:text-gray-50 text-gray-300"
-                                type="button"
-                            >
-                                <DecreaseSVG />
-                            </CartLineQuantityAdjustButton>
-                        </div>
-                        <div className="h-full flex justify-center items-center px-2">
-                            <CartLineQuantity as="span">
-                                <span className="w-12 rounded border border-gray-300 px-2 py-1 text-center text-sm">
-                                    {line.quantity}
-                                </span>
-                                ;
-                            </CartLineQuantity>
-                        </div>
-                        <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
-                            <CartLineQuantityAdjustButton
-                                adjust="increase"
-                                className="cursor-pointer hover:text-gray-50 text-gray-300"
-                                type="button"
-                            >
-                                <IncreaseSVG />
-                            </CartLineQuantityAdjustButton>
-                        </div>
-                    </div>
-                    <div className="flex max-w-[100px] items-center h-full font-medium text-sm text-gray-400">
-                        {formatPrice(merchandise.price?.amount, merchandise.price?.currencyCode)}
-                    </div>
-                    <div className="flex max-w-[100px] items-center h-full font-medium text-sm text-gray-100">
-                        {formatPrice(line.cost?.totalAmount?.amount, line.cost?.totalAmount?.currencyCode)}
-                    </div>
-                </div>
+            <div className="flex-1">
+                <p className="text-base font-bold">{productTitle}</p>
+                {variantTitle ? <p className="text-xs text-secondary-500">{variantTitle}</p> : null}
             </div>
 
             <CartLineQuantityAdjustButton
                 adjust="remove"
-                className="rounded-lg p-1 text-sm text-gray-300 hover:text-red-500/90 hover:outline hover:outline-red-800/90 cursor-pointer absolute top-0 right-0 flex items-center justify-center"
+                className="rounded-lg p-1 text-sm aspect-square w-10 text-secondary-300 hover:text-red-500/90 hover:outline hover:outline-red-800/90 cursor-pointer flex items-center justify-center col-start-3 row-start-1"
                 type="button"
                 aria-label="Remove item"
             >
                 <TrashSVG width={6} height={6} />
             </CartLineQuantityAdjustButton>
+
+            <div className="flex items-center gap-2 justify-between col-span-2">
+                <div className="flex flex-1 max-w-[100px] items-center h-full border rounded font-medium">
+                    <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
+                        <CartLineQuantityAdjustButton
+                            adjust="decrease"
+                            className="cursor-pointer hover:text-secondary-100 text-secondary-300"
+                            type="button"
+                        >
+                            <DecreaseSVG />
+                        </CartLineQuantityAdjustButton>
+                    </div>
+                    <div className="h-full flex justify-center items-center px-2">
+                        <CartLineQuantity as="span">
+                            <span className="w-12 rounded border border-secondary-300 px-2 py-1 text-center text-sm">
+                                {line.quantity}
+                            </span>
+                            ;
+                        </CartLineQuantity>
+                    </div>
+                    <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
+                        <CartLineQuantityAdjustButton
+                            adjust="increase"
+                            className="cursor-pointer hover:text-secondary-50 text-secondary-300"
+                            type="button"
+                        >
+                            <IncreaseSVG />
+                        </CartLineQuantityAdjustButton>
+                    </div>
+                </div>
+                <div className="flex max-w-[100px] items-center h-full font-medium text-sm text-secondary-300">
+                    {formatPrice(merchandise.price?.amount, merchandise.price?.currencyCode)}
+                </div>
+                <div className="flex max-w-[100px] items-center h-full font-semibold text-sm text-secondary-100">
+                    {formatPrice(line.cost?.totalAmount?.amount, line.cost?.totalAmount?.currencyCode)}
+                </div>
+            </div>
         </li>
     );
 }

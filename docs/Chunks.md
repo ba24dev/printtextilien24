@@ -44,70 +44,74 @@ It follows four main phases: setup → Shopify integration → custom features �
 ### Chunk 5 – Cart & Checkout
 **Goal:** End-to-end cart.  
 **Tasks:** Implement `CartProvider`, drawer/page, quantity update, remove line, checkout button.  
-**Done when:** Cart lines render correctly; checkout opens Shopify.
+**Done when:** Cart lines render correctly; checkout opens Shopify.  
+**Status:** ✅ Completed – Cart drawer lists variants, updates quantities, removes lines, and links to Shopify checkout.
 
 ### Chunk 6 – Search (Stub)
 **Goal:** Basic search field.  
 **Tasks:** `/api/search?q=` route (dummy), search input UI, prepare Orama integration.  
-**Done when:** Search returns basic results.
+**Done when:** Search returns basic results.  
+**Status:** ✅ Completed – `/api/search` serves mocked products, header search debounces queries, and results link to the PDP.
 
 ---
 
-## Phase 3 – Custom Features
+## Phase 3 – Design & Polish
 
-### Chunk 7 – Instant Add to Cart (Quick-Add)
-**Goal:** Add non-custom products directly from grid.  
-**Tasks:** Hover/Quick panel for size/color/variant; `addToCart` call without PDP.  
-**Done when:** Quick-Add puts item into cart correctly.
-
-### Chunk 8 – PrintConfig (RECT surfaces)
-**Goal:** Provide print areas per variant.  
-**Tasks:** Define Metafield schema (RECT only), `getVariantPrintConfig(variantId)` loader, validation.  
-**Done when:** T-shirt and hoodie return valid surfaces in mm with safe-zone.
-
-### Chunk 9 – Upload & Assets (Supabase)
-**Goal:** Upload and store image files.  
-**Tasks:** `POST /api/upload` (size + MIME checks), `assets` table insert, private bucket.  
-**Done when:** Upload returns `{ key, assetId }` and file stored privately.
-
-### Chunk 10 – Customizer UI (V1)
-**Goal:** Place artwork on mockup.  
-**Tasks:** `/customize/[handle]` route with mockup overlay, drag/scale OR mm fields (top/bottom/left/right), “center” presets, DPI warning.  
-**Done when:** User can upload and position image with correct preview.
-
-### Chunk 11 – Job Storage & Cart Binding
-**Goal:** Persist placement and link to cart.  
-**Tasks:** Insert `custom_jobs` record `{ jobId, variantId, surfaceId, assetId, transformJson, targetDpi }`; add to cart with `line_item.properties = { jobId, surfaceId }`.  
-**Done when:** Custom item in cart includes correct jobId reference.
-
-### Chunk 12 – Order Webhook & Mirror
-**Goal:** Map orders to jobs.  
-**Tasks:** `/api/webhooks/orders/create`, maintain `order_line_map`, admin list for open items.  
-**Done when:** New orders recorded with linked jobId per line item.
-
----
-
-## Phase 4 – Design & Polish
-
-### Chunk 13 – Theme & Layout
+### Chunk 7 – Theme & Layout
 **Goal:** Base styling and layout.  
 **Tasks:** Header/footer, grid, spacing, buttons, cart drawer style.  
-**Done when:** Consistent layout across desktop and mobile.
+**Done when:** Consistent layout across desktop and mobile.  
+**Status:** ✅ Completed – Homepage now features the marquee carousel and featured spotlight, `/products` gained the filterable catalogue layout, and the PDP received the mosaic gallery plus polished purchase panel.
 
-### Chunk 14 – Error Handling & Guardrails
+### Chunk 8 – Error Handling & Guardrails
 **Goal:** User-friendly feedback.  
 **Tasks:** Handle upload errors, low DPI, invalid margins, missing selections; add skeletons/loaders.  
 **Done when:** All critical errors show clear messages.
 
-### Chunk 15 – Search with Orama (Active)
+### Chunk 9 – Search with Orama
 **Goal:** Real search integration.  
 **Tasks:** Build Orama index from products, API endpoint, autocomplete UI.  
-**Done when:** Relevant search results <100 ms.
+**Done when:** Relevant search results <100 ms.  
+**Status:** ⏳ Pending – scheduled to begin after error-handling pass in Chunk 8.
 
-### Chunk 16 – Order Tracking (No Login)
+### Chunk 10 – Order Tracking (No Login)
 **Goal:** Track orders without customer accounts.  
 **Tasks:** “Track order” page (email + order number → status from mirror); link to Shopify order status.  
 **Done when:** Users can view their order status without logging in.
+
+---
+
+## Phase 4 – Custom Production Pipeline
+
+### Chunk 11 – Instant Add to Cart (Quick-Add)
+**Goal:** Add non-custom products directly from grid.  
+**Tasks:** Hover/Quick panel for size/color/variant; `addToCart` call without PDP.  
+**Done when:** Quick-Add puts item into cart correctly.
+
+### Chunk 12 – PrintConfig (RECT surfaces)
+**Goal:** Provide print areas per variant.  
+**Tasks:** Define Metafield schema (RECT only), `getVariantPrintConfig(variantId)` loader, validation.  
+**Done when:** T-shirt and hoodie return valid surfaces in mm with safe-zone.
+
+### Chunk 13 – Upload & Assets (Supabase)
+**Goal:** Upload and store image files.  
+**Tasks:** `POST /api/upload` (size + MIME checks), `assets` table insert, private bucket.  
+**Done when:** Upload returns `{ key, assetId }` and file stored privately.
+
+### Chunk 14 – Customizer UI (V1)
+**Goal:** Place artwork on mockup.  
+**Tasks:** `/customize/[handle]` route with mockup overlay, drag/scale OR mm fields (top/bottom/left/right), “center” presets, DPI warning.  
+**Done when:** User can upload and position image with correct preview.
+
+### Chunk 15 – Job Storage & Cart Binding
+**Goal:** Persist placement and link to cart.  
+**Tasks:** Insert `custom_jobs` record `{ jobId, variantId, surfaceId, assetId, transformJson, targetDpi }`; add to cart with `line_item.properties = { jobId, surfaceId }`.  
+**Done when:** Custom item in cart includes correct jobId reference.
+
+### Chunk 16 – Order Webhook & Mirror
+**Goal:** Map orders to jobs.  
+**Tasks:** `/api/webhooks/orders/create`, maintain `order_line_map`, admin list for open items.  
+**Done when:** New orders recorded with linked jobId per line item.
 
 ---
 

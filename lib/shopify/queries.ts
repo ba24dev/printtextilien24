@@ -39,6 +39,9 @@ export const PRODUCT_BY_HANDLE_QUERY = `#graphql
       handle
       title
       descriptionHtml
+      vendor
+      productType
+      tags
       priceRange {
         minVariantPrice {
           amount
@@ -75,6 +78,50 @@ export const PRODUCT_BY_HANDLE_QUERY = `#graphql
       options {
         name
         values
+      }
+      collections(first: 4) {
+        nodes {
+          id
+          handle
+          title
+        }
+      }
+    }
+  }
+`;
+
+export const COLLECTION_BY_HANDLE_QUERY = `#graphql
+  query CollectionByHandle($handle: String!, $productsFirst: Int!) {
+    collection(handle: $handle) {
+      id
+      title
+      description
+      handle
+      image {
+        id
+        url
+        altText
+      }
+      products(first: $productsFirst) {
+        edges {
+          node {
+            id
+            handle
+            title
+            description
+            priceRange {
+              minVariantPrice {
+                amount
+                currencyCode
+              }
+            }
+            featuredImage {
+              id
+              url
+              altText
+            }
+          }
+        }
       }
     }
   }
