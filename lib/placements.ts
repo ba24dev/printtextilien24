@@ -41,10 +41,8 @@ export function computePrintSize(
   margins: MarginsMM,
   dpi: number = DEFAULT_DPI
 ) {
-  const usableWidthMm =
-    surface.widthMm - surface.safeZone.left - surface.safeZone.right;
-  const usableHeightMm =
-    surface.heightMm - surface.safeZone.top - surface.safeZone.bottom;
+  const usableWidthMm = surface.widthMm - surface.safeZone.left - surface.safeZone.right;
+  const usableHeightMm = surface.heightMm - surface.safeZone.top - surface.safeZone.bottom;
 
   const artworkWidthMm = usableWidthMm - (margins.left + margins.right);
   const artworkHeightMm = usableHeightMm - (margins.top + margins.bottom);
@@ -62,12 +60,12 @@ export function computePrintSize(
 export const isWithinSafeZone = (
   designWidthMm: number,
   designHeightMm: number,
-  surface: SurfaceMM,
+  surface: SurfaceMM
 ): boolean => {
-    const usableWidthMm = surface.widthMm - surface.safeZone.left - surface.safeZone.right;
-    const usableHeightMm = surface.heightMm - surface.safeZone.top - surface.safeZone.bottom;
+  const usableWidthMm = surface.widthMm - surface.safeZone.left - surface.safeZone.right;
+  const usableHeightMm = surface.heightMm - surface.safeZone.top - surface.safeZone.bottom;
 
-    return designWidthMm <= usableWidthMm && designHeightMm <= usableHeightMm;
+  return designWidthMm <= usableWidthMm && designHeightMm <= usableHeightMm;
 };
 
 export const exampleSurface: SurfaceMM = {
