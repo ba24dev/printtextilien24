@@ -1,8 +1,8 @@
 "use client";
 
-import FeaturedProducts from "@/components/Home/FeaturedProducts";
-import Hero from "@/components/Home/Hero";
-import HomepageCarousel from "@/components/Home/HomepageCarousel";
+import CarouselSection from "@/components/marketing/Carousel";
+import FeaturedProducts from "@/components/marketing/FeaturedProducts";
+import Hero from "@/components/marketing/Hero";
 import { fetchCollectionByHandle } from "@/lib/shopify/collection";
 import { CollectionSummary } from "@/lib/shopify/types";
 import { useEffect, useState } from "react";
@@ -43,7 +43,7 @@ export default function HomePage() {
             <Hero />
             {featuredCollection ? <FeaturedProducts collection={featuredCollection} /> : null}
 
-            {carouselCollection ? <HomepageCarousel collection={carouselCollection} /> : null}
+            {carouselCollection ? <CarouselSection collection={carouselCollection} /> : null}
         </main>
     );
 }

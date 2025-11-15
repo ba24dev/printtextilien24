@@ -1,13 +1,13 @@
 import { CollectionSummary } from "@/lib/shopify/types";
 import Link from "next/link";
-import Carousel from "../Carousel/Carousel";
-import Heading from "./Heading";
+import Heading from "../ui/Heading";
+import Marquee from "./Marquee";
 
-interface HomepageCarouselProps {
+interface CarouselProps {
     collection: CollectionSummary;
 }
 
-export default function HomepageCarousel({ collection }: HomepageCarouselProps) {
+export default function Carousel({ collection }: CarouselProps) {
     return (
         <section className="py-16">
             <div className="mx-auto max-w-6xl px-6">
@@ -18,7 +18,7 @@ export default function HomepageCarousel({ collection }: HomepageCarouselProps) 
                     </Link>
                 </header>
 
-                <Carousel collection={collection} />
+                <Marquee collection={collection} />
             </div>
         </section>
     );

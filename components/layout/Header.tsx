@@ -5,10 +5,10 @@ import { useCart } from "@shopify/hydrogen-react";
 import { ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import CartDrawer from "../Cart/CartDrawer";
-import SearchInput from "../Search/SearchInput";
-import SearchResults from "../Search/SearchResults";
 import ThemeSwitcher from "./ThemeSwitcher";
+import SearchInput from "../ui/SearchInput";
+import SearchResults from "../ui/SearchResults";
+import CartDrawer from "../shopping/CartDrawer";
 
 const NAV_LINKS = [
     { href: "/", label: "Home" },

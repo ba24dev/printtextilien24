@@ -1,7 +1,7 @@
 "use client";
 
 import { CartCheckoutButton, CartCost, CartLineProvider, useCart } from "@shopify/hydrogen-react";
-import { CloseSVG } from "../SVG/Icons";
+import { SquareX } from "lucide-react";
 import CartLineItem from "./CartLineItem";
 
 type CartDrawerProps = {
@@ -40,7 +40,7 @@ export default function CartDrawer({ isOpen, onCloseAction }: CartDrawerProps) {
                         type="button"
                         onClick={onCloseAction}
                     >
-                        <CloseSVG height={6} width={6} />
+                        <SquareX className="w-6 h-6" />
                     </button>
                 </header>
 

@@ -1,7 +1,7 @@
 import { formatPrice } from "@/lib/helpers";
 import { CartLineQuantity, CartLineQuantityAdjustButton, useCartLine } from "@shopify/hydrogen-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
-import { DecreaseSVG, IncreaseSVG, TrashSVG } from "../SVG/Icons";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/160x160.png?text=No+Image";
 
@@ -30,11 +30,11 @@ export default function CartLineItem() {
 
             <CartLineQuantityAdjustButton
                 adjust="remove"
-                className="rounded-lg p-1 text-sm aspect-square w-10 text-secondary-300 hover:text-red-500/90 hover:outline hover:outline-red-800/90 cursor-pointer flex items-center justify-center col-start-3 row-start-1"
+                className="rounded-lg p-1 text-sm aspect-square w-10 text-secondary-300 hover:text-red-500/70 cursor-pointer flex items-center justify-center col-start-3 row-start-1"
                 type="button"
                 aria-label="Remove item"
             >
-                <TrashSVG width={6} height={6} />
+                <Trash2 className="w-6 h-6" />
             </CartLineQuantityAdjustButton>
 
             <div className="flex items-center gap-2 justify-between col-span-2">
@@ -42,10 +42,10 @@ export default function CartLineItem() {
                     <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
                         <CartLineQuantityAdjustButton
                             adjust="decrease"
-                            className="cursor-pointer hover:text-secondary-100 text-secondary-300"
+                            className="cursor-pointer hover:text-secondary-100 text-secondary-500"
                             type="button"
                         >
-                            <DecreaseSVG />
+                            <Minus className="w-4 h-4" />
                         </CartLineQuantityAdjustButton>
                     </div>
                     <div className="h-full flex justify-center items-center px-2">
@@ -59,10 +59,10 @@ export default function CartLineItem() {
                     <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
                         <CartLineQuantityAdjustButton
                             adjust="increase"
-                            className="cursor-pointer hover:text-secondary-50 text-secondary-300"
+                            className="cursor-pointer hover:text-secondary-100 text-secondary-500"
                             type="button"
                         >
-                            <IncreaseSVG />
+                            <Plus className="w-4 h-4" />
                         </CartLineQuantityAdjustButton>
                     </div>
                 </div>
