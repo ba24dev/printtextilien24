@@ -7,7 +7,8 @@ export const metadata: Metadata = {
 };
 
 import ClientProviders from "@/components/ClientProviders";
-import Header from "@/components/Header";
+import Footer from "@/components/Footer/Footer";
+import Header from "@/components/Header/Header";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (
@@ -16,6 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <ClientProviders>
                     <Header />
                     {children}
+                    <Footer />
                 </ClientProviders>
             </body>
         </html>

@@ -17,6 +17,13 @@ This repository contains the source code for the Printshop MVP, a textile prints
 
 The development process is divided into chunks, as outlined in the `docs/Chunks.md` file. Each chunk represents a specific milestone or feature set.
 
+## Key Features
+
+- Auto-scrolling homepage carousel sourced from the "Hidden" showcase collection.
+- Featured collection spotlight with curated merchandising copy.
+- `/products` catalogue with collection filters, deep-linkable selection, and price sorting.
+- Product detail page mosaic gallery with structured purchase panel and highlights section.
+
 ## Getting Started
 
 ### Prerequisites
@@ -67,7 +74,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ### Current Milestone
 
-Chunk 5 (Cart & Checkout) is now live. The site mounts a cart drawer fed by Hydrogen’s `CartProvider`, supports variant quantity changes and line removal, and links directly to Shopify checkout. Upcoming work moves on to Chunk 6 (Search Stub).
+Chunk 7 (Theme & Layout) is complete. The homepage, product index, and PDP now share the polished base styling, carousel, and layout refinements delivered in this chunk. Next up: Chunk 8 (Error Handling & Guardrails).
 
 ## Contributing
 

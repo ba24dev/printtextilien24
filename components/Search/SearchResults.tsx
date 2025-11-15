@@ -25,7 +25,7 @@ export default function SearchResults({
     if (!show) return null;
 
     return (
-        <div className="absolute z-40 mt-2 w-full rounded-lg border border-gray-200 bg-white shadow-lg">
+        <div className="absolute z-40 mt-2 w-full rounded-lg border border-secondary-500 bg-secondary-800 shadow-lg">
             {isLoading ? (
                 <p className="px-4 py-3 text-sm text-gray-500">Searching...</p>
             ) : isError ? (
@@ -38,10 +38,10 @@ export default function SearchResults({
                         <li key={result.id}>
                             <Link
                                 href={`/products/${result.handle}`}
-                                className="flex items-center gap-4 px-4 py-3 hover:bg-gray-100"
+                                className="flex items-center gap-4 px-4 py-3 hover:bg-secondary-600 rounded-lg"
                                 onClick={onSelectAction}
                             >
-                                <div className="relative h-12 w-12 overflow-hidden rounded bg-gray-100">
+                                <div className="relative h-12 w-12 overflow-hidden rounded-lg">
                                     {result.imageUrl ? (
                                         <Image
                                             src={result.imageUrl}
@@ -51,15 +51,15 @@ export default function SearchResults({
                                             className="object-cover"
                                         />
                                     ) : (
-                                        <span className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
+                                        <span className="absolute inset-0 flex items-center justify-center text-xs text-secondary-300">
                                             No Image
                                         </span>
                                     )}
                                 </div>
                                 <div className="flex-1">
-                                    <p className="text-sm font-medium text-gray-900">{result.title}</p>
+                                    <p className="text-sm font-medium text-foreground">{result.title}</p>
                                     {result.price ? (
-                                        <p className="mt-1 text-sm text-gray-500">
+                                        <p className="mt-1 text-sm text-secondary-300">
                                             {formatPrice(result.price.amount, result.price.currencyCode)}
                                         </p>
                                     ) : null}

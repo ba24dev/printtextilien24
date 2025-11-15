@@ -4,53 +4,44 @@ import { useProduct } from "@shopify/hydrogen-react";
 import Image from "next/image";
 
 export default function ProductGallery() {
-  const { product } = useProduct();
+    const { product } = useProduct();
+    const images = product?.images?.nodes ?? [];
 
-  const images = product?.images?.nodes || [];
-  const primaryImage = images[0] ?? null;
+    const [primary, second, third, fourth] = images;
+    const fallback = {
+        url: "https://placehold.co/800x1000.png?text=Printtextilien24",
+        altText: product?.title ?? "Product image",
+    };
 
-  if (!product || !primaryImage) {
     return (
-      <div className="flex aspect-square items-center justify-center rounded-lg border border-dashed border-gray-300 text-sm text-gray-400">
-        No image available
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="relative aspect-square overflow-hidden rounded-lg bg-gray-100">
-        <Image
-          src={primaryImage?.url ?? "https://placehold.co/600x600.png"}
-          alt={primaryImage.altText ?? product.title ?? "Product image"}
-          fill
-          priority
-          className="object-cover"
-          sizes="(min-width: 768px) 50vw, 100vw"
-        />
-      </div>
-
-      {images.length > 1 && (
-        <div className="grid grid-cols-4 gap-3">
-          {images.map((image) => (
-            <div
-              key={image?.id ?? image?.url}
-              className="relative aspect-square overflow-hidden rounded-lg bg-gray-100"
-            >
-              {image?.url ? (
-                <Image
-                  src={image.url}
-                  alt={image.altText ?? product.title ?? "Product image"}
-                  fill
-                  priority
-                  className="object-cover"
-                  sizes="(min-width: 768px) 25vw, 33vw"
-                />
-              ) : null}
-            </div>
-          ))}
+        <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-2">
+            <GalleryImage image={primary ?? fallback} className="lg:row-span-2 rounded-3xl" priority />
+            <GalleryImage image={second ?? fallback} className="aspect-3/2 rounded-3xl max-lg:hidden" />
+            <GalleryImage image={third ?? fallback} className="aspect-3/2 rounded-3xl max-lg:hidden" />
+            <GalleryImage image={fourth ?? fallback} className="lg:col-span-2 aspect-5/2 rounded-3xl" />
         </div>
-      )}
-    </div>
-  );
+    );
+}
+
+interface GalleryImageProps {
+    image: { url?: string | null; altText?: string | null };
+    className?: string;
+    priority?: boolean;
+}
+
+function GalleryImage({ image, className, priority }: GalleryImageProps) {
+    if (!image?.url) return null;
+
+    return (
+        <div className={`relative overflow-hidden bg-surface/40 ${className ?? ""}`}>
+            <Image
+                src={image.url}
+                alt={image.altText ?? "Product image"}
+                fill
+                priority={priority}
+                sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                className="object-cover transition duration-700 ease-out hover:scale-105"
+            />
+        </div>
+    );
 }

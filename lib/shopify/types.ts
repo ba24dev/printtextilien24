@@ -18,6 +18,7 @@ export interface ProductSummary {
     id: string;
     handle: string;
     title: string;
+    description?: string;
     priceRange: {
         minVariantPrice: MoneyV2;
     };
