@@ -7,11 +7,11 @@ import ProductDetails from "./ProductDetails";
 import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 
-interface ProductExperienceProps {
+interface ProductDetailExperienceProps {
     product: ShopifyProduct;
 }
 
-export default function ProductExperience({ product }: ProductExperienceProps) {
+export default function ProductDetailExperience({ product }: ProductDetailExperienceProps) {
     return (
         <ProductProvider data={product}>
             <section className="dark:bg-primary-700/20 bg-primary-300/40 py-48 md:py-32">

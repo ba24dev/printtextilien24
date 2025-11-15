@@ -6,9 +6,9 @@ export const metadata: Metadata = {
     description: "Ihr Online-Shop für bedruckte Textilien",
 };
 
-import ClientProviders from "@/components/ClientProviders";
-import Footer from "@/components/Footer/Footer";
-import Header from "@/components/Header/Header";
+import ClientProviders from "@/components/layout/ClientProviders";
+import Footer from "@/components/layout/Footer";
+import Header from "@/components/layout/Header";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
     return (

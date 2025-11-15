@@ -1,15 +1,17 @@
+"use client";
+
 import { CollectionSummary } from "@/lib/shopify/types";
 import { useEffect, useMemo, useRef } from "react";
-import ProductCard from "../Product/ProductCard";
+import ProductCard from "../catalog/ProductCard";
 
-interface CarouselProps {
+interface MarqueeProps {
     collection: CollectionSummary;
 }
 
 const SCROLL_SPEED_PX_PER_S = 12;
 const DUPLICATION_FACTOR = 3;
 
-export default function Carousel({ collection }: CarouselProps) {
+export default function Marquee({ collection }: MarqueeProps) {
     const viewportRef = useRef<HTMLDivElement>(null);
     const trackRef = useRef<HTMLDivElement>(null);
     const animationRef = useRef<Animation | null>(null);

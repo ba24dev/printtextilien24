@@ -3,10 +3,10 @@
 import { CollectionSummary, ProductSummary } from "@/lib/shopify/types";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useMemo, useState } from "react";
-import ProductCard from "../Product/ProductCard";
-import InteractionButton from "./CollectionButton";
+import InteractionButton from "../ui/InteractionButton";
+import ProductCard from "./ProductCard";
 
-interface ProductIndexViewProps {
+interface CollectionViewProps {
     collections: CollectionSummary[];
 }
 
@@ -20,7 +20,7 @@ function getPrice(product: ProductSummary): number {
     return parseFloat(product.priceRange.minVariantPrice.amount);
 }
 
-export default function ProductIndexView({ collections }: ProductIndexViewProps) {
+export default function CollectionView({ collections }: CollectionViewProps) {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();

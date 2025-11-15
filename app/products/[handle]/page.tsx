@@ -1,4 +1,4 @@
-import ProductExperience from "@/components/Product/ProductExperience";
+import ProductDetailExperience from "@/components/pdp/ProductDetailExperience";
 import { fetchProductByHandle } from "@/lib/shopify/product";
 import { ShopifyProduct } from "@/lib/shopify/transport";
 import { notFound } from "next/navigation";
@@ -22,5 +22,5 @@ export default async function ProductPage({ params }: ProductPageProps) {
         notFound();
     }
 
-    return <ProductExperience product={product as ShopifyProduct} />;
+    return <ProductDetailExperience product={product as ShopifyProduct} />;
 }

@@ -3,7 +3,7 @@ import { Money } from "@shopify/hydrogen-react";
 import { ArrowRight, ShoppingCart } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import Heading from "./Heading";
+import Heading from "../ui/Heading";
 
 interface FeaturedProductsProps {
     collection: CollectionSummary;
