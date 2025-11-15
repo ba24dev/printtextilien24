@@ -1,11 +1,5 @@
-import {
-  CollectionEdge,
-  ProductSummaryEdge,
-  ShopifyProduct,
-} from "./transport";
+import { CollectionEdge, ProductSummaryEdge } from "./transport";
 import { CollectionSummary, ProductSummary } from "./types";
-
-import { flattenConnection } from "@shopify/hydrogen-react";
 
 function mapProductSummaryEdge(edge: ProductSummaryEdge): ProductSummary {
   return {
@@ -34,22 +28,5 @@ export function mapCollectionEdge(edge: CollectionEdge): CollectionSummary {
     title: edge.node.title,
     handle: edge.node.handle,
     products: edge.node.products.edges.map(mapProductSummaryEdge),
-  };
-}
-
-export function normaliseProduct(
-  product: ShopifyProduct | null
-): ShopifyProduct | null {
-  if (!product) return null;
-
-  return {
-    ...product,
-    images: {
-      nodes: flattenConnection(product.images) ?? [],
-    },
-    variants: {
-      nodes: flattenConnection(product.variants) ?? [],
-    },
-    options: product.options ?? [],
   };
 }
