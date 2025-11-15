@@ -5,7 +5,7 @@ This document lists the technologies and core libraries used for the Next.js Pri
 ---
 
 ## Framework & Language
-- **Next.js 15** – App Router, React 18, Node runtime.
+- **Next.js 16** – App Router, React 18, Node runtime.
 - **TypeScript** – full typing across backend and frontend.
 - **Tailwind v4** - utility-first CSS framework
 

@@ -1,26 +1,25 @@
 @import "tailwindcss";
+@import "./theme.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:where(.dark, .dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+    scrollbar-gutter: stable;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
+    @apply bg-linear-to-br from-background to-background/50 text-foreground;
+}
+
+@layer components {
+    .btn-primary {
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-linear-to-r from-primary-500 dark:to-primary-600 to-primary-400 px-6 py-3 text-sm font-semibold dark:text-foreground text-background shadow-lg shadow-primary-500/30 transition hover:to-primary-500 border border-foreground;
+    }
+    .btn-outline {
+        @apply inline-flex items-center justify-center gap-2 rounded-full border border-primary-500 px-6 py-3 text-sm font-semibold text-primary-200 transition bg-linear-to-r hover:from-primary-500 dark:hover:to-primary-600 hover:to-primary-400 hover:border-primary-400 dark:hover:text-primary-100 hover:text-primary-900;
+    }
+    .small {
+        @apply px-4 py-2 text-xs;
+    }
 }
