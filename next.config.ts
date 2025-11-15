@@ -7,14 +7,14 @@ const nextConfig: NextConfig = {
             {
                 protocol: "https",
                 hostname: "cdn.shopify.com",
-                port: "",
-                pathname: "/s/**",
             },
             {
                 protocol: "https",
                 hostname: "placehold.co",
-                port: "",
-                pathname: "/*/**",
+            },
+            {
+                protocol: "https",
+                hostname: "*.unsplash.com",
             },
         ],
     },

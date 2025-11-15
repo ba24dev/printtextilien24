@@ -1,18 +1,30 @@
 "use client";
 
-import ProductCard from "@/components/ProductCard";
-import { Collection, fetchCollectionsWithProducts, Product } from "@/lib/shopify";
-import React, { useEffect, useState } from "react";
+import CarouselSection from "@/components/marketing/Carousel";
+import FeaturedProducts from "@/components/marketing/FeaturedProducts";
+import Hero from "@/components/marketing/Hero";
+import { fetchCollectionByHandle } from "@/lib/shopify/collection";
+import { CollectionSummary } from "@/lib/shopify/types";
+import { useEffect, useState } from "react";
 
-const HomePage: React.FC = () => {
-    const [collections, setCollections] = useState<Collection[]>([]);
+const FEATURED_COLLECTION_HANDLE = "hidden-homepage-featured-items";
+const CAROUSEL_COLLECTION_HANDLE = "hidden-homepage-carousel";
+
+export default function HomePage() {
+    const [featuredCollection, setFeaturedCollection] = useState<CollectionSummary | null>(null);
+    const [carouselCollection, setCarouselCollection] = useState<CollectionSummary | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const data = await fetchCollectionsWithProducts();
-                setCollections(data);
+                const [featuredData, carouselData] = await Promise.all([
+                    fetchCollectionByHandle(FEATURED_COLLECTION_HANDLE),
+                    fetchCollectionByHandle(CAROUSEL_COLLECTION_HANDLE),
+                ]);
+
+                setFeaturedCollection(featuredData);
+                setCarouselCollection(carouselData);
             } catch (error) {
                 console.error("Error fetching collections:", error);
             } finally {
@@ -23,32 +35,15 @@ const HomePage: React.FC = () => {
     }, []);
 
     if (loading) {
-        return <div>Loading...</div>;
+        return <div className="px-6 py-12 text-sm text-foreground/70">Loading homepage…</div>;
     }
 
     return (
-        <div className="container mx-auto px-4">
-            {collections.map((collection) => (
-                <div key={collection.id} className="mb-8">
-                    <h2 className="text-2xl font-bold mb-4">{collection.title}</h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {collection.products.map((product: Product) => (
-                            <ProductCard
-                                key={product.id}
-                                id={product.id}
-                                title={product.title}
-                                handle={product.handle}
-                                price={product.priceRange.minVariantPrice.amount}
-                                currency={product.priceRange.minVariantPrice.currencyCode}
-                                imageUrl={product.featuredImage?.url || "https://placehold.co/600x400/png"}
-                                imageAlt={product.featuredImage?.altText || null}
-                            />
-                        ))}
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-};
+        <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">
+            <Hero />
+            {featuredCollection ? <FeaturedProducts collection={featuredCollection} /> : null}
 
-export default HomePage;
+            {carouselCollection ? <CarouselSection collection={carouselCollection} /> : null}
+        </main>
+    );
+}
