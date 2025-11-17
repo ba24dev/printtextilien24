@@ -1,3 +1,5 @@
+import { convertTime } from "@/lib/helpers";
+
 // HIDDEN CATEGORIES - Configurable handles for hidden shopify collections
 export const HOMEPAGE_FEATURED_HANDLE = "hidden-homepage-featured-items";
 export const HOMEPAGE_CAROUSEL_HANDLE = "hidden-homepage-carousel";
@@ -13,3 +15,6 @@ export const SITE_LOCALE = "de-DE";
 
 // SEARCH CONFIG - Configuration for search functionality
 export const DEBOUNCE_MS = 300;
+export const INDEX_TTL_MS = convertTime(5, "min", "ms");
+export const SEARCH_LIMIT = 8;
+export const SEARCH_PAGE_SIZE = 100;
