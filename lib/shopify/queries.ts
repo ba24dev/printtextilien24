@@ -126,3 +126,36 @@ export const COLLECTION_BY_HANDLE_QUERY = `#graphql
     }
   }
 `;
+
+export const SEARCH_PRODUCTS_QUERY = `#graphql
+  query SearchProducts($first: Int!, $after: String) {
+    products(first: $first, after: $after) {
+      edges {
+        cursor
+        node {
+          id
+          handle
+          title
+          vendor
+          tags
+          collections(first: 5) {
+            nodes { title }
+          }
+          priceRange {
+            minVariantPrice {
+              amount
+              currencyCode
+            }
+          }
+          featuredImage {
+            url
+          }
+        }
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;

@@ -6,6 +6,9 @@ export interface SearchResult {
   title: string;
   imageUrl: string | null;
   price?: MoneyV2;
+  vendor?: string | null;
+  tags?: string[];
+  collections?: string[];
 }
 
 export interface SearchResponse {
