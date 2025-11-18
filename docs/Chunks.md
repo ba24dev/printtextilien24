@@ -81,7 +81,7 @@ It follows four main phases: setup → Shopify integration → custom features �
 **Goal:** Real search integration.  
 **Tasks:** Build Orama index from products, ship a `/api/search` endpoint that queries it, surface autocomplete + result list in the header search.  
 **Done when:** Relevant search results return in <100 ms and link to PDPs.  
-**Status:** 🟡 In Progress – kickoff complete: catalog schema reviewed, `/api/search` requirements confirmed, and plan drafted for building the Orama index + header autocomplete loop.
+**Status:** ✅ Completed – Orama now indexes live Shopify products, `/api/search` streams real results in <100 ms, and the header autocomplete surfaces images, titles, and prices with proper empty/error states.
 **Plan:**
 
 - Add `@orama/orama` plus a `lib/search/orama.ts` helper that defines the searchable schema (title, handle, tags, vendor, collections) and memoizes the in-memory index per server process.
@@ -96,26 +96,26 @@ It follows four main phases: setup → Shopify integration → custom features �
 **Done when:** Core apparel SKUs return accurate surfaces ready for the customizer.  
 **Status:** ⏳ Pending – first customizer milestone once search lands.
 
-### Chunk 10 – Upload & Assets (Supabase)
+### Chunk 10 – Customizer UI (V1)
 
-**Goal:** Upload and store customer artwork.  
-**Tasks:** Implement `POST /api/upload` with size/MIME checks, persist to Supabase storage, and record metadata in the `assets` table.  
-**Done when:** Endpoint returns `{ key, assetId }` and the file is stored privately.  
-**Status:** ⏳ Pending – unlocks asset selection inside the customizer.
+**Goal:** Let users position artwork on the product mockup before any backend persistence.  
+**Tasks:** Build `/customize/[handle]` with mockup overlay, drag/scale controls or mm inputs, presets for centering, basic DPI warnings, and in-browser image loading so we can iterate without storage dependencies.  
+**Done when:** Users can choose a local file, see it on the mockup, and adjust placement using the PrintConfig metadata.  
+**Status:** ⏳ Pending – kicks off immediately after PrintConfig foundations so the customizer becomes testable ASAP.
 
-### Chunk 11 – Customizer UI (V1)
+### Chunk 11 – Upload & Assets (Supabase)
 
-**Goal:** Let users position artwork on the product mockup.  
-**Tasks:** Build `/customize/[handle]` with mockup overlay, drag/scale controls or mm inputs, presets for centering, and basic DPI warnings.  
-**Done when:** Users can upload, position, and preview artwork with accurate boundaries.  
-**Status:** ⏳ Pending – highest priority once data + uploads exist.
+**Goal:** Persist artwork once the customizer UX is stable.  
+**Tasks:** Implement `POST /api/upload` with size/MIME checks, persist to Supabase storage, and record metadata in the `assets` table; optionally add a mock adapter fallback for local dev.  
+**Done when:** Endpoint returns `{ key, assetId }` and stored files can be reloaded in the customizer.  
+**Status:** ⏳ Pending – snaps into the existing customizer flow after V1 proves out with local files.
 
 ### Chunk 12 – Job Storage & Cart Binding
 
 **Goal:** Persist customizer output and tie it to cart lines.  
 **Tasks:** Insert `custom_jobs` records `{ jobId, variantId, surfaceId, assetId, transformJson, targetDpi }` and add cart properties `{ jobId, surfaceId }`.  
 **Done when:** Customized cart items reference the saved job payload.  
-**Status:** ⏳ Pending – follows immediately after the customizer UI.
+**Status:** ⏳ Pending – follows immediately after uploads so cart lines can reference stored assets.
 
 ---
 
