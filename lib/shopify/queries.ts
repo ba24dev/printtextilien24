@@ -1,3 +1,24 @@
+const PRINT_ZONE_FIELDS = `
+  printZone: metafield(namespace: "custom.print", key: "print_zone") {
+    reference {
+      ... on Metaobject {
+        handle
+        nameField: field(key: "name") { value }
+        isCustomizableField: field(key: "is_customizable") { value }
+        dimensionsField: field(key: "dimensions") { value }
+        positionField: field(key: "position") { value }
+        previewImageField: field(key: "previewImageUrl") {
+          reference {
+            ... on MediaImage {
+              image { url }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
 export const COLLECTIONS_QUERY = `#graphql
   query GetCollections($collectionsFirst: Int!, $productsFirst: Int!) {
     collections(first: $collectionsFirst) {
@@ -12,6 +33,7 @@ export const COLLECTIONS_QUERY = `#graphql
                 id
                 handle
                 title
+                ${PRINT_ZONE_FIELDS}
                 priceRange {
                   minVariantPrice {
                     amount
@@ -38,6 +60,7 @@ export const PRODUCT_BY_HANDLE_QUERY = `#graphql
       id
       handle
       title
+      ${PRINT_ZONE_FIELDS}
       descriptionHtml
       vendor
       productType
@@ -108,6 +131,7 @@ export const COLLECTION_BY_HANDLE_QUERY = `#graphql
             id
             handle
             title
+            ${PRINT_ZONE_FIELDS}
             description
             priceRange {
               minVariantPrice {
