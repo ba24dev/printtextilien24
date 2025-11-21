@@ -11,7 +11,7 @@ export default function CartButton({ quantity, onClickAction }: CartButtonProps)
     <button
       type="button"
       onClick={() => onClickAction(true)}
-      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
+      className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 "
       aria-label={copy.cart.title(quantity)}
       title={copy.cart.title(quantity)}
     >

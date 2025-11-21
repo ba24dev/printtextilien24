@@ -12,7 +12,6 @@ export const copy = {
     nav: [
       { label: "Startseite", href: "/" },
       { label: "Produkte", href: "/products" },
-      { label: "Personalisieren", href: "/customize" },
     ],
     cartLabel: "Warenkorb",
   },
@@ -110,24 +109,21 @@ export const copy = {
         { label: "Allgemein", href: "/collections/allgemein" },
       ],
       company: [
-        { label: "Über Printtextilien24", href: "/about" },
         { label: "Busol", href: "https://busol.info" },
         { label: "Karriere", href: "https://www.busol.info/jobs/" },
         { label: "BusinessApp24", href: "https://www.businessapp24.de/" },
-        { label: "Kontakt", href: "/contact" },
+        {
+          label: "Kontakt",
+          href: "/contact",
+        },
       ],
       support: [
-        { label: "Versand & Rückgabe", href: "/support/shipping" },
-        { label: "Bestellstatus", href: "/support/orders" },
         { label: "Datenschutzrichtlinie", href: "/privacy" },
-        { label: "AGB", href: "/terms" },
         { label: "Impressum", href: "/imprint" },
       ],
     },
     quickLinks: {
       privacy: "Datenschutz",
-      terms: "AGB",
-      cookies: "Cookies",
       sitemap: "Sitemap",
     },
     columnTitles: {
