@@ -16,6 +16,8 @@ export function FooterColumn({ heading, links }: FooterColumnProps) {
           <li key={label}>
             <Link
               href={href}
+              target={href.startsWith("http") ? "_blank" : undefined}
+              rel={href.startsWith("http") ? "noopener noreferrer" : undefined}
               className="transition hover:text-primary-200"
             >
               {label}
