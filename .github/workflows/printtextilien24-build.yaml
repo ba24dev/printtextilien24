@@ -1,0 +1,60 @@
+# To better understand this file read this:
+# https://docs.ionos.space/docs/github-actions-customization/
+
+name: "Deploy Now: Execute Build"
+
+on:
+  workflow_call:
+    inputs:
+      site-url:
+        required: true
+        type: string
+      branch-id:
+        required: true
+        type: string
+
+env:
+  DEPLOYMENT_FOLDER: public
+
+jobs:
+# Please do not rename this job
+  build-project:
+    name: build printtextilien24
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: v22.x
+
+      - name: Build Node assets
+        env:
+          CI: true
+          NEXT_PUBLIC_SHOPIFY_COUNTRY_ISO_CODE: DE
+          NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE: DE
+          NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN: b5427daabc868adb9a0dbfcc9d044bda
+          NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION: 2025-07
+          NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL: https://12d54a-a9.myshopify.com
+          SITE_URL: ${{ inputs.site-url }}
+        run: |
+          npm install --global pnpm
+          pnpm install
+          pnpm build
+
+# Please do not touch the following action
+      - name: Store deployment content
+        uses: ionos-deploy-now/artifact-action@v1
+        with:
+          api-key: ${{ secrets.IONOS_API_KEY }}
+          service-host: api-eu.ionos.space
+          project-id: 2db3ce8a-7ac1-4a0c-a3be-4a4618540edc
+          branch-id: ${{ inputs.branch-id }}
+          version: ${{ github.sha }}
+          folder: ${{ env.DEPLOYMENT_FOLDER }}
+          config-file: .deploy-now/printtextilien24/config.yaml
+          action: upload
