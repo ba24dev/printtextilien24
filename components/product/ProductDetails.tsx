@@ -20,7 +20,7 @@ export default function ProductDetails() {
           {copy.product.descriptionTitle}
         </h2>
         <div
-          className="prose prose-invert prose-sm mt-4 max-w-none text-foreground/70"
+          className="mt-4 max-w-none text-foreground/70 text-sm leading-relaxed space-y-4 [&_p]:m-0 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:mt-1"
           dangerouslySetInnerHTML={{ __html: descriptionHtml }}
         />
       </section>
@@ -56,7 +56,7 @@ export default function ProductDetails() {
             </div>
           ) : null}
           <div>
-            <dt className="font-semibold text-foreground/80">{copy.product.handleLabel}</dt>
+            <dt className="font-semibold text-foreground/80">{copy.product.handleLabel} </dt>
             <dd>{product.handle}</dd>
           </div>
         </dl>
