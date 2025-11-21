@@ -41,7 +41,7 @@ export default function Footer() {
             >
               {copy.footer.quickLinks.privacy}
             </Link>
-            <Link
+            {/* <Link
               href="/terms"
               className="hover:text-primary-200"
             >
@@ -52,7 +52,7 @@ export default function Footer() {
               className="hover:text-primary-200"
             >
               {copy.footer.quickLinks.cookies}
-            </Link>
+            </Link> */}
             <Link
               href="/sitemap"
               className="hover:text-primary-200"
