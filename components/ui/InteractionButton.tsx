@@ -21,7 +21,7 @@ export default function InteractionButton({
       type="button"
       onClick={() => setActiveAction(handle)}
       className={clsx(
-        "w-full rounded-lg px-4 py-2 text-left text-sm transition cursor-pointer",
+        "w-full rounded-lg px-4 py-2 text-left text-sm transition",
         activeHandle === handle
           ? "bg-primary-500 text-background dark:text-foreground"
           : "text-foreground hover:bg-secondary-500 dark:hover:text-background"

@@ -28,7 +28,7 @@ export default function SearchInput({
         <button
           type="button"
           onClick={onClearAction}
-          className="absolute inset-y-0 right-2 flex items-center text-md text-secondary-300 hover:text-secondary-100 cursor-pointer"
+          className="absolute inset-y-0 right-2 flex items-center text-md text-secondary-300 hover:text-secondary-100 "
           aria-label={copy.search.clear}
           title={copy.search.clear}
         >
