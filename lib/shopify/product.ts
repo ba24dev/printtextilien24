@@ -1,11 +1,12 @@
 import { SEARCH_PAGE_SIZE } from "@/config/app-config";
-import { SearchResult } from "../search/types";
-import { shopifyRequest } from "./client";
-import { PRODUCT_BY_HANDLE_QUERY, SEARCH_PRODUCTS_QUERY } from "./queries";
-import { ProductByHandleResult, ShopifyProduct } from "./transport";
 import { MoneyV2 } from "@shopify/hydrogen-react/storefront-api-types";
 import { PrintSurface } from "../customizer/print-config";
-import { extractPrintSurfacesFromProduct } from "./transformers";
+import { SearchResult } from "../search/types";
+import { shopifyRequest } from "./client";
+import { parseMetaobjectsToSurfaces, parsePrintZoneIds } from "./metaobjects/metaobject-parser";
+import { METAOBJECTS_BY_ID_QUERY } from "./queries/metaobjects";
+import { PRODUCT_BY_HANDLE_QUERY, SEARCH_PRODUCTS_QUERY } from "./queries/products";
+import { ProductByHandleResult, ShopifyProduct } from "./transport";
 
 /**
  * Fetches a Shopify product by its handle.
@@ -28,9 +29,7 @@ import { extractPrintSurfacesFromProduct } from "./transformers";
  * }
  * ```
  */
-export async function fetchProductByHandle(
-  handle: string
-): Promise<ShopifyProduct | null> {
+export async function fetchProductByHandle(handle: string): Promise<ShopifyProduct | null> {
   const data = await shopifyRequest<ProductByHandleResult>({
     query: PRODUCT_BY_HANDLE_QUERY,
     variables: { handle, imagesFirst: 10, variantsFirst: 50 },
@@ -95,19 +94,16 @@ interface SearchProductsResult {
  *
  * @throws Will throw an error if the Shopify API request fails.
  */
-export async function fetchAllProductsForSearch(
-  limit = 500
-): Promise<SearchResult[]> {
+export async function fetchAllProductsForSearch(limit = 500): Promise<SearchResult[]> {
   let cursor: string | null = null;
   const products: SearchResult[] = [];
 
   do {
-    const data: SearchProductsResult =
-      await shopifyRequest<SearchProductsResult>({
-        query: SEARCH_PRODUCTS_QUERY,
-        variables: { first: SEARCH_PAGE_SIZE, after: cursor },
-        cache: "no-store",
-      });
+    const data: SearchProductsResult = await shopifyRequest<SearchProductsResult>({
+      query: SEARCH_PRODUCTS_QUERY,
+      variables: { first: SEARCH_PAGE_SIZE, after: cursor },
+      cache: "no-store",
+    });
 
     for (const edge of data.products.edges) {
       const node = edge.node;
@@ -120,9 +116,7 @@ export async function fetchAllProductsForSearch(
         price: node.priceRange.minVariantPrice,
         vendor: node.vendor,
         tags: node.tags,
-        collections: node.collections.nodes.map(
-          (collectionNode) => collectionNode.title
-        ),
+        collections: node.collections.nodes.map((collectionNode) => collectionNode.title),
       });
 
       if (products.length >= limit) {
@@ -130,9 +124,7 @@ export async function fetchAllProductsForSearch(
       }
     }
 
-    cursor = data.products.pageInfo.hasNextPage
-      ? data.products.pageInfo.endCursor
-      : null;
+    cursor = data.products.pageInfo.hasNextPage ? data.products.pageInfo.endCursor : null;
   } while (cursor);
 
   return products;
@@ -164,8 +156,21 @@ export async function fetchProductWithPrintConfig(
   const product = await fetchProductByHandle(handle);
   if (!product) return null;
 
-  return {
-    product,
-    printSurfaces: extractPrintSurfacesFromProduct(product),
-  };
+  const printZoneIds = parsePrintZoneIds(product);
+  if (printZoneIds.length === 0) return { product, printSurfaces: [] };
+
+  try {
+    const data = await shopifyRequest<{ nodes: unknown[] }>({
+      query: METAOBJECTS_BY_ID_QUERY,
+      variables: { ids: printZoneIds },
+      cache: "no-store",
+    });
+    return {
+      product,
+      printSurfaces: parseMetaobjectsToSurfaces(data.nodes),
+    };
+  } catch (err) {
+    console.error("[fetchProductWithPrintConfig] metaobjects fetch failed:", err);
+    return { product, printSurfaces: [] };
+  }
 }

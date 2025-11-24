@@ -1,7 +1,5 @@
 import ProductView from "@/components/product/ProductView";
-import {
-  fetchProductWithPrintConfig,
-} from "@/lib/shopify/product";
+import { fetchProductWithPrintConfig } from "@/lib/shopify/product";
 import { notFound } from "next/navigation";
 
 interface ProductPageProps {

@@ -1,10 +1,10 @@
 "use client";
 
 import { copy } from "@/config/copy";
+import { PrintSurface } from "@/lib/customizer/print-config";
 import { AddToCartButton, Money, useProduct } from "@shopify/hydrogen-react";
 import { ShoppingCart } from "lucide-react";
 import VariantSelector from "./VariantSelector";
-import { PrintSurface } from "@/lib/customizer/print-config";
 
 interface ProductInfoProps {
   printSurfaces?: PrintSurface[];
@@ -14,19 +14,15 @@ export default function ProductInfo({ printSurfaces = [] }: ProductInfoProps) {
   const { product, selectedVariant } = useProduct();
   if (!product) return null;
 
-  console.log("ProductInfo printSurfaces:", printSurfaces);
   const hasPrintSurfaces = printSurfaces.length > 0;
-  const price =
-    selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
+  const price = selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
   const available = selectedVariant?.availableForSale ?? false;
 
   return (
     <aside className="rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground">
-            {product.title}
-          </h1>
+          <h1 className="text-3xl font-semibold text-foreground">{product.title}</h1>
           {product.vendor ? (
             <p className="mt-2 text-sm text-foreground/60">
               {copy.product.byLabel} {product.vendor}
@@ -39,6 +35,40 @@ export default function ProductInfo({ printSurfaces = [] }: ProductInfoProps) {
           ) : null}
         </div>
 
+        {hasPrintSurfaces ? (
+          <div className="mt-4">
+            <h3 className="text-sm font-medium text-foreground/70">Druckflächen</h3>
+            <ul className="mt-2 flex gap-3">
+              {printSurfaces.map((s, idx) => (
+                <li
+                  key={idx}
+                  className="flex items-center gap-3"
+                >
+                  {s.previewImageUrl ? (
+                    // preview is external image url; keep it small
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={s.previewImageUrl}
+                      alt={`Vorschau ${s.name}`}
+                      className="h-10 w-10 rounded-md object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-10 w-10 items-center justify-center rounded-md bg-foreground/5 text-xs text-foreground/60">
+                      {s.name.slice(0, 2).toUpperCase()}
+                    </div>
+                  )}
+                  <div>
+                    <div className="text-sm font-medium text-foreground">{s.name}</div>
+                    <div className="text-xs text-foreground/60">
+                      {Math.round(s.widthPct)}% x {Math.round(s.heightPct)}%
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
         {price ? (
           <div className="text-2xl font-semibold text-primary-200">
             <Money data={price} />
@@ -47,7 +77,7 @@ export default function ProductInfo({ printSurfaces = [] }: ProductInfoProps) {
 
         <VariantSelector />
 
-        {selectedVariant ? (
+        {selectedVariant && !hasPrintSurfaces ? (
           <AddToCartButton
             variantId={selectedVariant.id}
             disabled={!available}

@@ -1,7 +1,4 @@
-import {
-  CurrencyCode,
-  Product,
-} from "@shopify/hydrogen-react/storefront-api-types";
+import { CurrencyCode, Product } from "@shopify/hydrogen-react/storefront-api-types";
 import type { PartialDeep } from "type-fest";
 
 export type ProductSummaryEdge = {
@@ -81,7 +78,7 @@ export type PrintZoneMetafield = {
     name?: { value?: string | null } | null;
     isCustomizable?: { value?: string | null } | null;
     dimensions?: { value?: string | null } | null;
-    position?: { value?: string | null } | null;
+    offset?: { value?: string | null } | null;
     previewImage?: {
       reference?: {
         image?: { url: string | null } | null;
