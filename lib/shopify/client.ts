@@ -1,9 +1,27 @@
 import { createStorefrontClient } from "@shopify/hydrogen-react";
 
+// Support both NEXT_PUBLIC_* env names and non-public fallbacks so local envs
+// or CI can use either naming convention without editing code.
+const STOREFRONT_URL =
+  process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL ?? process.env.SHOPIFY_STOREFRONT_URL;
+const STOREFRONT_API_VERSION =
+  process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION ??
+  process.env.SHOPIFY_STOREFRONT_API_VERSION ??
+  "2025-10";
+const STOREFRONT_TOKEN =
+  process.env.NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN ??
+  process.env.SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN;
+
+if (!STOREFRONT_URL || !STOREFRONT_TOKEN) {
+  throw new Error(
+    "Missing Shopify Storefront configuration. Set NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL and NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN (or SHOPIFY_STOREFRONT_URL / SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN)."
+  );
+}
+
 const shopifyClient = createStorefrontClient({
-  storeDomain: process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL!,
-  storefrontApiVersion: process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION!,
-  publicStorefrontToken: process.env.NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN!,
+  storeDomain: STOREFRONT_URL,
+  storefrontApiVersion: STOREFRONT_API_VERSION,
+  publicStorefrontToken: STOREFRONT_TOKEN,
 });
 
 const SHOPIFY_API_URL = shopifyClient.getStorefrontApiUrl();
