@@ -1,11 +1,12 @@
 "use client";
 
 import { TemplateSizeKey } from "@/config/print-templates";
+import { useCustomizationStorage } from "@/hooks/useCustomizationStorage";
 import { PrintSurface } from "@/lib/customizer/print-config";
 import { PrintCustomizationMetadata } from "@/lib/customizer/print-metadata";
 import { ShopifyProduct } from "@/lib/shopify/transport";
 import { AddToCartButton, ProductProvider, useProduct } from "@shopify/hydrogen-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 import PrintCustomizer from "../customizer/PrintCustomizer";
 import ProductBreadcrumbs from "./ProductBreadcrumbs";
 import ProductDetails from "./ProductDetails";
@@ -74,10 +75,10 @@ function ProductViewContent({ product, printSurfaces }: ProductViewProps) {
   );
 }
 
-type CustomizationState = {
+export type CustomizationState = {
   metadata: PrintCustomizationMetadata;
   attributes: { key: string; value: string }[];
-} | null;
+};
 
 function inferTemplateSizeKey(
   variant:
@@ -121,48 +122,26 @@ function ProductCustomizationSection({
   templateSizeKey?: string | null;
   storageKey: string;
 }) {
-  const [customization, setCustomization] = useState<CustomizationState>(null);
+  const { customization, customizationMap, initialMap, hasCustomization, handleChange } =
+    useCustomizationStorage(storageKey);
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  const initialForCustomizer = Object.keys(customizationMap).length > 0 ? customizationMap : initialMap;
 
-  const hasCustomization = (customization?.attributes.length ?? 0) > 0;
-
-  const handleCustomizationChange = useCallback((data: NonNullable<CustomizationState>) => {
-    setCustomization(data);
-  }, []);
-
-  useEffect(() => {
-    // load persisted customization after hydration to avoid SSR/client mismatch
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    const hydrateFromStorage = () => {
-      try {
-        const raw = typeof window !== "undefined" ? window.localStorage.getItem(storageKey) : null;
-        if (!raw) return;
-        const parsed = JSON.parse(raw) as CustomizationState;
-        if (parsed && Array.isArray(parsed.attributes)) setCustomization(parsed);
-      } catch {
-        // ignore malformed cache
-      }
-    };
-    hydrateFromStorage();
-  }, [storageKey]);
-
-  useEffect(() => {
-    if (customization && hasCustomization) {
-      try {
-        window.localStorage.setItem(storageKey, JSON.stringify(customization));
-      } catch {
-        // ignore storage failures (e.g., quota)
-      }
-    }
-  }, [customization, hasCustomization, storageKey]);
+  if (!isHydrated) return null;
 
   return (
-    <>
+    <div>
       <PrintCustomizer
         surfaces={surfaces}
         templateSizeKey={templateSizeKey}
-        onChange={handleCustomizationChange}
+        initialCustomizationMap={initialForCustomizer}
+        onChangeAction={handleChange}
       />
-      <div className="mt-4 flex items-center gap-4">
+      <div className="mt-4 flex items-center gap-4" suppressHydrationWarning>
         {variantId ? (
           <AddToCartButton
             variantId={variantId}
@@ -186,6 +165,6 @@ function ProductCustomizationSection({
           </span>
         ) : null}
       </div>
-    </>
+    </div>
   );
 }

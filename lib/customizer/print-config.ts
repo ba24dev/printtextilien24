@@ -45,6 +45,18 @@ export interface PrintSurface {
   templateKey?: string | null;
 }
 
+/**
+ * Parses a raw print zone configuration object and returns a normalized `PrintSurface` object.
+ *
+ * This function extracts and validates the print zone's name, customizable status, dimensions,
+ * offset, preview image URL, template size, and template key. Dimensions and offsets are interpreted
+ * as percentages (0..100) and clamped to valid ranges. Template size is clamped between 360 and 800.
+ * Returns `null` if required fields are missing or invalid.
+ *
+ * @param raw - The raw print zone configuration object, possibly containing string values for
+ *              name, isCustomizable, dimensions, offset, previewImageUrl, templateSize, and templateKey.
+ * @returns A normalized `PrintSurface` object if parsing succeeds, or `null` if required fields are missing or invalid.
+ */
 export function parsePrintZone(raw: {
   name?: string | null;
   isCustomizable?: string | null;

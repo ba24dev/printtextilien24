@@ -1,4 +1,4 @@
-import { convertTime } from "@/lib/helpers";
+import { convertTime } from "@/utils/helpers";
 
 // HIDDEN CATEGORIES - Configurable handles for hidden shopify collections
 export const HOMEPAGE_FEATURED_HANDLE = "hidden-homepage-featured-items";

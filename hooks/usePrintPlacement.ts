@@ -1,73 +1,25 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 
-import {
-  TEMPLATE_PHYSICAL_SIZES,
-  TemplateSideKey,
-  TemplateSizeKey,
-  getTemplatePhysicalSize,
-} from "@/config/print-templates";
+import { TemplateSizeKey } from "@/config/print-templates";
 import { PrintSurface } from "@/lib/customizer/print-config";
 import {
   PrintCustomizationMetadata,
   buildPrintCustomizationAttributes,
   buildPrintCustomizationMetadata,
 } from "@/lib/customizer/print-metadata";
-
-type Position = { x: number; y: number };
-
-const MAX_CANVAS_SIDE = 420;
-const DEFAULT_TEMPLATE_WIDTH = 360;
-
-function resolveTemplateSize(surface: PrintSurface) {
-  const widthPct = Math.max(surface.widthPct, 1);
-  const heightPct = Math.max(surface.heightPct, 1);
-  const tpl = surface.templateSize ?? {
-    width: DEFAULT_TEMPLATE_WIDTH,
-    height: Math.round((DEFAULT_TEMPLATE_WIDTH * heightPct) / widthPct),
-  };
-  const scale = Math.min(1, MAX_CANVAS_SIDE / Math.max(tpl.width, tpl.height));
-  return {
-    templateSize: tpl,
-    canvasW: Math.round(tpl.width * scale),
-    canvasH: Math.round(tpl.height * scale),
-  };
-}
-
-function resolveSurfaceRect(surface: PrintSurface, canvasW: number, canvasH: number) {
-  const widthPct = Math.max(surface.widthPct, 1);
-  const heightPct = Math.max(surface.heightPct, 1);
-  const width = (widthPct / 100) * canvasW;
-  const height = (heightPct / 100) * canvasH;
-  const x = (surface.offsetPct.x / 100) * canvasW;
-  const y = (surface.offsetPct.y / 100) * canvasH;
-  return { x, y, width, height };
-}
-
-function resolveMmPerPx(
-  surface: PrintSurface,
-  templateSize: { width: number; height: number },
-  templateSizeKey?: TemplateSizeKey | string | null
-) {
-  const sideKey = (surface.templateKey ?? surface.name ?? null) as TemplateSideKey | null;
-  let physical = getTemplatePhysicalSize(
-    surface.templateKey ?? surface.name ?? null,
-    templateSizeKey ?? null
-  );
-
-  if (!physical && sideKey && TEMPLATE_PHYSICAL_SIZES[sideKey]) {
-    const map = TEMPLATE_PHYSICAL_SIZES[sideKey];
-    physical = map.m ?? map.s ?? Object.values(map)[0] ?? null;
-  }
-  if (!physical) return null;
-  return {
-    x: physical.widthMm / templateSize.width,
-    y: physical.heightMm / templateSize.height,
-  };
-}
+import {
+  Position,
+  resolveMmPerPx,
+  resolveSurfaceRect,
+  resolveTemplateSize,
+} from "@/utils/placement-utils";
+import { useCanvasRenderer } from "./useCanvasRenderer";
+import { usePlacementHydration } from "./usePlacementHydration";
 
 export function usePrintPlacement(
   surface: PrintSurface,
-  templateSizeKey?: TemplateSizeKey | string | null
+  templateSizeKey?: TemplateSizeKey | string | null,
+  initialMetadata?: PrintCustomizationMetadata | null
 ) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
@@ -81,7 +33,6 @@ export function usePrintPlacement(
   const imgStart = useRef<Position | null>(null);
 
   const { templateSize, canvasW, canvasH } = useMemo(() => resolveTemplateSize(surface), [surface]);
-
   const surfaceRect = useMemo(
     () => resolveSurfaceRect(surface, canvasW, canvasH),
     [surface, canvasW, canvasH]
@@ -99,56 +50,60 @@ export function usePrintPlacement(
     [surface, templateSize, templateSizeKey]
   );
 
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+  const placedSizePx = useMemo(() => {
+    if (!imageSize) return null;
+    return { width: imageSize.width * scale, height: imageSize.height * scale };
+  }, [imageSize, scale]);
 
-    const drawAll = () => {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      if (surface.previewImageUrl) {
-        const bg = bgRef.current;
-        if (bg) {
-          ctx.drawImage(bg, 0, 0, canvas.width, canvas.height);
-        } else {
-          ctx.fillStyle = "#fff";
-          ctx.fillRect(0, 0, canvas.width, canvas.height);
+  const placedSizeMm =
+    mmPerPx && placedSizePx
+      ? {
+          width: placedSizePx.width * mmPerPx.x,
+          height: placedSizePx.height * mmPerPx.y,
         }
-      } else {
-        ctx.fillStyle = "#fff";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-      }
+      : null;
 
-      if (img && imageDataUrl) {
-        const iw = img.width * scale;
-        const ih = img.height * scale;
-        ctx.drawImage(img, pos.x, pos.y, iw, ih);
-      }
+  const surfaceSizeMm =
+    mmPerPx && surfaceRect.width > 0 && surfaceRect.height > 0
+      ? { width: surfaceRect.width * mmPerPx.x, height: surfaceRect.height * mmPerPx.y }
+      : null;
 
-      ctx.save();
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6, 4]);
-      ctx.strokeStyle = "#444";
-      ctx.strokeRect(surfaceRect.x, surfaceRect.y, surfaceRect.width, surfaceRect.height);
-      ctx.restore();
-    };
+  const naturalSizeMm =
+    mmPerPx && imageSize
+      ? { width: imageSize.width * mmPerPx.x, height: imageSize.height * mmPerPx.y }
+      : null;
 
-    if (surface.previewImageUrl && !bgRef.current) {
-      const bg = new Image();
-      bg.crossOrigin = "anonymous";
-      bg.onload = () => {
-        bgRef.current = bg;
-        drawAll();
-      };
-      bg.src = surface.previewImageUrl;
-      return;
-    }
+  const maxPosMm =
+    mmPerPx && placedSizePx
+      ? {
+          x: (surfaceRect.width - placedSizePx.width) * mmPerPx.x,
+          y: (surfaceRect.height - placedSizePx.height) * mmPerPx.y,
+        }
+      : null;
 
-    drawAll();
-  }, [surface.previewImageUrl, imageDataUrl, pos, scale, canvasW, canvasH, surfaceRect]);
+  useCanvasRenderer({
+    canvasRef,
+    imgRef,
+    bgRef,
+    surface,
+    surfaceRect,
+    canvasW,
+    canvasH,
+    imageDataUrl,
+    pos,
+    scale,
+  });
+
+  const { isHydrating, isHydrated } = usePlacementHydration({
+    initialMetadata,
+    surfaceRect,
+    mmPerPx,
+    setScale,
+    setPos,
+    setImageDataUrl,
+    setImageSize,
+    imgRef,
+  });
 
   function handleFile(file: File | null) {
     if (!file) return;
@@ -222,6 +177,26 @@ export function usePrintPlacement(
     }));
   }
 
+  function setPositionMm(xMm: number, yMm: number) {
+    if (!mmPerPx) return;
+    const desiredX = surfaceRect.x + xMm / mmPerPx.x;
+    const desiredY = surfaceRect.y + yMm / mmPerPx.y;
+    if (!imageSize) {
+      setPos({ x: desiredX, y: desiredY });
+      return;
+    }
+    const iw = imageSize.width * scale;
+    const ih = imageSize.height * scale;
+    const minX = surfaceRect.x;
+    const minY = surfaceRect.y;
+    const maxX = surfaceRect.x + surfaceRect.width - iw;
+    const maxY = surfaceRect.y + surfaceRect.height - ih;
+    setPos({
+      x: Math.min(Math.max(desiredX, minX), maxX),
+      y: Math.min(Math.max(desiredY, minY), maxY),
+    });
+  }
+
   const metadata: PrintCustomizationMetadata = useMemo(
     () =>
       buildPrintCustomizationMetadata(
@@ -250,6 +225,15 @@ export function usePrintPlacement(
     maxScale,
     metadata,
     attributes,
+    mmPerPx,
+    placedSizeMm,
+    naturalSizeMm,
+    surfaceSizeMm,
+    surfaceRect,
+    maxPosMm,
+    isHydrating,
+    isHydrated,
+    setPositionMm,
     onScaleChange: handleScaleChange,
     onFileSelect: handleFile,
     onMouseDown: handleMouseDown,
