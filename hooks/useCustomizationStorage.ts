@@ -52,41 +52,85 @@ export function useCustomizationStorage(storageKey: string) {
   const initial = useMemo(() => readSnapshot(storageKey), [storageKey]);
   const [customization, setCustomization] = useState<CustomizationState | null>(initial.current);
   const [customizationMap, setCustomizationMap] = useState<CustomizationMap>(initial.map);
-  const [initialMap] = useState<CustomizationMap>(initial.map);
+  const [initialMap, setInitialMap] = useState<CustomizationMap>(initial.map);
   const saveTimer = useRef<NodeJS.Timeout | null>(null);
+  const currentKeyRef = useRef(storageKey);
+  // eslint-disable-next-line react-hooks/refs
+  const keyChanged = currentKeyRef.current !== storageKey;
+  const pendingSnapshot = keyChanged ? readSnapshot(storageKey) : null;
 
   const handleChange = useCallback(
     (data: CustomizationState) => {
-      console.log("[useCustomizationStorage] handleChange", storageKey, data.metadata.surfaceName, data);
-      setCustomization(data);
-      setCustomizationMap((prev) => ({ ...prev, [data.metadata.surfaceName]: data }));
+      console.log(
+        "[useCustomizationStorage] handleChange",
+        storageKey,
+        data.metadata.surfaceName,
+        data
+      );
+      const surfaceName = data.metadata.surfaceName;
+      const isEmpty = (data.attributes?.length ?? 0) === 0;
+      setCustomization(isEmpty ? null : data);
+      setCustomizationMap((prev) => {
+        const next = { ...prev };
+        if (isEmpty) {
+          delete next[surfaceName];
+        } else {
+          next[surfaceName] = data;
+        }
+        return next;
+      });
     },
     [storageKey]
   );
 
+  // Refresh state when the storage key changes.
+  // We need to read from localStorage here because the key is driven by variant changes.
+  useEffect(() => {
+    if (currentKeyRef.current === storageKey) return;
+    if (saveTimer.current) {
+      clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+    currentKeyRef.current = storageKey;
+    const next = readSnapshot(storageKey);
+    setCustomization(next.current);
+    setCustomizationMap(next.map);
+    setInitialMap(next.map);
+  }, [storageKey]);
+
+  // Persist changes (debounced)
   useEffect(() => {
     if (saveTimer.current) clearTimeout(saveTimer.current);
 
-    // debounce writes to avoid spamming during drag/scale
     saveTimer.current = setTimeout(() => {
-      if (Object.keys(customizationMap).length === 0) return;
+      if (currentKeyRef.current !== storageKey) return;
+      const hasEntries = Object.keys(customizationMap).length > 0;
       try {
-        console.log("[useCustomizationStorage] persist", storageKey, customizationMap);
-        window.localStorage.setItem(storageKey, JSON.stringify({ surfaces: customizationMap }));
+        if (hasEntries) {
+          console.log("[useCustomizationStorage] persist", storageKey, customizationMap);
+          window.localStorage.setItem(storageKey, JSON.stringify({ surfaces: customizationMap }));
+        } else {
+          console.log("[useCustomizationStorage] clear", storageKey);
+          window.localStorage.removeItem(storageKey);
+        }
       } catch {
         // ignore storage failures
       }
     }, 300);
+
     return () => {
       if (saveTimer.current) clearTimeout(saveTimer.current);
     };
   }, [customizationMap, storageKey]);
 
   return {
-    customization,
-    customizationMap,
-    initialMap,
-    hasCustomization: (customization?.attributes.length ?? 0) > 0,
+    customization: keyChanged ? pendingSnapshot?.current ?? null : customization,
+    customizationMap: keyChanged ? pendingSnapshot?.map ?? {} : customizationMap,
+    initialMap: keyChanged ? pendingSnapshot?.map ?? {} : initialMap,
+    hasCustomization: keyChanged
+      ? ((pendingSnapshot?.current?.attributes.length ?? 0) > 0)
+      : (customization?.attributes.length ?? 0) > 0,
+    ready: true,
     handleChange,
   };
 }

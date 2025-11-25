@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 
 import { TemplateSizeKey } from "@/config/print-templates";
 import { PrintSurface } from "@/lib/customizer/print-config";
@@ -80,6 +80,14 @@ export function usePrintPlacement(
           y: (surfaceRect.height - placedSizePx.height) * mmPerPx.y,
         }
       : null;
+
+  const resetPlacement = useCallback(() => {
+    setImageDataUrl(null);
+    setImageSize(null);
+    setScale(1);
+    setPos({ x: surfaceRect.x, y: surfaceRect.y });
+    imgRef.current = null;
+  }, [surfaceRect.x, surfaceRect.y]);
 
   useCanvasRenderer({
     canvasRef,
@@ -233,6 +241,7 @@ export function usePrintPlacement(
     maxPosMm,
     isHydrating,
     isHydrated,
+    resetPlacement,
     setPositionMm,
     onScaleChange: handleScaleChange,
     onFileSelect: handleFile,

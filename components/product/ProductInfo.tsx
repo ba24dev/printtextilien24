@@ -1,22 +1,42 @@
 "use client";
 
 import { copy } from "@/config/copy";
+import { CustomizationState } from "@/hooks/useCustomizationStorage";
 import { PrintSurface } from "@/lib/customizer/print-config";
 import { AddToCartButton, Money, useProduct } from "@shopify/hydrogen-react";
+import { useSyncExternalStore } from "react";
 import { ShoppingCart } from "lucide-react";
 import VariantSelector from "./VariantSelector";
 
 interface ProductInfoProps {
   printSurfaces?: PrintSurface[];
+  requiresCustomization?: boolean;
+  customization?: CustomizationState | null;
 }
 
-export default function ProductInfo({ printSurfaces = [] }: ProductInfoProps) {
+export default function ProductInfo({
+  printSurfaces = [],
+  requiresCustomization = false,
+  customization = null,
+}: ProductInfoProps) {
   const { product, selectedVariant } = useProduct();
+
+  const isHydrated = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+
   if (!product) return null;
 
   const hasPrintSurfaces = printSurfaces.length > 0;
   const price = selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
   const available = selectedVariant?.availableForSale ?? false;
+  const hasCustomization = (customization?.attributes.length ?? 0) > 0;
+  const attributes = customization?.attributes ?? [];
+
+  const needsCustomizationBlocker =
+    requiresCustomization && hasPrintSurfaces && (!isHydrated || !hasCustomization);
 
   return (
     <aside className="rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
@@ -77,14 +97,19 @@ export default function ProductInfo({ printSurfaces = [] }: ProductInfoProps) {
 
         <VariantSelector />
 
-        {selectedVariant && !hasPrintSurfaces ? (
+        {selectedVariant ? (
           <AddToCartButton
             variantId={selectedVariant.id}
-            disabled={!available}
+            disabled={!available || needsCustomizationBlocker}
+            attributes={attributes}
             className="group mt-8 btn-primary w-full disabled:cursor-not-allowed disabled:opacity-60"
           >
             <ShoppingCart className="h-4 w-4" />
-            {available ? copy.product.addToCart : copy.product.soldOut}
+            {!available
+              ? copy.product.soldOut
+              : needsCustomizationBlocker
+              ? "Upload & platzieren, um fortzufahren"
+              : copy.product.addToCart}
           </AddToCartButton>
         ) : null}
       </div>
