@@ -17,6 +17,7 @@ export interface PrintCustomizerProps {
     metadata: PrintCustomizationMetadata;
     attributes: { key: string; value: string }[];
   }) => void;
+  resetKey?: string;
 }
 
 export default function PrintCustomizer({
@@ -24,6 +25,7 @@ export default function PrintCustomizer({
   templateSizeKey,
   initialCustomizationMap = {},
   onChangeAction,
+  resetKey,
 }: PrintCustomizerProps) {
   const [selected, setSelected] = useState(0);
   const surface = surfaces[selected];
@@ -31,11 +33,12 @@ export default function PrintCustomizer({
   return (
     <div className="grid grid-cols-[auto_1fr] gap-4">
       <CustomizerSurface
-        key={surface.name}
+        key={`${resetKey ?? "reset"}:${surface.name}`}
         surface={surface}
         templateSizeKey={templateSizeKey}
         initialCustomization={initialCustomizationMap[surface.name] ?? null}
         onChangeAction={onChangeAction}
+        resetKey={resetKey}
       />
 
       <SurfaceSelector

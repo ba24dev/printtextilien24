@@ -1,8 +1,4 @@
-import {
-  TEMPLATE_PHYSICAL_SIZES,
-  TemplateSideKey,
-  TemplateSizeKey,
-} from "@/config/print-templates";
+import { TEMPLATE_PHYSICAL_SIZES, TemplateSizeKey } from "@/config/print-templates";
 import { PrintSurface } from "@/lib/customizer/print-config";
 
 export type Position = { x: number; y: number };

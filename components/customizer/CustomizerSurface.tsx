@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 
 import { usePrintPlacement } from "@/hooks/usePrintPlacement";
 import { PrintSurface } from "@/lib/customizer/print-config";
@@ -19,6 +19,8 @@ type CustomizerSurfaceProps = {
     metadata: PrintCustomizationMetadata;
     attributes: { key: string; value: string }[];
   }) => void;
+  resetKey?: string;
+  onResetRequestAction?: () => void;
 };
 
 export function CustomizerSurface({
@@ -27,44 +29,38 @@ export function CustomizerSurface({
   initialCustomization,
   onChangeAction,
 }: CustomizerSurfaceProps) {
+  const placement = usePrintPlacement(
+    surface,
+    templateSizeKey,
+    initialCustomization?.metadata ?? null
+  );
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
-  const lastPayloadRef = useRef<
-    { metadata: PrintCustomizationMetadata; attributes: { key: string; value: string }[] } | null
-  >(null);
-  const {
-    canvasRef,
-    canvasW,
-    canvasH,
-    scale,
-    maxScale,
-    metadata,
-    attributes,
-    mmPerPx,
-    placedSizeMm,
-    naturalSizeMm,
-    surfaceSizeMm,
-    maxPosMm,
-    isHydrating,
-    setPositionMm,
-    onScaleChange,
-    onFileSelect,
-    onMouseDown,
-    onMouseMove,
-    onMouseUp,
-  } = usePrintPlacement(surface, templateSizeKey, initialCustomization?.metadata ?? null);
+  const lastPayloadRef = useRef<{
+    metadata: PrintCustomizationMetadata;
+    attributes: { key: string; value: string }[];
+  } | null>(null);
+  const userInteractedRef = useRef(false);
+  const metadataRef = useRef<PrintCustomizationMetadata | null>(null);
+  const prevInitRef = useRef<typeof initialCustomization>(initialCustomization);
+
+  useEffect(() => {
+    metadataRef.current = placement.metadata;
+  }, [placement.metadata]);
 
   useEffect(() => {
     if (!onChangeAction) return;
-    if (isHydrating) return;
-    const hasData =
-      (metadata.imageDataUrl ?? initialCustomization?.metadata?.imageDataUrl) ||
-      (attributes && attributes.length > 0) ||
-      (initialCustomization?.attributes && initialCustomization.attributes.length > 0);
+    if (placement.isHydrating) return;
+    if (!userInteractedRef.current) return;
+    const hasCurrentImage = Boolean(placement.metadata.imageDataUrl);
+    const hasInitialImage = Boolean(initialCustomization?.metadata?.imageDataUrl);
+    const hasCurrentAttrs = (placement.attributes?.length ?? 0) > 0;
+    const hasInitialAttrs = (initialCustomization?.attributes?.length ?? 0) > 0;
+    const hasData = hasCurrentImage || hasInitialImage || hasCurrentAttrs || hasInitialAttrs;
     if (!hasData) return;
-    lastPayloadRef.current = { metadata, attributes };
+    lastPayloadRef.current = { metadata: placement.metadata, attributes: placement.attributes };
     console.log("[CustomizerSurface] change queued", surface.name, {
-      metadata,
-      attributes,
+      metadata: placement.metadata,
+      attributes: placement.attributes,
     });
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
@@ -73,34 +69,89 @@ export function CustomizerSurface({
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [metadata, attributes, onChangeAction]);
+  }, [
+    placement.metadata,
+    placement.attributes,
+    onChangeAction,
+    placement.isHydrating,
+    initialCustomization?.metadata?.imageDataUrl,
+    initialCustomization?.attributes?.length,
+    initialCustomization?.attributes,
+    surface.name,
+  ]);
+
+  const handleScaleChange = (value: number) => {
+    userInteractedRef.current = true;
+    placement.onScaleChange(value);
+  };
+
+  const handlePositionMm = (x: number, y: number) => {
+    userInteractedRef.current = true;
+    placement.setPositionMm(x, y);
+  };
+
+  const handleFileSelect = (file: File | null) => {
+    userInteractedRef.current = true;
+    placement.onFileSelect(file);
+  };
+
+  const handleReset = useCallback(() => {
+    userInteractedRef.current = false;
+    lastPayloadRef.current = null;
+    placement.resetPlacement();
+    const base = metadataRef.current;
+    if (onChangeAction && base) {
+      onChangeAction({
+        metadata: { ...base, imageDataUrl: null, scale: 1 },
+        attributes: [],
+      });
+    }
+  }, [onChangeAction, placement]);
+
+  useEffect(() => {
+    const prev = prevInitRef.current;
+    // If we have no stored customization for this key/variant, reset the canvas once when it changes
+    if (!initialCustomization && prev !== initialCustomization) {
+      handleReset();
+    }
+    prevInitRef.current = initialCustomization;
+  }, [initialCustomization, handleReset]);
 
   return (
     <>
       <CanvasPreview
         surface={surface}
-        canvasRef={canvasRef}
-        width={canvasW}
-        height={canvasH}
-        onMouseDown={onMouseDown}
-        onMouseMove={onMouseMove}
-        onMouseUp={onMouseUp}
+        canvasRef={placement.canvasRef}
+        width={placement.canvasW}
+        height={placement.canvasH}
+        onMouseDown={placement.onMouseDown}
+        onMouseMove={placement.onMouseMove}
+        onMouseUp={placement.onMouseUp}
         className="rounded bg-white shadow"
       />
 
       <PlacementControls
-        scale={scale}
-        maxScale={maxScale}
-        metadata={metadata}
-        mmPerPx={mmPerPx}
-        placedSizeMm={placedSizeMm}
-        naturalSizeMm={naturalSizeMm}
-        surfaceSizeMm={surfaceSizeMm}
-        maxPosMm={maxPosMm}
-        setPositionMm={setPositionMm}
-        onScaleChange={onScaleChange}
-        onFileSelect={onFileSelect}
+        scale={placement.scale}
+        maxScale={placement.maxScale}
+        metadata={placement.metadata}
+        mmPerPx={placement.mmPerPx}
+        placedSizeMm={placement.placedSizeMm}
+        naturalSizeMm={placement.naturalSizeMm}
+        surfaceSizeMm={placement.surfaceSizeMm}
+        maxPosMm={placement.maxPosMm}
+        setPositionMm={handlePositionMm}
+        onScaleChange={handleScaleChange}
+        onFileSelect={handleFileSelect}
       />
+      <div className="mt-3 text-right">
+        <button
+          type="button"
+          className="rounded border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:border-foreground/40 hover:text-foreground"
+          onClick={handleReset}
+        >
+          Reset
+        </button>
+      </div>
     </>
   );
 }
