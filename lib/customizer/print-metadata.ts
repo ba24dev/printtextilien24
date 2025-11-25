@@ -2,7 +2,6 @@ import { PrintSurface } from "./print-config";
 
 export interface PrintCustomizationMetadata {
   surfaceName: string;
-  // legacy property names kept for compatibility; values are percentages unless mm data available
   xMm: number;
   yMm: number;
   scale: number;
@@ -18,6 +17,18 @@ type PlacementInput = {
   canvas: { width: number; height: number };
 };
 
+/**
+ * Builds metadata for a print customization, including positional and sizing information
+ * in millimeters or as percentages, depending on the provided conversion factors.
+ *
+ * @param surface - The print surface containing the name and other relevant properties.
+ * @param placement - The placement input specifying position, scale, and image data.
+ * @param mmPerPx - Optional conversion factors for millimeters per pixel in x and y directions.
+ *                  If provided and canvas dimensions are valid, positions and sizes are calculated in millimeters.
+ *                  Otherwise, positions are returned as percentages relative to the canvas size.
+ * @returns An object containing metadata for the print customization, including surface name,
+ *          position (in mm or %), scale, image data URL, and optional position and surface size in millimeters.
+ */
 export function buildPrintCustomizationMetadata(
   surface: PrintSurface,
   placement: PlacementInput,
@@ -52,6 +63,17 @@ export function buildPrintCustomizationMetadata(
   };
 }
 
+/**
+ * Builds an array of key-value attributes for print customization metadata.
+ *
+ * If the provided metadata contains an `imageDataUrl`, the function returns an array
+ * with a single object where the key is `"printCustomization"` and the value is the
+ * stringified JSON representation of the metadata. If `imageDataUrl` is not present,
+ * an empty array is returned.
+ *
+ * @param metadata - The print customization metadata to process.
+ * @returns An array of key-value objects representing the print customization attributes.
+ */
 export function buildPrintCustomizationAttributes(
   metadata: PrintCustomizationMetadata
 ): { key: string; value: string }[] {

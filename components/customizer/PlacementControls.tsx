@@ -4,6 +4,12 @@ type Props = {
   scale: number;
   maxScale: number;
   metadata: PrintCustomizationMetadata;
+  mmPerPx: { x: number; y: number } | null;
+  placedSizeMm: { width: number; height: number } | null;
+  naturalSizeMm: { width: number; height: number } | null;
+  surfaceSizeMm: { width: number; height: number } | null;
+  maxPosMm: { x: number; y: number } | null;
+  setPositionMm: (x: number, y: number) => void;
   onScaleChange: (value: number) => void;
   onFileSelect: (file: File | null) => void;
 };
@@ -12,6 +18,12 @@ export function PlacementControls({
   scale,
   maxScale,
   metadata,
+  mmPerPx,
+  placedSizeMm,
+  naturalSizeMm,
+  surfaceSizeMm,
+  maxPosMm,
+  setPositionMm,
   onScaleChange,
   onFileSelect,
 }: Props) {
@@ -73,8 +85,77 @@ export function PlacementControls({
           onChange={(e) => onScaleChange(Number(e.target.value))}
           disabled={!maxScale}
         />
+        {mmPerPx && naturalSizeMm ? (
+          <div className="flex items-center gap-2 text-xs">
+            <span className="text-[11px] text-foreground/60">Breite (mm)</span>
+            <input
+              type="number"
+              min={1}
+              value={Math.round(placedSizeMm?.width ?? 0)}
+              onChange={(e) => {
+                const targetWidth = Number(e.target.value);
+                if (!naturalSizeMm.width || targetWidth <= 0) return;
+                const desiredScale = targetWidth / naturalSizeMm.width;
+                onScaleChange(desiredScale);
+              }}
+              className="w-24 rounded border px-2 py-1 text-sm"
+            />
+            <span className="text-[11px] text-foreground/60">
+              Max: {Math.round(naturalSizeMm.width * maxScale)} mm
+            </span>
+          </div>
+        ) : null}
 
         <div className="text-xs text-foreground/60">Position: {positionLabel}</div>
+
+        <div className="text-xs text-foreground/60">
+          Bildgröße:{" "}
+          {placedSizeMm
+            ? `${Math.round(placedSizeMm.width)} × ${Math.round(placedSizeMm.height)} mm`
+            : "N/A"}
+        </div>
+        {surfaceSizeMm ? (
+          <div className="text-xs text-foreground/60">
+            Fläche: {Math.round(surfaceSizeMm.width)} × {Math.round(surfaceSizeMm.height)} mm
+          </div>
+        ) : null}
+        {naturalSizeMm ? (
+          <div className="text-[11px] text-foreground/60">
+            Original: {Math.round(naturalSizeMm.width)} × {Math.round(naturalSizeMm.height)} mm
+          </div>
+        ) : null}
+        {mmPerPx && maxPosMm ? (
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] text-foreground/60">X-Pos (mm)</span>
+              <input
+                type="number"
+                step="1"
+                min={0}
+                max={Math.max(0, Math.floor(maxPosMm.x))}
+                value={Math.round(metadata.positionMm?.x ?? 0)}
+                onChange={(e) =>
+                  setPositionMm(Number(e.target.value) || 0, metadata.positionMm?.y ?? 0)
+                }
+                className="rounded border px-2 py-1 text-sm"
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="text-[11px] text-foreground/60">Y-Pos (mm)</span>
+              <input
+                type="number"
+                step="1"
+                min={0}
+                max={Math.max(0, Math.floor(maxPosMm.y))}
+                value={Math.round(metadata.positionMm?.y ?? 0)}
+                onChange={(e) =>
+                  setPositionMm(metadata.positionMm?.x ?? 0, Number(e.target.value) || 0)
+                }
+                className="rounded border px-2 py-1 text-sm"
+              />
+            </label>
+          </div>
+        ) : null}
       </form>
     </div>
   );

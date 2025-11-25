@@ -42,6 +42,7 @@ This document summarizes the workflow rules the user established for this reposi
 4. Keep documentation synchronized with the current implementation status.
 5. Match existing formatting, naming, and folder structure.
 6. Verify compatibility with React 18 and approved libraries before suggesting code.
+7. Prefer no-effect solutions when possible. Only suggest `useEffect`/`useLayoutEffect` for genuine side effects; derive state from props, use memoization, or event handlers otherwise (see https://react.dev/learn/you-might-not-need-an-effect).
 
 ## Style Guidelines
 
