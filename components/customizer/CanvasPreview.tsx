@@ -34,7 +34,7 @@ export function CanvasPreview({
         onMouseUp={onMouseUp}
         onMouseLeave={onMouseUp}
         aria-label={`Preview for ${surface.name}`}
-        className="rounded bg-white shadow"
+        className="rounded bg-transparent shadow"
       />
     </div>
   );
