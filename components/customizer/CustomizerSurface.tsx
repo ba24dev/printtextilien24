@@ -52,12 +52,18 @@ export function CustomizerSurface({
     if (placement.isHydrating) return;
     if (!userInteractedRef.current) return;
     const hasCurrentImage = Boolean(placement.metadata.imageDataUrl);
-    const hasInitialImage = Boolean(initialCustomization?.metadata?.imageDataUrl);
+    const hasInitialImage = Boolean(
+      initialCustomization?.metadata?.imageDataUrl
+    );
     const hasCurrentAttrs = (placement.attributes?.length ?? 0) > 0;
     const hasInitialAttrs = (initialCustomization?.attributes?.length ?? 0) > 0;
-    const hasData = hasCurrentImage || hasInitialImage || hasCurrentAttrs || hasInitialAttrs;
+    const hasData =
+      hasCurrentImage || hasInitialImage || hasCurrentAttrs || hasInitialAttrs;
     if (!hasData) return;
-    lastPayloadRef.current = { metadata: placement.metadata, attributes: placement.attributes };
+    lastPayloadRef.current = {
+      metadata: placement.metadata,
+      attributes: placement.attributes,
+    };
     console.log("[CustomizerSurface] change queued", surface.name, {
       metadata: placement.metadata,
       attributes: placement.attributes,
@@ -139,6 +145,8 @@ export function CustomizerSurface({
         naturalSizeMm={placement.naturalSizeMm}
         surfaceSizeMm={placement.surfaceSizeMm}
         maxPosMm={placement.maxPosMm}
+        minScale={placement.minScale}
+        baseScale={placement.baseScale}
         setPositionMm={handlePositionMm}
         onScaleChange={handleScaleChange}
         onFileSelect={handleFileSelect}
