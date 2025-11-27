@@ -16,6 +16,10 @@ import {
 import { useCanvasRenderer } from "./useCanvasRenderer";
 import { usePlacementHydration } from "./usePlacementHydration";
 
+import { isBitmapUploadValid } from "@/utils/print-validation";
+
+import { PRINT_CONFIG } from "@/config/app-config";
+
 export function usePrintPlacement(
   surface: PrintSurface,
   templateSizeKey?: TemplateSizeKey | string | null,
@@ -26,29 +30,55 @@ export function usePrintPlacement(
   const bgRef = useRef<HTMLImageElement | null>(null);
 
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
-  const [imageSize, setImageSize] = useState<{ width: number; height: number } | null>(null);
+  const [imageSize, setImageSize] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const [scale, setScale] = useState(1);
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<Position | null>(null);
   const imgStart = useRef<Position | null>(null);
 
-  const { templateSize, canvasW, canvasH } = useMemo(() => resolveTemplateSize(surface), [surface]);
+  // Error state for upload/validation
+  const [error, setError] = useState<string | null>(null);
+
+  const { templateSize, canvasW, canvasH } = useMemo(
+    () => resolveTemplateSize(surface),
+    [surface]
+  );
   const surfaceRect = useMemo(
     () => resolveSurfaceRect(surface, canvasW, canvasH),
     [surface, canvasW, canvasH]
   );
 
-  const [pos, setPos] = useState<Position>(() => ({ x: surfaceRect.x, y: surfaceRect.y }));
-
-  const maxScale = useMemo(() => {
-    if (!imageSize) return 0;
-    return Math.min(surfaceRect.width / imageSize.width, surfaceRect.height / imageSize.height);
-  }, [imageSize, surfaceRect.height, surfaceRect.width]);
+  const [pos, setPos] = useState<Position>(() => ({
+    x: surfaceRect.x,
+    y: surfaceRect.y,
+  }));
 
   const mmPerPx = useMemo(
     () => resolveMmPerPx(surface, templateSize, templateSizeKey),
     [surface, templateSize, templateSizeKey]
   );
+
+  const maxScale = useMemo(() => {
+    if (!imageSize || !mmPerPx) return 0;
+    // Calculate max scale so placed size in mm does not exceed image's physical size at desired DPI
+    const mmPerInch = 25.4;
+    const { desiredDpi } = PRINT_CONFIG;
+    const maxWidthMm = (imageSize.width / desiredDpi) * mmPerInch;
+    const maxHeightMm = (imageSize.height / desiredDpi) * mmPerInch;
+    // What scale would make placed size == max physical size?
+    const scaleByWidth = maxWidthMm / (imageSize.width * mmPerPx.x);
+    const scaleByHeight = maxHeightMm / (imageSize.height * mmPerPx.y);
+    // Also limit by surface size (fit-to-surface)
+    const fitSurfaceScale = Math.min(
+      surfaceRect.width / imageSize.width,
+      surfaceRect.height / imageSize.height
+    );
+    // Final max scale: cannot exceed physical print size, nor surface fit
+    return Math.min(scaleByWidth, scaleByHeight, fitSurfaceScale);
+  }, [imageSize, surfaceRect.height, surfaceRect.width, mmPerPx]);
 
   const placedSizePx = useMemo(() => {
     if (!imageSize) return null;
@@ -65,12 +95,18 @@ export function usePrintPlacement(
 
   const surfaceSizeMm =
     mmPerPx && surfaceRect.width > 0 && surfaceRect.height > 0
-      ? { width: surfaceRect.width * mmPerPx.x, height: surfaceRect.height * mmPerPx.y }
+      ? {
+          width: surfaceRect.width * mmPerPx.x,
+          height: surfaceRect.height * mmPerPx.y,
+        }
       : null;
 
   const naturalSizeMm =
     mmPerPx && imageSize
-      ? { width: imageSize.width * mmPerPx.x, height: imageSize.height * mmPerPx.y }
+      ? {
+          width: imageSize.width * mmPerPx.x,
+          height: imageSize.height * mmPerPx.y,
+        }
       : null;
 
   const maxPosMm =
@@ -115,6 +151,12 @@ export function usePrintPlacement(
 
   function handleFile(file: File | null) {
     if (!file) return;
+    setError(null);
+    const isSvg = file.type === "image/svg+xml";
+    if (!isSvg && !file.type.startsWith("image/")) {
+      setError("Unsupported file type. Only PNG, JPG, SVG allowed.");
+      return;
+    }
     const reader = new FileReader();
     reader.onload = () => {
       const url = String(reader.result);
@@ -123,10 +165,36 @@ export function usePrintPlacement(
       img.onload = () => {
         imgRef.current = img;
         setImageSize({ width: img.width, height: img.height });
-        const fitScale = Math.min(surfaceRect.width / img.width, surfaceRect.height / img.height);
-        setScale(fitScale);
-        const startX = surfaceRect.x + (surfaceRect.width - img.width * fitScale) / 2;
-        const startY = surfaceRect.y + (surfaceRect.height - img.height * fitScale) / 2;
+        if (!isSvg && !isBitmapUploadValid(img.width, img.height)) {
+          setError(
+            "Image too small. At configured DPI it would be smaller than minimum print size."
+          );
+          return;
+        }
+        // Calculate max scale as above
+        const mmPerInch = 25.4;
+        const { desiredDpi } = PRINT_CONFIG;
+        const maxWidthMm = (img.width / desiredDpi) * mmPerInch;
+        const maxHeightMm = (img.height / desiredDpi) * mmPerInch;
+        const mmPerPxX = mmPerPx ? mmPerPx.x : 1;
+        const mmPerPxY = mmPerPx ? mmPerPx.y : 1;
+        const scaleByWidth = maxWidthMm / (img.width * mmPerPxX);
+        const scaleByHeight = maxHeightMm / (img.height * mmPerPxY);
+        const fitSurfaceScale = Math.min(
+          surfaceRect.width / img.width,
+          surfaceRect.height / img.height
+        );
+        const maxAllowedScale = Math.min(
+          scaleByWidth,
+          scaleByHeight,
+          fitSurfaceScale
+        );
+        setScale(maxAllowedScale);
+        const startX =
+          surfaceRect.x + (surfaceRect.width - img.width * maxAllowedScale) / 2;
+        const startY =
+          surfaceRect.y +
+          (surfaceRect.height - img.height * maxAllowedScale) / 2;
         setPos({ x: startX, y: startY });
       };
       img.src = url;
@@ -171,7 +239,25 @@ export function usePrintPlacement(
       setScale(next);
       return;
     }
-    const clamped = Math.min(Math.max(next, 0), maxScale);
+    // Clamp scale so placed size does not exceed image's max physical size
+    const mmPerInch = 25.4;
+    const { desiredDpi } = PRINT_CONFIG;
+    const maxWidthMm = (imageSize.width / desiredDpi) * mmPerInch;
+    const maxHeightMm = (imageSize.height / desiredDpi) * mmPerInch;
+    const mmPerPxX = mmPerPx ? mmPerPx.x : 1;
+    const mmPerPxY = mmPerPx ? mmPerPx.y : 1;
+    const scaleByWidth = maxWidthMm / (imageSize.width * mmPerPxX);
+    const scaleByHeight = maxHeightMm / (imageSize.height * mmPerPxY);
+    const fitSurfaceScale = Math.min(
+      surfaceRect.width / imageSize.width,
+      surfaceRect.height / imageSize.height
+    );
+    const maxAllowedScale = Math.min(
+      scaleByWidth,
+      scaleByHeight,
+      fitSurfaceScale
+    );
+    const clamped = Math.min(Math.max(next, 0), maxAllowedScale);
     const iw = imageSize.width * clamped;
     const ih = imageSize.height * clamped;
     const minX = surfaceRect.x;
@@ -223,7 +309,10 @@ export function usePrintPlacement(
     [surface, pos, scale, imageDataUrl, surfaceRect, mmPerPx]
   );
 
-  const attributes = useMemo(() => buildPrintCustomizationAttributes(metadata), [metadata]);
+  const attributes = useMemo(
+    () => buildPrintCustomizationAttributes(metadata),
+    [metadata]
+  );
 
   return {
     canvasRef,
@@ -248,5 +337,6 @@ export function usePrintPlacement(
     onMouseDown: handleMouseDown,
     onMouseMove: handleMouseMove,
     onMouseUp: endDrag,
+    error,
   };
 }

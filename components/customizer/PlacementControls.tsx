@@ -29,17 +29,16 @@ export function PlacementControls({
 }: Props) {
   const positionLabel = (() => {
     if (metadata.positionMm) {
-      return `${Math.round(metadata.positionMm.x)} mm, ${Math.round(metadata.positionMm.y)} mm`;
+      return `${Math.round(metadata.positionMm.x)} mm, ${Math.round(
+        metadata.positionMm.y
+      )} mm`;
     }
     return `${Math.round(metadata.xMm)}%, ${Math.round(metadata.yMm)}%`;
   })();
 
   return (
     <div className="grid w-full grid-cols-1 gap-3">
-      <form
-        id="placement-controls"
-        className="flex flex-col gap-2"
-      >
+      <form id="placement-controls" className="flex flex-col gap-2">
         <label
           className="w-full flex flex-col items-center px-4 py-6 text-secondary-200 dark:bg-secondary-200 dark:text-secondary-800 rounded-lg shadow-lg tracking-wide uppercase border border-primary-500 cursor-pointer hover:bg-primary-200 hover:text-primary-800 transition-colors duration-300 ease-in-out"
           htmlFor="file_input"
@@ -69,10 +68,7 @@ export function PlacementControls({
           SVG, PNG, JPG (min. DPI 150).
         </p>
 
-        <label
-          className="text-xs"
-          htmlFor="scale"
-        >
+        <label className="text-xs" htmlFor="scale">
           Skalierung
         </label>
         <input
@@ -106,22 +102,28 @@ export function PlacementControls({
           </div>
         ) : null}
 
-        <div className="text-xs text-foreground/60">Position: {positionLabel}</div>
+        <div className="text-xs text-foreground/60">
+          Position: {positionLabel}
+        </div>
 
         <div className="text-xs text-foreground/60">
           Bildgröße:{" "}
           {placedSizeMm
-            ? `${Math.round(placedSizeMm.width)} × ${Math.round(placedSizeMm.height)} mm`
+            ? `${Math.round(placedSizeMm.width)} × ${Math.round(
+                placedSizeMm.height
+              )} mm`
             : "N/A"}
         </div>
         {surfaceSizeMm ? (
           <div className="text-xs text-foreground/60">
-            Fläche: {Math.round(surfaceSizeMm.width)} × {Math.round(surfaceSizeMm.height)} mm
+            Fläche: {Math.round(surfaceSizeMm.width)} ×{" "}
+            {Math.round(surfaceSizeMm.height)} mm
           </div>
         ) : null}
         {naturalSizeMm ? (
           <div className="text-[11px] text-foreground/60">
-            Original: {Math.round(naturalSizeMm.width)} × {Math.round(naturalSizeMm.height)} mm
+            Original: {Math.round(naturalSizeMm.width)} ×{" "}
+            {Math.round(naturalSizeMm.height)} mm
           </div>
         ) : null}
         {mmPerPx && maxPosMm ? (
@@ -135,7 +137,10 @@ export function PlacementControls({
                 max={Math.max(0, Math.floor(maxPosMm.x))}
                 value={Math.round(metadata.positionMm?.x ?? 0)}
                 onChange={(e) =>
-                  setPositionMm(Number(e.target.value) || 0, metadata.positionMm?.y ?? 0)
+                  setPositionMm(
+                    Number(e.target.value) || 0,
+                    metadata.positionMm?.y ?? 0
+                  )
                 }
                 className="rounded border px-2 py-1 text-sm"
               />
@@ -149,7 +154,10 @@ export function PlacementControls({
                 max={Math.max(0, Math.floor(maxPosMm.y))}
                 value={Math.round(metadata.positionMm?.y ?? 0)}
                 onChange={(e) =>
-                  setPositionMm(metadata.positionMm?.x ?? 0, Number(e.target.value) || 0)
+                  setPositionMm(
+                    metadata.positionMm?.x ?? 0,
+                    Number(e.target.value) || 0
+                  )
                 }
                 className="rounded border px-2 py-1 text-sm"
               />
