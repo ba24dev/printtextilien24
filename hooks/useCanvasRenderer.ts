@@ -5,7 +5,7 @@ import { Position } from "@/utils/placement-utils";
 
 type Params = {
   canvasRef: React.MutableRefObject<HTMLCanvasElement | null>;
-  imgRef: React.MutableRefObject<HTMLImageElement | null>;
+  imgRef: React.MutableRefObject<HTMLImageElement | HTMLCanvasElement | null>;
   bgRef: React.MutableRefObject<HTMLImageElement | null>;
   surface: PrintSurface;
   surfaceRect: { x: number; y: number; width: number; height: number };

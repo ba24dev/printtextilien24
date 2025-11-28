@@ -2,16 +2,18 @@ import { useEffect, useRef, useState } from "react";
 
 import { PrintCustomizationMetadata } from "@/lib/customizer/print-metadata";
 import { Position } from "../utils/placement-utils";
+import { trimTransparentPixels } from "@/utils/image-trim";
 
 type HydrationParams = {
   initialMetadata?: PrintCustomizationMetadata | null;
   surfaceRect: { x: number; y: number; width: number; height: number };
   mmPerPx: { x: number; y: number } | null;
   setScale: (s: number) => void;
+  setIsVector: (v: boolean) => void;
   setPos: (pos: Position) => void;
   setImageDataUrl: (url: string | null) => void;
   setImageSize: (size: { width: number; height: number }) => void;
-  imgRef: React.MutableRefObject<HTMLImageElement | null>;
+  imgRef: React.MutableRefObject<HTMLImageElement | HTMLCanvasElement | null>;
 };
 
 /**
@@ -41,6 +43,7 @@ export function usePlacementHydration({
   surfaceRect,
   mmPerPx,
   setScale,
+  setIsVector,
   setPos,
   setImageDataUrl,
   setImageSize,
@@ -53,16 +56,27 @@ export function usePlacementHydration({
   useEffect(() => {
     if (hydrated.current) return;
     if (!initialMetadata || !initialMetadata.imageDataUrl) return;
+    const isSvg =
+      initialMetadata.imageDataUrl.startsWith("data:image/svg+xml") ||
+      /\.svg(\?|$)/i.test(initialMetadata.imageDataUrl);
+    setIsVector(isSvg);
     const img = new Image();
     img.onload = () => {
-      imgRef.current = img;
-      setImageSize({ width: img.width, height: img.height });
-      const max = Math.min(surfaceRect.width / img.width, surfaceRect.height / img.height);
+      let finalImg: HTMLImageElement | HTMLCanvasElement = img;
+      let finalSize = { width: img.width, height: img.height };
+      if (isSvg) {
+        const trimmed = trimTransparentPixels(img);
+        finalImg = trimmed.image;
+        finalSize = { width: trimmed.width, height: trimmed.height };
+      }
+      imgRef.current = finalImg;
+      setImageSize({ width: finalSize.width, height: finalSize.height });
+      const max = Math.min(surfaceRect.width / finalSize.width, surfaceRect.height / finalSize.height);
       const desiredScale = Math.min(initialMetadata.scale || 1, max);
       setScale(desiredScale);
 
-      const iw = img.width * desiredScale;
-      const ih = img.height * desiredScale;
+      const iw = finalSize.width * desiredScale;
+      const ih = finalSize.height * desiredScale;
 
       const computePos = () => {
         if (initialMetadata.positionMm && mmPerPx) {

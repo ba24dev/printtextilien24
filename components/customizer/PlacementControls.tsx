@@ -7,6 +7,7 @@ type Props = {
   maxScale: number;
   minScale: number;
   baseScale: number | null;
+  anchorName: string;
   metadata: PrintCustomizationMetadata;
   mmPerPx: { x: number; y: number } | null;
   placedSizeMm: { width: number; height: number } | null;
@@ -16,6 +17,7 @@ type Props = {
   setPositionMm: (x: number, y: number) => void;
   onScaleChange: (value: number) => void;
   onFileSelect: (file: File | null) => void;
+  onAnchorChange: (anchor: string) => void;
 };
 
 export function PlacementControls({
@@ -23,6 +25,7 @@ export function PlacementControls({
   maxScale,
   minScale,
   baseScale,
+  anchorName,
   metadata,
   mmPerPx,
   placedSizeMm,
@@ -32,6 +35,7 @@ export function PlacementControls({
   setPositionMm,
   onScaleChange,
   onFileSelect,
+  onAnchorChange,
 }: Props) {
   const [widthInput, setWidthInput] = useState<string>("");
   const [isEditingWidth, setIsEditingWidth] = useState(false);
@@ -88,6 +92,32 @@ export function PlacementControls({
         <p className="mt-1 text-sm text-gray-500 dark:text-gray-300" id="file_input_help">
           SVG, PNG, JPG (min. DPI 150).
         </p>
+
+        <div className="grid grid-cols-3 gap-1 self-start rounded border px-2 py-1 text-xs">
+          {[
+            { key: "top-left", label: "TL" },
+            { key: "top-center", label: "T" },
+            { key: "top-right", label: "TR" },
+            { key: "middle-left", label: "L" },
+            { key: "center", label: "C" },
+            { key: "middle-right", label: "R" },
+            { key: "bottom-left", label: "BL" },
+            { key: "bottom-center", label: "B" },
+            { key: "bottom-right", label: "BR" },
+          ].map((opt) => {
+            const active = anchorName === opt.key;
+            return (
+              <button
+                key={opt.key}
+                type="button"
+                className={`rounded border px-2 py-1 ${active ? "bg-primary-200 text-primary-900 border-primary-500" : "border-foreground/20"}`}
+                onClick={() => onAnchorChange(opt.key)}
+              >
+                {opt.label}
+              </button>
+            );
+          })}
+        </div>
 
         <label className="text-xs" htmlFor="scale">
           Skalierung (% der Originalgroesse)
