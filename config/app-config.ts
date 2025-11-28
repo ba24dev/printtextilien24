@@ -24,3 +24,6 @@ export const PRINT_CONFIG = {
   desiredDpi: 300, // e.g. 300 DPI for print
   minPhysicalSizeMm: 30, // e.g. minimum 30x30 mm
 };
+
+// FEATURE FLAGS
+export const ENABLE_PLACEMENT_DEBUG = false;

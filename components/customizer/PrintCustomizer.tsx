@@ -11,7 +11,10 @@ export interface PrintCustomizerProps {
   templateSizeKey?: string | null;
   initialCustomizationMap?: Record<
     string,
-    { metadata: PrintCustomizationMetadata; attributes: { key: string; value: string }[] }
+    {
+      metadata: PrintCustomizationMetadata;
+      attributes: { key: string; value: string }[];
+    }
   >;
   onChangeAction?: (data: {
     metadata: PrintCustomizationMetadata;
@@ -31,7 +34,12 @@ export default function PrintCustomizer({
   const surface = surfaces[selected];
 
   return (
-    <div className="grid grid-cols-[auto_1fr] gap-4">
+    <div className="flex flex-col gap-4">
+      <SurfaceSelector
+        surfaces={surfaces}
+        selectedIndex={selected}
+        onSelect={setSelected}
+      />
       <CustomizerSurface
         key={`${resetKey ?? "reset"}:${surface.name}`}
         surface={surface}
@@ -39,12 +47,6 @@ export default function PrintCustomizer({
         initialCustomization={initialCustomizationMap[surface.name] ?? null}
         onChangeAction={onChangeAction}
         resetKey={resetKey}
-      />
-
-      <SurfaceSelector
-        surfaces={surfaces}
-        selectedIndex={selected}
-        onSelect={setSelected}
       />
     </div>
   );

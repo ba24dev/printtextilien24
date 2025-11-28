@@ -2,10 +2,12 @@
 
 import { useCallback, useEffect, useRef } from "react";
 
+import { ENABLE_PLACEMENT_DEBUG } from "@/config/app-config";
 import { usePrintPlacement } from "@/hooks/usePrintPlacement";
 import { PrintSurface } from "@/lib/customizer/print-config";
 import { PrintCustomizationMetadata } from "@/lib/customizer/print-metadata";
 import { CanvasPreview } from "./CanvasPreview";
+import { PlacementDebugControls } from "./PlacementDebugControls";
 import { PlacementControls } from "./PlacementControls";
 
 type CustomizerSurfaceProps = {
@@ -130,43 +132,47 @@ export function CustomizerSurface({
 
   return (
     <>
-      <CanvasPreview
-        surface={surface}
-        canvasRef={placement.canvasRef}
-        width={placement.canvasW}
-        height={placement.canvasH}
-        onMouseDown={placement.onMouseDown}
-        onMouseMove={placement.onMouseMove}
-        onMouseUp={placement.onMouseUp}
-        className="rounded bg-white shadow"
-      />
-
-      <PlacementControls
-        scale={placement.scale}
-        maxScale={placement.maxScale}
-        metadata={placement.metadata}
-        mmPerPx={placement.mmPerPx}
-        placedSizeMm={placement.placedSizeMm}
-        naturalSizeMm={placement.naturalSizeMm}
-        surfaceSizeMm={placement.surfaceSizeMm}
-        maxPosMm={placement.maxPosMm}
-        minScale={placement.minScale}
-        baseScale={placement.baseScale}
-        anchor={placement.anchor}
-        anchorName={placement.anchor}
-        setPositionMm={handlePositionMm}
-        onAnchorChange={handleAnchor}
-        onScaleChange={handleScaleChange}
-        onFileSelect={handleFileSelect}
-      />
-      <div className="mt-3 text-right">
-        <button
-          type="button"
-          className="rounded border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:border-foreground/40 hover:text-foreground"
-          onClick={handleReset}
-        >
-          Reset
-        </button>
+      <div className="grid grid-cols-2 gap-4">
+        <CanvasPreview
+          surface={surface}
+          canvasRef={placement.canvasRef}
+          width={placement.canvasW}
+          height={placement.canvasH}
+          onMouseDown={placement.onMouseDown}
+          onMouseMove={placement.onMouseMove}
+          onMouseUp={placement.onMouseUp}
+          onResizeStart={(corner, x, y) => {
+            userInteractedRef.current = true;
+            placement.onResizeStart(corner as any, x, y);
+          }}
+          imageRect={placement.placedRectPx}
+          hasImage={Boolean(placement.imageDataUrl)}
+          className="items-center justify-self-center col-span-2"
+        />
+        <PlacementControls
+          anchorName={placement.anchor}
+          onAnchorChange={handleAnchor}
+          onFileSelect={handleFileSelect}
+          onReset={handleReset}
+        />
+        {ENABLE_PLACEMENT_DEBUG ? (
+          <div className="mt-2">
+            <PlacementDebugControls
+              scale={placement.scale}
+              maxScale={placement.maxScale}
+              minScale={placement.minScale}
+              baseScale={placement.baseScale}
+              metadata={placement.metadata}
+              mmPerPx={placement.mmPerPx}
+              placedSizeMm={placement.placedSizeMm}
+              naturalSizeMm={placement.naturalSizeMm}
+              surfaceSizeMm={placement.surfaceSizeMm}
+              maxPosMm={placement.maxPosMm}
+              setPositionMm={handlePositionMm}
+              onScaleChange={handleScaleChange}
+            />
+          </div>
+        ) : null}
       </div>
     </>
   );
