@@ -101,6 +101,11 @@ export function CustomizerSurface({
     placement.onFileSelect(file);
   };
 
+  const handleAnchor = (key: string) => {
+    userInteractedRef.current = true;
+    placement.setAnchor(key as any);
+  };
+
   const handleReset = useCallback(() => {
     userInteractedRef.current = false;
     lastPayloadRef.current = null;
@@ -147,7 +152,10 @@ export function CustomizerSurface({
         maxPosMm={placement.maxPosMm}
         minScale={placement.minScale}
         baseScale={placement.baseScale}
+        anchor={placement.anchor}
+        anchorName={placement.anchor}
         setPositionMm={handlePositionMm}
+        onAnchorChange={handleAnchor}
         onScaleChange={handleScaleChange}
         onFileSelect={handleFileSelect}
       />

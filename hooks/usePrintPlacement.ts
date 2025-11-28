@@ -20,13 +20,60 @@ import { isBitmapUploadValid } from "@/utils/print-validation";
 import { useCanvasRenderer } from "./useCanvasRenderer";
 import { usePlacementHydration } from "./usePlacementHydration";
 
+type AnchorName =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "middle-left"
+  | "center"
+  | "middle-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
+type AnchorState = AnchorName | "custom";
+
+function anchorToPos(params: {
+  anchor: AnchorName;
+  surfaceRect: { x: number; y: number; width: number; height: number };
+  placedWidth: number;
+  placedHeight: number;
+}) {
+  const { anchor, surfaceRect, placedWidth, placedHeight } = params;
+  const xMap: Record<AnchorName, number> = {
+    "top-left": surfaceRect.x,
+    "middle-left": surfaceRect.x,
+    "bottom-left": surfaceRect.x,
+    "top-center": surfaceRect.x + (surfaceRect.width - placedWidth) / 2,
+    center: surfaceRect.x + (surfaceRect.width - placedWidth) / 2,
+    "bottom-center": surfaceRect.x + (surfaceRect.width - placedWidth) / 2,
+    "top-right": surfaceRect.x + surfaceRect.width - placedWidth,
+    "middle-right": surfaceRect.x + surfaceRect.width - placedWidth,
+    "bottom-right": surfaceRect.x + surfaceRect.width - placedWidth,
+  };
+
+  const yMap: Record<AnchorName, number> = {
+    "top-left": surfaceRect.y,
+    "top-center": surfaceRect.y,
+    "top-right": surfaceRect.y,
+    "middle-left": surfaceRect.y + (surfaceRect.height - placedHeight) / 2,
+    center: surfaceRect.y + (surfaceRect.height - placedHeight) / 2,
+    "middle-right": surfaceRect.y + (surfaceRect.height - placedHeight) / 2,
+    "bottom-left": surfaceRect.y + surfaceRect.height - placedHeight,
+    "bottom-center": surfaceRect.y + surfaceRect.height - placedHeight,
+    "bottom-right": surfaceRect.y + surfaceRect.height - placedHeight,
+  };
+
+  return { x: xMap[anchor], y: yMap[anchor] };
+}
+
 export function usePrintPlacement(
   surface: PrintSurface,
   templateSizeKey?: TemplateSizeKey | string | null,
   initialMetadata?: PrintCustomizationMetadata | null
 ) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const imgRef = useRef<HTMLImageElement | null>(null);
+  const imgRef = useRef<HTMLImageElement | HTMLCanvasElement | null>(null);
   const bgRef = useRef<HTMLImageElement | null>(null);
 
   const [imageDataUrl, setImageDataUrl] = useState<string | null>(null);
@@ -36,6 +83,7 @@ export function usePrintPlacement(
   } | null>(null);
   const [isVector, setIsVector] = useState(false);
   const [scale, setScale] = useState(1);
+  const [anchor, setAnchor] = useState<AnchorState>("center");
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<Position | null>(null);
   const imgStart = useRef<Position | null>(null);
@@ -133,11 +181,42 @@ export function usePrintPlacement(
     surfaceRect,
     mmPerPx,
     setScale,
+    setIsVector,
     setPos,
     setImageDataUrl,
     setImageSize,
     imgRef,
   });
+
+  function applyAnchor(
+    nextAnchor: AnchorName,
+    targetScale?: number,
+    imageSizeOverride?: { width: number; height: number }
+  ) {
+    const size = imageSizeOverride ?? imageSize;
+    if (!size) {
+      setAnchor(nextAnchor);
+      return;
+    }
+    const s = targetScale ?? scale;
+    const placedWidth = size.width * s;
+    const placedHeight = size.height * s;
+    const desiredPos = anchorToPos({
+      anchor: nextAnchor,
+      surfaceRect,
+      placedWidth,
+      placedHeight,
+    });
+    setPos(
+      clampPosition({
+        pos: desiredPos,
+        surfaceRect,
+        imageSize: size,
+        scale: s,
+      })
+    );
+    setAnchor(nextAnchor);
+  }
 
   function handleFile(file: File | null) {
     if (!file) return;
@@ -152,9 +231,10 @@ export function usePrintPlacement(
     reader.onload = () => {
       const url = String(reader.result);
       setImageDataUrl(url);
+      setAnchor("center");
       const img = new Image();
       img.onload = () => {
-        let finalImg = img;
+        let finalImg: HTMLImageElement | HTMLCanvasElement = img;
         let finalSize = { width: img.width, height: img.height };
         if (isSvg) {
           const trimmed = trimTransparentPixels(img);
@@ -195,11 +275,8 @@ export function usePrintPlacement(
           maxAllowedScale || preferredScale
         );
         setScale(initialScale);
-        const startX =
-          surfaceRect.x + (surfaceRect.width - finalSize.width * initialScale) / 2;
-        const startY =
-          surfaceRect.y + (surfaceRect.height - finalSize.height * initialScale) / 2;
-        setPos({ x: startX, y: startY });
+        // Default placement: center anchor on surface
+        applyAnchor("center", initialScale, finalSize);
       };
       img.src = url;
     };
@@ -220,16 +297,15 @@ export function usePrintPlacement(
     const newY = imgStart.current.y + dy;
     const img = imgRef.current;
     if (!img) return;
-    const iw = img.width * scale;
-    const ih = img.height * scale;
-    const minX = surfaceRect.x;
-    const minY = surfaceRect.y;
-    const maxX = surfaceRect.x + surfaceRect.width - iw;
-    const maxY = surfaceRect.y + surfaceRect.height - ih;
-    const nextX = Math.min(Math.max(newX, minX), maxX);
-    const nextY = Math.min(Math.max(newY, minY), maxY);
-    if (nextX === pos.x && nextY === pos.y) return;
-    setPos({ x: nextX, y: nextY });
+    const clamped = clampPosition({
+      pos: { x: newX, y: newY },
+      surfaceRect,
+      imageSize: { width: img.width, height: img.height },
+      scale,
+    });
+    if (clamped.x === pos.x && clamped.y === pos.y) return;
+    setPos(clamped);
+    setAnchor("custom");
   }
 
   function endDrag() {
@@ -247,14 +323,18 @@ export function usePrintPlacement(
     const clamped = Math.min(Math.max(next, lowerBound), maxScale || next);
     if (Math.abs(clamped - scale) < 1e-4) return;
     if (clamped !== scale) setScale(clamped);
-    setPos((p) =>
-      clampPosition({
-        pos: p,
-        surfaceRect,
-        imageSize,
-        scale: clamped,
-      })
-    );
+    if (anchor === "custom") {
+      setPos(
+        clampPosition({
+          pos,
+          surfaceRect,
+          imageSize,
+          scale: clamped,
+        })
+      );
+    } else {
+      applyAnchor(anchor, clamped);
+    }
   }
 
   function setPositionMm(xMm: number, yMm: number) {
@@ -303,6 +383,7 @@ export function usePrintPlacement(
     canvasW,
     canvasH,
     scale,
+    anchor,
     maxScale,
     minScale,
     baseScale,
@@ -318,6 +399,13 @@ export function usePrintPlacement(
     isHydrated,
     resetPlacement,
     setPositionMm,
+    setAnchor: (a: AnchorState | AnchorName) => {
+      if (a === "custom") {
+        setAnchor("custom");
+        return;
+      }
+      applyAnchor(a);
+    },
     onScaleChange: handleScaleChange,
     onFileSelect: handleFile,
     onMouseDown: handleMouseDown,

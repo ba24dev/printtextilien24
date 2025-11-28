@@ -1,5 +1,5 @@
 export function trimTransparentPixels(img: HTMLImageElement): {
-  image: HTMLImageElement;
+  image: HTMLCanvasElement | HTMLImageElement;
   width: number;
   height: number;
 } {
@@ -40,7 +40,5 @@ export function trimTransparentPixels(img: HTMLImageElement): {
   const tctx = trimmedCanvas.getContext("2d");
   if (!tctx) return { image: img, width: img.width, height: img.height };
   tctx.putImageData(ctx.getImageData(minX, minY, trimmedW, trimmedH), 0, 0);
-  const trimmedImg = new Image();
-  trimmedImg.src = trimmedCanvas.toDataURL();
-  return { image: trimmedImg, width: trimmedW, height: trimmedH };
+  return { image: trimmedCanvas, width: trimmedW, height: trimmedH };
 }
