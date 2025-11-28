@@ -87,6 +87,13 @@ export function usePrintPlacement(
   const [dragging, setDragging] = useState(false);
   const dragStart = useRef<Position | null>(null);
   const imgStart = useRef<Position | null>(null);
+  const resizeHandle = useRef<AnchorName | null>(null);
+  const resizeStart = useRef<{
+    mouse: Position;
+    pos: Position;
+    scale: number;
+    imageSize: { width: number; height: number };
+  } | null>(null);
   const { minPhysicalSizeMm } = PRINT_CONFIG;
 
   // Error state for upload/validation
@@ -127,6 +134,11 @@ export function usePrintPlacement(
     return { width: imageSize.width * scale, height: imageSize.height * scale };
   }, [imageSize, scale]);
 
+  const placedRectPx = useMemo(() => {
+    if (!imageSize) return null;
+    return { x: pos.x, y: pos.y, width: imageSize.width * scale, height: imageSize.height * scale };
+  }, [imageSize, pos.x, pos.y, scale]);
+
   const placedSizeMm = useMemo(
     () =>
       computePlacedSizeMm({
@@ -161,6 +173,8 @@ export function usePrintPlacement(
     setScale(1);
     setPos({ x: surfaceRect.x, y: surfaceRect.y });
     imgRef.current = null;
+    resizeHandle.current = null;
+    resizeStart.current = null;
   }, [surfaceRect.x, surfaceRect.y]);
 
   useCanvasRenderer({
@@ -283,16 +297,76 @@ export function usePrintPlacement(
     reader.readAsDataURL(file);
   }
 
+  const toLocal = useCallback(
+    (clientX: number, clientY: number) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect) return { x: clientX, y: clientY };
+      return { x: clientX - rect.left, y: clientY - rect.top };
+    },
+    [canvasRef]
+  );
+
   function handleMouseDown(clientX: number, clientY: number) {
+    if (!placedRectPx) return;
+    const local = toLocal(clientX, clientY);
+    const inside =
+      local.x >= placedRectPx.x &&
+      local.x <= placedRectPx.x + placedRectPx.width &&
+      local.y >= placedRectPx.y &&
+      local.y <= placedRectPx.y + placedRectPx.height;
+    if (!inside) return;
     setDragging(true);
-    dragStart.current = { x: clientX, y: clientY };
+    dragStart.current = local;
     imgStart.current = { x: pos.x, y: pos.y };
   }
 
   function handleMouseMove(clientX: number, clientY: number) {
+    const local = toLocal(clientX, clientY);
+    if (resizeHandle.current && resizeStart.current && imageSize) {
+      const start = resizeStart.current;
+      const handle = resizeHandle.current;
+      const dx = local.x - start.mouse.x;
+      const dy = local.y - start.mouse.y;
+      const startRect = {
+        x: start.pos.x,
+        y: start.pos.y,
+        width: start.imageSize.width * start.scale,
+        height: start.imageSize.height * start.scale,
+      };
+      const dirX = handle.includes("left") ? -1 : 1;
+      const dirY = handle.includes("top") ? -1 : 1;
+      const nextWidth = startRect.width + dx * dirX;
+      const nextHeight = startRect.height + dy * dirY;
+      if (nextWidth <= 1 || nextHeight <= 1) return;
+      const scaleFactor = Math.min(nextWidth / startRect.width, nextHeight / startRect.height);
+      if (scaleFactor <= 0) return;
+      const desiredScale = start.scale * scaleFactor;
+      const lowerBound = minScale || 0;
+      const upperBound = maxScale || desiredScale;
+      const clampedScale = Math.min(Math.max(desiredScale, lowerBound), upperBound);
+      const newWidth = imageSize.width * clampedScale;
+      const newHeight = imageSize.height * clampedScale;
+      const fixedRight = startRect.x + startRect.width;
+      const fixedBottom = startRect.y + startRect.height;
+      const newX = handle.includes("left") ? fixedRight - newWidth : startRect.x;
+      const newY = handle.includes("top") ? fixedBottom - newHeight : startRect.y;
+      const clampedPos = clampPosition({
+        pos: { x: newX, y: newY },
+        surfaceRect,
+        imageSize,
+        scale: clampedScale,
+      });
+      if (Math.abs(clampedScale - scale) > 1e-4) {
+        setScale(clampedScale);
+      }
+      setPos(clampedPos);
+      setAnchor("custom");
+      return;
+    }
+
     if (!dragging || !dragStart.current || !imgStart.current) return;
-    const dx = clientX - dragStart.current.x;
-    const dy = clientY - dragStart.current.y;
+    const dx = local.x - dragStart.current.x;
+    const dy = local.y - dragStart.current.y;
     const newX = imgStart.current.x + dx;
     const newY = imgStart.current.y + dy;
     const img = imgRef.current;
@@ -312,6 +386,8 @@ export function usePrintPlacement(
     setDragging(false);
     dragStart.current = null;
     imgStart.current = null;
+    resizeHandle.current = null;
+    resizeStart.current = null;
   }
 
   function handleScaleChange(next: number) {
@@ -391,6 +467,8 @@ export function usePrintPlacement(
     attributes,
     mmPerPx,
     placedSizeMm,
+    placedRectPx,
+    imageDataUrl,
     naturalSizeMm,
     surfaceSizeMm,
     surfaceRect,
@@ -411,6 +489,20 @@ export function usePrintPlacement(
     onMouseDown: handleMouseDown,
     onMouseMove: handleMouseMove,
     onMouseUp: endDrag,
+    onResizeStart: (handle: AnchorName, clientX: number, clientY: number) => {
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (!rect || !imageSize) return;
+      const localMouse = { x: clientX - rect.left, y: clientY - rect.top };
+      resizeHandle.current = handle;
+      resizeStart.current = {
+        mouse: localMouse,
+        pos,
+        scale,
+        imageSize,
+      };
+      setAnchor("custom");
+      setDragging(false);
+    },
     error,
   };
 }
