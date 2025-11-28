@@ -50,7 +50,7 @@ export function PlacementControls({
             { key: "top-center", label: "🡡" },
             { key: "top-right", label: "🡥" },
             { key: "middle-left", label: "🡠" },
-            { key: "center", label: "◎" },
+            { key: "center", label: "⊙" },
             { key: "middle-right", label: "🡢" },
             { key: "bottom-left", label: "🡧" },
             { key: "bottom-center", label: "🡣" },
