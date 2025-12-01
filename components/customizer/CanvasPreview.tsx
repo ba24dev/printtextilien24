@@ -15,6 +15,7 @@ type Props = {
     clientX: number,
     clientY: number
   ) => void;
+  onDeleteImage?: () => void;
   imageRect?: { x: number; y: number; width: number; height: number } | null;
   hasImage?: boolean;
   [key: string]: unknown;
@@ -29,6 +30,7 @@ export function CanvasPreview({
   onMouseMove,
   onMouseUp,
   onResizeStart,
+  onDeleteImage,
   imageRect,
   hasImage,
   ...restProps
@@ -87,23 +89,35 @@ export function CanvasPreview({
                 height: imageRect.height,
               }}
             />
-            {handles.map((h) => (
-              <button
-                key={h.key}
-                type="button"
-                className={`absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white bg-sky-400 shadow pointer-events-auto ${
-                  h.key === "top-left" || h.key === "bottom-right"
-                    ? "cursor-nwse-resize"
-                    : "cursor-nesw-resize"
-                }`}
-                style={{ left: h.left, top: h.top }}
-                onMouseDown={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  onResizeStart?.(h.key, e.clientX, e.clientY);
-                }}
-              />
-            ))}
+            {handles.map((h) => {
+              const isDelete = h.key === "top-right";
+              return (
+                <button
+                  key={h.key}
+                  type="button"
+                  className={`absolute h-5 w-5 -translate-x-1/2 -translate-y-1/2 rounded-full border border-white shadow pointer-events-auto text-xs ${
+                    isDelete
+                      ? "bg-red-500 text-white"
+                      : "bg-sky-400 " +
+                        (h.key === "top-left" || h.key === "bottom-right"
+                          ? "cursor-nwse-resize"
+                          : "cursor-nesw-resize")
+                  }`}
+                  style={{ left: h.left, top: h.top }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (isDelete) {
+                      onDeleteImage?.();
+                      return;
+                    }
+                    onResizeStart?.(h.key, e.clientX, e.clientY);
+                  }}
+                >
+                  {isDelete ? "🗙" : ""}
+                </button>
+              );
+            })}
           </div>
         ) : null}
       </div>
