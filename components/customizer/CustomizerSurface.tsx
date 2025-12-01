@@ -10,6 +10,17 @@ import { CanvasPreview } from "./CanvasPreview";
 import { PlacementDebugControls } from "./PlacementDebugControls";
 import { PlacementControls } from "./PlacementControls";
 
+type AnchorKey =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "middle-left"
+  | "center"
+  | "middle-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
 type CustomizerSurfaceProps = {
   surface: PrintSurface;
   templateSizeKey?: string | null;
@@ -103,9 +114,9 @@ export function CustomizerSurface({
     placement.onFileSelect(file);
   };
 
-  const handleAnchor = (key: string) => {
+  const handleAnchor = (key: AnchorKey) => {
     userInteractedRef.current = true;
-    placement.setAnchor(key as any);
+    placement.setAnchor(key);
   };
 
   const handleReset = useCallback(() => {
@@ -137,22 +148,22 @@ export function CustomizerSurface({
           surface={surface}
           canvasRef={placement.canvasRef}
           width={placement.canvasW}
-          height={placement.canvasH}
-          onMouseDown={placement.onMouseDown}
-          onMouseMove={placement.onMouseMove}
-          onMouseUp={placement.onMouseUp}
-        onResizeStart={(corner, x, y) => {
-          userInteractedRef.current = true;
-          placement.onResizeStart(corner as any, x, y);
-        }}
-        onDeleteImage={() => {
-          userInteractedRef.current = true;
-          handleReset();
-        }}
-        imageRect={placement.placedRectPx}
-        hasImage={Boolean(placement.imageDataUrl)}
-        className="items-center justify-self-center col-span-2"
-      />
+        height={placement.canvasH}
+        onMouseDown={placement.onMouseDown}
+        onMouseMove={placement.onMouseMove}
+        onMouseUp={placement.onMouseUp}
+          onResizeStart={(corner, x, y) => {
+            userInteractedRef.current = true;
+            placement.onResizeStart(corner, x, y);
+          }}
+          onDeleteImage={() => {
+            userInteractedRef.current = true;
+            handleReset();
+          }}
+          imageRect={placement.placedRectPx}
+          hasImage={Boolean(placement.imageDataUrl)}
+          className="items-center justify-self-center col-span-2"
+        />
         <PlacementControls
           anchorName={placement.anchor}
           onAnchorChange={handleAnchor}
