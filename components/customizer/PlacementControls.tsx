@@ -1,7 +1,18 @@
+type AnchorKey =
+  | "top-left"
+  | "top-center"
+  | "top-right"
+  | "middle-left"
+  | "center"
+  | "middle-right"
+  | "bottom-left"
+  | "bottom-center"
+  | "bottom-right";
+
 type Props = {
   anchorName: string;
   onFileSelect: (file: File | null) => void;
-  onAnchorChange: (anchor: string) => void;
+  onAnchorChange: (anchor: AnchorKey) => void;
   onReset: () => void;
 };
 
@@ -40,7 +51,7 @@ export function PlacementControls({
           className="mt-1 text-sm text-gray-500 dark:text-gray-300"
           id="file_input_help"
         >
-          SVG, PNG, JPG (min. DPI 150).
+          SVG, PNG, JPG
         </p>
       </form>
       <div className="gap-3">
@@ -64,7 +75,7 @@ export function PlacementControls({
                 className={`btn-outline ${
                   active ? "btn-primary" : "border-foreground/20"
                 }`}
-                onClick={() => onAnchorChange(opt.key)}
+                onClick={() => onAnchorChange(opt.key as AnchorKey)}
               >
                 {opt.label}
               </button>

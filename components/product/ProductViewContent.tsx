@@ -12,7 +12,10 @@ import ProductGallery from "./ProductGallery";
 import ProductInfo from "./ProductInfo";
 import { ProductViewProps } from "./types";
 
-export default function ProductViewContent({ product, printSurfaces }: ProductViewProps) {
+export default function ProductViewContent({
+  product,
+  printSurfaces,
+}: ProductViewProps) {
   const surfaces = printSurfaces ?? [];
   const { selectedVariant } = useProduct();
   const isClient = useSyncExternalStore(
@@ -36,8 +39,8 @@ export default function ProductViewContent({ product, printSurfaces }: ProductVi
       <div className="mx-auto max-w-6xl px-6">
         <ProductBreadcrumbs product={product} />
         <div className="mt-12 grid gap-12 lg:grid-cols-3 lg:grid-rows-[auto_auto_1fr]">
-          <div className="col-span-2 rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
-            {requiresCustomization && isClient ? (
+          {requiresCustomization && isClient ? (
+            <div className="col-span-2 rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
               <ProductCustomizationSection
                 key={storageKey}
                 surfaces={surfaces}
@@ -47,8 +50,8 @@ export default function ProductViewContent({ product, printSurfaces }: ProductVi
                 onChangeAction={handleChange}
                 storageKey={storageKey}
               />
-            ) : null}
-          </div>
+            </div>
+          ) : null}
           <div className="lg:col-span-2 lg:row-span-3">
             <ProductGallery />
           </div>
@@ -73,7 +76,9 @@ export default function ProductViewContent({ product, printSurfaces }: ProductVi
 function inferTemplateSizeKey(
   variant:
     | {
-        selectedOptions?: Array<{ name?: string | null; value?: string | null } | null | undefined>;
+        selectedOptions?: Array<
+          { name?: string | null; value?: string | null } | null | undefined
+        >;
       }
     | null
     | undefined
