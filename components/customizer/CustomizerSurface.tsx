@@ -141,14 +141,18 @@ export function CustomizerSurface({
           onMouseDown={placement.onMouseDown}
           onMouseMove={placement.onMouseMove}
           onMouseUp={placement.onMouseUp}
-          onResizeStart={(corner, x, y) => {
-            userInteractedRef.current = true;
-            placement.onResizeStart(corner as any, x, y);
-          }}
-          imageRect={placement.placedRectPx}
-          hasImage={Boolean(placement.imageDataUrl)}
-          className="items-center justify-self-center col-span-2"
-        />
+        onResizeStart={(corner, x, y) => {
+          userInteractedRef.current = true;
+          placement.onResizeStart(corner as any, x, y);
+        }}
+        onDeleteImage={() => {
+          userInteractedRef.current = true;
+          handleReset();
+        }}
+        imageRect={placement.placedRectPx}
+        hasImage={Boolean(placement.imageDataUrl)}
+        className="items-center justify-self-center col-span-2"
+      />
         <PlacementControls
           anchorName={placement.anchor}
           onAnchorChange={handleAnchor}
