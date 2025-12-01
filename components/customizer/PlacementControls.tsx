@@ -1,3 +1,5 @@
+import { copy } from "@/config/copy";
+
 type AnchorKey =
   | "top-left"
   | "top-center"
@@ -37,7 +39,9 @@ export function PlacementControls({
           >
             <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
           </svg>
-          <span className="mt-2 text-base leading-normal">Select a file</span>
+          <span className="mt-2 text-base leading-normal">
+            {copy.customizer.uploadLabel}
+          </span>
           <input
             type="file"
             className="hidden"
@@ -48,10 +52,16 @@ export function PlacementControls({
           />
         </label>
         <p
-          className="mt-1 text-sm text-gray-500 dark:text-gray-300"
+          className="mt-1 text-xs text-gray-500 dark:text-gray-300 whitespace-pre-line"
           id="file_input_help"
         >
-          SVG, PNG, JPG
+          {copy.customizer.uploadHelp}
+        </p>
+        <p
+          className="mt-1 text-xs text-gray-500 dark:text-gray-300 whitespace-pre-line"
+          id="file_input_help"
+        >
+          {copy.customizer.scalingInfo}
         </p>
       </form>
       <div className="gap-3">
@@ -73,7 +83,7 @@ export function PlacementControls({
                 key={opt.key}
                 type="button"
                 className={`btn-outline ${
-                  active ? "btn-primary" : "border-foreground/20"
+                  active ? "btn-primary text-white" : "border-foreground/20"
                 }`}
                 onClick={() => onAnchorChange(opt.key as AnchorKey)}
               >
@@ -89,7 +99,7 @@ export function PlacementControls({
           className="rounded border border-foreground/20 px-3 py-1 text-xs text-foreground/70 hover:border-foreground/40 hover:text-foreground w-full"
           onClick={onReset}
         >
-          Reset
+          {copy.customizer.reset}
         </button>
       </div>
     </div>
