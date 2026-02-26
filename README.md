@@ -12,6 +12,7 @@ This repository contains the source code for the Printshop MVP, a textile prints
 - **Validation**: Zod
 - **Search**: Orama
 - **Hosting**: Vercel
+- **Copy management**: All user-facing strings live in `config/copy.ts` for easy edits
 
 ## Development Plan
 
@@ -23,6 +24,7 @@ The development process is divided into chunks, as outlined in the `docs/Chunks.
 - Featured collection spotlight with curated merchandising copy.
 - `/products` catalogue with collection filters, deep-linkable selection, and price sorting.
 - Product detail page mosaic gallery with structured purchase panel and highlights section.
+- Customizer V1 with file upload, anchor presets, drag/resize handles, and a delete control; debug controls gated by `ENABLE_PLACEMENT_DEBUG` and copy pulled from `config/copy.ts`.
 
 ## Getting Started
 
@@ -61,11 +63,13 @@ Tokens should remain in environment files; non-secret storefront metadata can be
 ### Development
 
 Start the development server:
+
 ```bash
 pnpm dev
 ```
 
 Lint the project:
+
 ```bash
 pnpm lint
 ```
@@ -74,7 +78,11 @@ Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ### Current Milestone
 
-Chunk 7 (Theme & Layout) is complete. The homepage, product index, and PDP now share the polished base styling, carousel, and layout refinements delivered in this chunk. Next up: Chunk 8 (Error Handling & Guardrails).
+Chunk 10 (Customizer UI V1) is complete with local uploads, anchor presets, drag/resize/delete controls, copy centralization, and debug gating. Next up: Chunk 11 (Upload & Assets) followed by Chunk 12 (Job Storage & Cart Binding).
+
+## Copy & Localization
+
+All UI text is centralized in `config/copy.ts`. Update values there to change labels such as upload instructions, sort options, headers, and helper text without touching component code.
 
 ## Contributing
 
