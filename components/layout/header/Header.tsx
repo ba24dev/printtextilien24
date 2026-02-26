@@ -20,10 +20,7 @@ export default function Header() {
       <header className="border-b dark:border-primary-900/40 border-primary-100/40 bg-background/80 backdrop-blur fixed top-0 left-0 right-0 z-50">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-6 px-6">
           <div className="flex items-center gap-8">
-            <Link
-              href="/"
-              className="text-lg font-semibold text-primary-100"
-            >
+            <Link href="/" className="text-lg font-semibold text-primary-100">
               {copy.general.businessName}
             </Link>
             <HeaderNav />
@@ -33,11 +30,13 @@ export default function Header() {
           </div>
           <div className="ml-auto flex items-center gap-3 md:ml-0">
             <ThemeSwitcher />
-
-            <CartButton
-              quantity={quantity}
-              onClickAction={setDrawerOpen}
-            />
+            <Link
+              href="/api/auth/customer/login"
+              className="rounded px-3 py-1 text-sm font-medium text-primary-100 bg-primary-700 hover:bg-primary-800 transition"
+            >
+              Sign in
+            </Link>
+            <CartButton quantity={quantity} onClickAction={setDrawerOpen} />
           </div>
         </div>
         <div className="border-t border-primary-900/30 px-6 pb-4 pt-3 md:hidden">
