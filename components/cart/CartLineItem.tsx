@@ -48,7 +48,7 @@ export default function CartLineItem() {
 
       <CartLineQuantityAdjustButton
         adjust="remove"
-        className="rounded-lg p-1 text-sm aspect-square w-10 text-secondary-300 hover:text-red-500/70 cursor-pointer flex items-center justify-center col-start-3 row-start-1"
+        className="rounded-lg p-1 text-sm aspect-square w-10 text-secondary-300 hover:text-red-500/70 flex items-center justify-center col-start-3 row-start-1"
         type="button"
         aria-label={copy.cart.actions.remove}
         title={copy.cart.actions.remove}
@@ -58,10 +58,10 @@ export default function CartLineItem() {
 
       <div className="flex items-center gap-2 justify-between col-span-2">
         <div className="flex flex-1 max-w-[100px] items-center h-full border rounded font-medium">
-          <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
+          <div className="flex-1 h-full flex justify-center items-center">
             <CartLineQuantityAdjustButton
               adjust="decrease"
-              className="cursor-pointer hover:text-secondary-100 text-secondary-500"
+              className="hover:text-secondary-100 text-secondary-500"
               type="button"
               aria-label={copy.cart.actions.decrease}
               title={copy.cart.actions.decrease}
@@ -77,10 +77,10 @@ export default function CartLineItem() {
               ;
             </CartLineQuantity>
           </div>
-          <div className="flex-1 h-full flex justify-center items-center cursor-pointer">
+          <div className="flex-1 h-full flex justify-center items-center">
             <CartLineQuantityAdjustButton
               adjust="increase"
-              className="cursor-pointer hover:text-secondary-100 text-secondary-500"
+              className="hover:text-secondary-100 text-secondary-500"
               type="button"
               aria-label={copy.cart.actions.increase}
               title={copy.cart.actions.increase}
