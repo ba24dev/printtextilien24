@@ -6,7 +6,7 @@ export const HOMEPAGE_CAROUSEL_HANDLE = "hidden-homepage-carousel";
 
 // MARQUEE SETTINGS - Configurable settings for the marquee component
 export const MARQUEE_DUPLICATION_FACTOR = 3;
-export const MARQUEE_SCROLL_SPEED = 12;
+export const MARQUEE_SCROLL_SPEED = 15;
 
 // APP CONFIG - General application configuration
 export const COMPANY_NAME = "Printex";

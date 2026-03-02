@@ -44,7 +44,7 @@ export default function ThemeSwitcher() {
           <DropdownMenu.Item
             key={value}
             onSelect={() => setTheme(value as "light" | "dark" | "system")}
-            className={`flex cursor-pointer select-none items-center gap-3 rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
+            className={`flex select-none items-center gap-3 rounded-lg px-3 py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 ${
               theme === value ? "bg-primary-900/40 text-primary-100" : "hover:bg-primary-900/25"
             }`}
           >
