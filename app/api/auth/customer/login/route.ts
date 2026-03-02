@@ -1,6 +1,6 @@
 import { generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
+import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scopes";
 import { NextRequest, NextResponse } from "next/server";
-import { SCOPES, unknownScopes, normalizeScopes } from "@/lib/shopify/auth/scopes";
 
 const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
 const SHOPIFY_AUTH_URL = process.env.SHOPIFY_CUSTOMER_API_AUTH_URL!;
@@ -13,21 +13,14 @@ const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
 export async function GET(request: NextRequest) {
   // warn if the scopes string is blank – this is a common misconfiguration
   if (!SCOPES || SCOPES.trim() === "") {
-    console.warn(
-      "SHOPIFY_CUSTOMER_API_SCOPES is empty; authorization URL will fail",
-    );
+    console.warn("SHOPIFY_CUSTOMER_API_SCOPES is empty; authorization URL will fail");
   }
   if (SCOPES.includes(",")) {
-    console.warn(
-      "SHOPIFY_CUSTOMER_API_SCOPES contains commas; they will be converted to spaces",
-    );
+    console.warn("SHOPIFY_CUSTOMER_API_SCOPES contains commas; they will be converted to spaces");
   }
   const bad = unknownScopes(SCOPES);
   if (bad.length) {
-    console.warn(
-      "SHOPIFY_CUSTOMER_API_SCOPES contains unknown/unexpected scopes:",
-      bad,
-    );
+    console.warn("SHOPIFY_CUSTOMER_API_SCOPES contains unknown/unexpected scopes:", bad);
   }
 
   // Generate PKCE verifier/challenge
@@ -60,12 +53,7 @@ export async function GET(request: NextRequest) {
 
   console.info("redirecting user to Shopify auth URL", authUrl);
   if (SCOPES !== normalizeScopes(SCOPES)) {
-    console.info(
-      "normalized scopes to",
-      normalizeScopes(SCOPES),
-      "from",
-      SCOPES,
-    );
+    console.info("normalized scopes to", normalizeScopes(SCOPES), "from", SCOPES);
   }
 
   const response = NextResponse.redirect(authUrl);

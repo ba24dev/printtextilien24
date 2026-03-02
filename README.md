@@ -90,7 +90,7 @@ app’s allowed permissions.
 > ```env
 > SHOPIFY_CUSTOMER_API_SCOPES="customer_read_customers customer_read_orders customer_read_draft_orders customer_read_store_credit_accounts customer_read_markets customer_read_companies customer_read_subscription_contracts"
 > ```
-> 
+>
 > (add more if you enable them later.)
 
 - `SUPABASE_URL` / `SUPABASE_ANON_KEY`

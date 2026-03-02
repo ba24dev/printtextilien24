@@ -1,6 +1,6 @@
+import { SCOPES } from "@/lib/shopify/auth/scopes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { SCOPES } from "@/lib/shopify/auth/scopes";
 
 const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
 const SHOPIFY_TOKEN_URL = process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL!;
@@ -20,19 +20,11 @@ export async function GET(request: NextRequest) {
   const params = Object.fromEntries(url.searchParams.entries());
   const parsed = CallbackSchema.safeParse(params);
   if (!parsed.success) {
-    return NextResponse.json(
-      { error: "Invalid callback params" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Invalid callback params" }, { status: 400 });
   }
   const { code, state, scope } = parsed.data;
   if (scope && scope !== SCOPES) {
-    console.warn(
-      "Shopify returned a different scope than requested:",
-      scope,
-      "expected",
-      SCOPES,
-    );
+    console.warn("Shopify returned a different scope than requested:", scope, "expected", SCOPES);
   }
 
   // Validate state matches cookie
@@ -44,10 +36,7 @@ export async function GET(request: NextRequest) {
   // Get PKCE verifier from cookie
   const verifier = request.cookies.get("shopify_pkce_verifier")?.value;
   if (!verifier) {
-    return NextResponse.json(
-      { error: "Missing PKCE verifier" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Missing PKCE verifier" }, { status: 400 });
   }
 
   // Exchange code for tokens
@@ -68,38 +57,27 @@ export async function GET(request: NextRequest) {
     body: JSON.stringify(bodyPayload),
   });
   if (!tokenRes.ok) {
-    return NextResponse.json(
-      { error: "Token exchange failed" },
-      { status: 400 },
-    );
+    return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
   }
   const tokenData = await tokenRes.json();
   // tokenData: { access_token, refresh_token, expires_in, id_token, ... }
 
   // Set tokens in httpOnly cookies
   const response = NextResponse.redirect("/account");
-  response.cookies.set(
-    "shopify_customer_access_token",
-    tokenData.access_token,
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: tokenData.expires_in,
-      path: "/",
-    },
-  );
-  response.cookies.set(
-    "shopify_customer_refresh_token",
-    tokenData.refresh_token,
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30, // 30 days
-      path: "/",
-    },
-  );
+  response.cookies.set("shopify_customer_access_token", tokenData.access_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: tokenData.expires_in,
+    path: "/",
+  });
+  response.cookies.set("shopify_customer_refresh_token", tokenData.refresh_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30, // 30 days
+    path: "/",
+  });
   // Clear PKCE and state cookies
   response.cookies.set("shopify_pkce_verifier", "", { maxAge: 0, path: "/" });
   response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });
