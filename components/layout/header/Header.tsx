@@ -4,6 +4,7 @@ import { copy } from "@/config/copy";
 import { useCart } from "@shopify/hydrogen-react";
 import Link from "next/link";
 import { useState } from "react";
+import { LogIn } from "lucide-react";
 import CartDrawer from "../../cart/CartDrawer";
 import Search from "../../catalog/search/Search";
 import ThemeSwitcher from "../ThemeSwitcher";
@@ -32,9 +33,11 @@ export default function Header() {
             <ThemeSwitcher />
             <Link
               href="/api/auth/customer/login"
-              className="rounded px-3 py-1 text-sm font-medium text-primary-100 bg-primary-700 hover:bg-primary-800 transition"
+              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
+              title="Login"
+              aria-label="Login"
             >
-              Sign in
+              <LogIn className="aspect-square w-5" />
             </Link>
             <CartButton quantity={quantity} onClickAction={setDrawerOpen} />
           </div>

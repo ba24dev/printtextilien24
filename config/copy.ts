@@ -77,8 +77,7 @@ export const copy = {
       featureBullets: [
         {
           title: "Schneller Versand",
-          description:
-            "Wir sorgen für eine schnelle Lieferung Ihrer Bestellungen.",
+          description: "Wir sorgen für eine schnelle Lieferung Ihrer Bestellungen.",
         },
         {
           title: "Kundenservice",
@@ -86,8 +85,7 @@ export const copy = {
         },
         {
           title: "Individuelle Gestaltung",
-          description:
-            "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
+          description: "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
         },
       ],
     },
@@ -168,8 +166,7 @@ export const copy = {
 
   customizer: {
     uploadLabel: "Datei auswählen",
-    uploadHelp:
-      "Bildformate SVG, PNG, JPG oder GIF.\nMaximale Dateigröße: 5MB.",
+    uploadHelp: "Bildformate SVG, PNG, JPG oder GIF.\nMaximale Dateigröße: 5MB.",
     scalingInfo: "Bilder werden automatisch auf ihre maximale Größe skaliert.",
     reset: "Zurücksetzen",
   },

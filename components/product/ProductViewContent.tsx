@@ -19,7 +19,7 @@ export default function ProductViewContent({
   const surfaces = printSurfaces ?? [];
   const { selectedVariant } = useProduct();
   const isClient = useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => true,
     () => false
   );
@@ -76,10 +76,10 @@ export default function ProductViewContent({
 function inferTemplateSizeKey(
   variant:
     | {
-        selectedOptions?: Array<
-          { name?: string | null; value?: string | null } | null | undefined
-        >;
-      }
+      selectedOptions?: Array<
+        { name?: string | null; value?: string | null } | null | undefined
+      >;
+    }
     | null
     | undefined
 ): TemplateSizeKey | null {
