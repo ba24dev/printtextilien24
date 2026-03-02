@@ -8,7 +8,7 @@ export default function CartFooter() {
         <span>{copy.cart.subtotal}</span>
         <CartCost amountType="subtotal" />
       </div>
-      <CartCheckoutButton className="mt-4 w-full rounded bg-primary-500 px-4 py-3 text-center text-sm font-medium text-white dark:hover:bg-primary-600 hover:bg-primary-400 cursor-pointer">
+      <CartCheckoutButton className="mt-4 w-full rounded bg-primary-500 px-4 py-3 text-center text-sm font-medium text-white dark:hover:bg-primary-600 hover:bg-primary-400">
         {copy.cart.checkout}
       </CartCheckoutButton>
     </footer>
