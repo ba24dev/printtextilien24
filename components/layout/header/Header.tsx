@@ -2,9 +2,9 @@
 
 import { copy } from "@/config/copy";
 import { useCart } from "@shopify/hydrogen-react";
+import { LogIn } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
-import { LogIn } from "lucide-react";
 import CartDrawer from "../../cart/CartDrawer";
 import Search from "../../catalog/search/Search";
 import ThemeSwitcher from "../ThemeSwitcher";
