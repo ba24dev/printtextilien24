@@ -38,12 +38,12 @@ export default function Hero() {
               {copy.marketing.hero.primaryCta}
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link
+            {/* <Link
               href="/customize"
               className="btn-outline"
             >
               {copy.marketing.hero.secondaryCta}
-            </Link>
+            </Link> */}
           </div>
 
           <ul className="flex flex-col gap-3 text-sm text-foreground/70 sm:flex-row sm:items-center">

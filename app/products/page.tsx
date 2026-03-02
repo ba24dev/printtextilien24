@@ -8,12 +8,8 @@ export default async function ProductsPage() {
     (collection) => !collection.handle.startsWith("hidden-")
   );
 
-  // ProductGrid is a client component that uses next/navigation hooks
-  // (useSearchParams). When rendering from a server component it must be
-  // wrapped in a Suspense boundary so the App Router can handle the client
-  // transition without prerender errors.
   return (
-    <Suspense fallback={<div className="py-8 text-center">Loading products…</div>}>
+    <Suspense fallback={<div className="py-24 text-center">Lädt…</div>}>
       <ProductGrid collections={visibleCollections} />
     </Suspense>
   );
