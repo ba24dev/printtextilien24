@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
 const SHOPIFY_TOKEN_URL = process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL!;
-const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET!;
+// public client flows don't supply a secret
+const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
 
 export async function GET(request: NextRequest) {
   const refreshToken = request.cookies.get(
@@ -12,15 +13,19 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "No refresh token" }, { status: 401 });
   }
 
+  const bodyPayload: Record<string, unknown> = {
+    client_id: SHOPIFY_CLIENT_ID,
+    grant_type: "refresh_token",
+    refresh_token: refreshToken,
+  };
+  if (SHOPIFY_CLIENT_SECRET) {
+    bodyPayload.client_secret = SHOPIFY_CLIENT_SECRET;
+  }
+
   const tokenRes = await fetch(SHOPIFY_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: SHOPIFY_CLIENT_ID,
-      client_secret: SHOPIFY_CLIENT_SECRET,
-      grant_type: "refresh_token",
-      refresh_token: refreshToken,
-    }),
+    body: JSON.stringify(bodyPayload),
   });
   if (!tokenRes.ok) {
     return NextResponse.json({ error: "Refresh failed" }, { status: 401 });

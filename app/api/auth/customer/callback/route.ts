@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { SCOPES } from "@/lib/shopify/auth/scopes";
 
 const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
 const SHOPIFY_TOKEN_URL = process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL!;
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
-const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET!;
+// public (web) clients have no secret; it’s optional
+const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
 
 const CallbackSchema = z.object({
   code: z.string(),
@@ -23,7 +25,15 @@ export async function GET(request: NextRequest) {
       { status: 400 },
     );
   }
-  const { code, state } = parsed.data;
+  const { code, state, scope } = parsed.data;
+  if (scope && scope !== SCOPES) {
+    console.warn(
+      "Shopify returned a different scope than requested:",
+      scope,
+      "expected",
+      SCOPES,
+    );
+  }
 
   // Validate state matches cookie
   const stateCookie = request.cookies.get("shopify_oauth_state")?.value;
@@ -41,17 +51,21 @@ export async function GET(request: NextRequest) {
   }
 
   // Exchange code for tokens
+  const bodyPayload: Record<string, unknown> = {
+    client_id: SHOPIFY_CLIENT_ID,
+    code,
+    grant_type: "authorization_code",
+    redirect_uri: REDIRECT_URI,
+    code_verifier: verifier,
+  };
+  if (SHOPIFY_CLIENT_SECRET) {
+    bodyPayload.client_secret = SHOPIFY_CLIENT_SECRET;
+  }
+
   const tokenRes = await fetch(SHOPIFY_TOKEN_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      client_id: SHOPIFY_CLIENT_ID,
-      client_secret: SHOPIFY_CLIENT_SECRET,
-      code,
-      grant_type: "authorization_code",
-      redirect_uri: REDIRECT_URI,
-      code_verifier: verifier,
-    }),
+    body: JSON.stringify(bodyPayload),
   });
   if (!tokenRes.ok) {
     return NextResponse.json(

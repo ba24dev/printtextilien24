@@ -26,4 +26,34 @@ describe("PKCE utils", () => {
     const encoded = base64urlEncode(buf);
     expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
   });
+
+  it("reads scopes from env or falls back to default", () => {
+    // reset environments so module loads cleanly
+    delete process.env.SHOPIFY_CUSTOMER_API_SCOPES;
+    // re-import module to get fresh SCOPES
+    const { SCOPES: defaultScopes } = require("@/app/api/auth/customer/login/route");
+    expect(defaultScopes).toContain("customer_read_customers");
+
+    process.env.SHOPIFY_CUSTOMER_API_SCOPES = "custom scope1 scope2";
+    const { SCOPES: overridden } = require("@/app/api/auth/customer/login/route");
+    expect(overridden).toBe("custom scope1 scope2");
+  });
+
+  it("warns about unknown scopes", () => {
+    const { unknownScopes } = require("@/lib/shopify/auth/scopes");
+    const bad = unknownScopes("customer_read_customers foo_bar openid");
+    expect(bad).toEqual(["foo_bar"]);
+  });
+
+  it("normalizes comma-separated scopes", () => {
+    const { normalizeScopes } = require("@/lib/shopify/auth/scopes");
+    expect(normalizeScopes("a,b,c")).toBe("a b c");
+    expect(normalizeScopes("a, b  ,c")).toBe("a b c");
+    expect(normalizeScopes("a a,b")).toBe("a b");
+  });
+
+  it("recognizes the composite customer-account-api:full scope", () => {
+    const { unknownScopes } = require("@/lib/shopify/auth/scopes");
+    expect(unknownScopes("customer-account-api:full")).toEqual([]);
+  });
 });
