@@ -1,5 +1,5 @@
 import { copy } from "@/config/copy";
-import { formatPrice } from "@/lib/helpers";
+import { formatPrice } from "@/utils/helpers";
 import {
   CartLineQuantity,
   CartLineQuantityAdjustButton,

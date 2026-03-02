@@ -1,6 +1,5 @@
 import ProductView from "@/components/product/ProductView";
-import { fetchProductByHandle } from "@/lib/shopify/product";
-import { ShopifyProduct } from "@/lib/shopify/transport";
+import { fetchProductWithPrintConfig } from "@/lib/shopify/product";
 import { notFound } from "next/navigation";
 
 interface ProductPageProps {
@@ -15,10 +14,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
     notFound();
   }
 
-  const product = await fetchProductByHandle(handle);
-  if (!product) {
+  const result = await fetchProductWithPrintConfig(handle);
+  if (!result) {
     notFound();
   }
 
-  return <ProductView product={product as ShopifyProduct} />;
+  return (
+    <ProductView
+      product={result.product}
+      printSurfaces={result.printSurfaces}
+    />
+  );
 }

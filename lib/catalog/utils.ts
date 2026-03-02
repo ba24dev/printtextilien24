@@ -1,3 +1,4 @@
+import { copy } from "@/config/copy";
 import { ProductSummary } from "@/lib/shopify/types";
 import type { ReadonlyURLSearchParams } from "next/navigation";
 
@@ -9,9 +10,9 @@ export interface SortOption {
 }
 
 export const SORT_OPTIONS: SortOption[] = [
-  { label: "Relevance", value: "relevance" },
-  { label: "Price: Low to High", value: "price-asc" },
-  { label: "Price: High to Low", value: "price-desc" },
+  { label: copy.catalog.sortOptions.relevance, value: "relevance" },
+  { label: copy.catalog.sortOptions.priceAsc, value: "price-asc" },
+  { label: copy.catalog.sortOptions.priceDesc, value: "price-desc" },
 ];
 
 export function getCollectionHandleFromQuery(

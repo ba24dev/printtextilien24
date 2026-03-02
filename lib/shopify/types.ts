@@ -1,4 +1,5 @@
 import { MoneyV2 } from "@shopify/hydrogen-react/storefront-api-types";
+import { PrintSurface } from "../customizer/print-config";
 
 export interface ProductImage {
   id: string;
@@ -23,6 +24,7 @@ export interface ProductSummary {
     minVariantPrice: MoneyV2;
   };
   featuredImage: ProductImage | null;
+  printSurfaces?: PrintSurface[];
 }
 
 export interface CollectionSummary {
