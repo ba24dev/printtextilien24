@@ -72,7 +72,7 @@ export const copy = {
       description:
         "Premium-Textilien zu fairen Preisen – mit schneller Produktion, individuellen Designs und persönlichem Service.",
       primaryCta: "Jetzt einkaufen",
-      secondaryCta: "Design anpassen",
+      secondaryCta: "",
       featureBullets: [
         {
           title: "Schneller Versand",
@@ -84,7 +84,7 @@ export const copy = {
         },
         {
           title: "Individuelle Gestaltung",
-          description: "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
+          description: "Wählen Sie aus einer Vielzahl von Vorlagen und Größen.",
         },
       ],
     },
@@ -143,6 +143,16 @@ export const copy = {
     close: "Schließen",
     submit: "Senden",
     cancel: "Abbrechen",
+  },
+
+  contact: {
+    heading: "Schreiben Sie uns",
+    description: "Wir freuen uns auf Ihre Nachricht. Bitte füllen Sie das Formular aus.",
+    nameLabel: "Name",
+    emailLabel: "E-Mail",
+    messageLabel: "Nachricht",
+    success: "Ihre Nachricht wurde gesendet. Wir melden uns in Kürze.",
+    error: "Beim Senden Ihrer Nachricht ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
   },
 
   notifications: {

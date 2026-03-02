@@ -1,50 +1,101 @@
-export default function KontaktPage() {
-  const mailto = "mailto://sales@printtextilien.de";
+"use client";
+
+import { useState, FormEvent } from "react";
+import { copy } from "@/config/copy";
+
+export default function ContactPage() {
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setStatus("sending");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      if (!res.ok) throw new Error("network");
+      setStatus("success");
+      setForm({ name: "", email: "", message: "" });
+    } catch {
+      setStatus("error");
+    }
+  };
 
   return (
     <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">
       <section className="bg-background/50 py-48 md:py-24">
-        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 md:flex-row md:items-center">
-          <div className="flex-1 space-y-6 dark:prose-invert prose max-w-full">
-            <header className="space-y-4">
-              <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-5xl md:text-6xl">
-                Aufregendes steht bevor...
-              </h1>
-            </header>
-
-            <p className="mt-6 text-lg leading-relaxed">
-              User Printshop ist noch immer im Aufbau, jedoch soll Sie das nicht abhalten schon
-              jetzt hochwertigen Textildruck und individuelle Veredelung zu bestellen.
+        <div className="mx-auto max-w-2xl px-6">
+          <header className="mb-12 space-y-4 text-center">
+            <h1 className="text-4xl font-semibold text-foreground">
+              {copy.contact.heading}
+            </h1>
+            <p className="text-lg text-foreground/70">
+              {copy.contact.description}
             </p>
+          </header>
 
-            <p className="mt-4 text-lg leading-relaxed">
-              Ob T-Shirts, Hoodies, Workwear oder Teamkleidung - wir bringen Ihr Design auf Stoff.
-              Bis zum Launch beraten wir Sie gerne auch persönlich und erstellen auf Wunsch Ihr
-              individuelles Angebot.
-            </p>
-
-            <address className="mt-8 not-italic text-base">
-              <div className="mb-2">
-                <strong>Telefon: </strong>
-                <a
-                  href="tel:+4956193719010"
-                  className="text-primary-400 font-bold hover:underline"
-                >
-                  0561 / 93719010
-                </a>
-              </div>
-
-              <div>
-                <strong>E-Mail: </strong>
-                <a
-                  href="mailto://sales@printtextilien.de?subject=Druckanfrage%20von%20Printtextilien24.de&body=Name%3A%20Max%20Mustermann%0A%0AAnfrage%3A%20%0ABeschreiben%20Sie%20hier%20bitte%20die%20Details%20Ihrer%20Anfrage.%20%0AGerne%20k%C3%B6nnen%20Sie%20hier%20auch%20um%20R%C3%BCckruf%20bitten%20und%20wir%20versuchen%20Sie%20yum%20gew%C3%BCnschten%20Zeitpunkt%20zu%20kontaktieren.%0A%0AVielen%20Dank"
-                  className="text-primary-400 font-bold hover:underline"
-                >
-                  {mailto.replace(/^mailto:\/\//, "")}
-                </a>
-              </div>
-            </address>
-          </div>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label className="block text-sm font-medium text-foreground">
+                {copy.contact.nameLabel}
+              </label>
+              <input
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground">
+                {copy.contact.emailLabel}
+              </label>
+              <input
+                name="email"
+                type="email"
+                value={form.email}
+                onChange={handleChange}
+                required
+                className="mt-1 w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-foreground">
+                {copy.contact.messageLabel}
+              </label>
+              <textarea
+                name="message"
+                value={form.message}
+                onChange={handleChange}
+                required
+                rows={5}
+                className="mt-1 w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={status === "sending"}
+              className="btn-primary w-full"
+            >
+              {status === "sending"
+                ? "Senden…"
+                : copy.actions.submit}
+            </button>
+            {status === "success" && (
+              <p className="text-green-600">{copy.contact.success}</p>
+            )}
+            {status === "error" && (
+              <p className="text-red-600">{copy.contact.error}</p>
+            )}
+          </form>
         </div>
       </section>
     </main>
