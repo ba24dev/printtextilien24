@@ -6,6 +6,7 @@ export type ProductSummaryEdge = {
     id: string;
     handle: string;
     title: string;
+    printZone?: PrintZoneMetafield | null;
     priceRange: {
       minVariantPrice: {
         amount: string;
@@ -69,4 +70,19 @@ export type ProductByHandleResult = {
 
 export type CollectionByHandleResult = {
   collection: CollectionEdge["node"] | null;
+};
+
+export type PrintZoneMetafield = {
+  reference?: {
+    handle?: string | null;
+    name?: { value?: string | null } | null;
+    isCustomizable?: { value?: string | null } | null;
+    dimensions?: { value?: string | null } | null;
+    offset?: { value?: string | null } | null;
+    previewImage?: {
+      reference?: {
+        image?: { url: string | null } | null;
+      } | null;
+    } | null;
+  } | null;
 };

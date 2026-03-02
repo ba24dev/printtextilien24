@@ -1,4 +1,4 @@
-import { convertTime } from "@/lib/helpers";
+import { convertTime } from "@/utils/helpers";
 
 // HIDDEN CATEGORIES - Configurable handles for hidden shopify collections
 export const HOMEPAGE_FEATURED_HANDLE = "hidden-homepage-featured-items";
@@ -18,3 +18,12 @@ export const DEBOUNCE_MS = 300;
 export const INDEX_TTL_MS = convertTime(5, "min", "ms");
 export const SEARCH_LIMIT = 8;
 export const SEARCH_PAGE_SIZE = 100;
+
+// PRINT CONFIG - Print validation settings
+export const PRINT_CONFIG = {
+  desiredDpi: 300, // e.g. 300 DPI for print
+  minPhysicalSizeMm: 30, // e.g. minimum 30x30 mm
+};
+
+// FEATURE FLAGS
+export const ENABLE_PLACEMENT_DEBUG = false;

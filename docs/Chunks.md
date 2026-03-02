@@ -92,9 +92,15 @@ It follows four main phases: setup → Shopify integration → custom features �
 ### Chunk 9 – PrintConfig Foundations
 
 **Goal:** Provide print surface metadata per variant.  
-**Tasks:** Define the RECT metafield schema, build a `getVariantPrintConfig(variantId)` loader, and validate units (mm) plus safe-zone calculations.  
+**Tasks:** Wire Shopify metafields (`is_customizable`, `dimensions`, `position`, `previewImageUrl`) into the Storefront API responses, build a typed loader that returns `printSurfaces[]`, and validate units (mm) plus placement origin.  
 **Done when:** Core apparel SKUs return accurate surfaces ready for the customizer.  
-**Status:** ⏳ Pending – first customizer milestone once search lands.
+**Status:** ✅ Completed – Shopify metafields (`is_customizable`, `dimensions`, `position`, `previewImageUrl`) are exposed in Storefront queries, parsed via zod, and surfaced in the loader and PDP UI. Badge and customizer integration are functional; chunk 10 is underway.
+**Plan:**
+
+- Expand product/collection queries so every product exposes the `print_zone` metafields along with the `is_customizable` flag.
+- Create `PrintSurface`/`PrintConfig` interfaces (with zod validation) and normalize the raw metafield values into `{ name, isCustomizable, widthMm, heightMm, originMm, previewImageUrl }`.
+- Expose helpers such as `fetchPrintConfigByVariantId` so PDP + upcoming customizer chunk read the same data source.
+- Add editor documentation describing how to duplicate an existing `print_zone` entry and update dimensions/position in millimeters.
 
 ### Chunk 10 – Customizer UI (V1)
 

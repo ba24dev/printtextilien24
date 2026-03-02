@@ -33,7 +33,7 @@ export default function CollectionFilters({
           key={"all"}
           id={"all"}
           handle={"all"}
-          label={"All"}
+          label={copy.catalog.allCollectionsLabel}
           activeHandle={activeCollection}
           setActiveAction={onCollectionChange}
         />

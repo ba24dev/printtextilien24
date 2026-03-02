@@ -18,6 +18,7 @@ export default function SearchInput({
   return (
     <div className="relative">
       <input
+        name="search"
         type="search"
         value={value}
         onChange={(event) => onChangeAction(event.currentTarget.value)}
