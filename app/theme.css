@@ -3,6 +3,10 @@
   --color-background: #e6e4e1;
   --color-foreground: #1b1b1c;
 
+  /* Accent colors */
+  --accent-color-1: #edd278;
+  --accent-color-2: #7686b5;
+
   /* Primary – #0c437b */
   --color-primary-900: color-mix(in srgb, #0c437b 10%, white);
   --color-primary-800: color-mix(in srgb, #0c437b 20%, white);
@@ -29,6 +33,10 @@
 .dark {
   --color-background: #1b1b1c;
   --color-foreground: #e6e4e1;
+
+  /* Accent colors */
+  --accent-color-1: #edd278;
+  --accent-color-2: #7686b5;
 
   /* Primary – #0c437b */
   --color-primary-100: color-mix(in srgb, #0c437b 10%, white);
