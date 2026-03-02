@@ -26,6 +26,10 @@ The development process is divided into chunks, as outlined in the `docs/Chunks.
 - Product detail page mosaic gallery with structured purchase panel and highlights section.
 - Customizer V1 with file upload, anchor presets, drag/resize handles, and a delete control; debug controls gated by `ENABLE_PLACEMENT_DEBUG` and copy pulled from `config/copy.ts`.
 
+> **Note:** personalisation/customization features are currently disabled in
+> the UI. Links and form elements have been removed and the feature will be
+> re-enabled in a future release.
+
 ## Getting Started
 
 ### Prerequisites
@@ -56,6 +60,7 @@ Copy `.env.example` to `.env.local` and provide your project values:
 - `NEXT_PUBLIC_SHOPIFY_REVALIDATION_SECRET`
 - `NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION`
 - `NEXT_PUBLIC_SHOPIFY_COUNTRY_ISO_CODE` / `NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE`
+- `NEXT_PUBLIC_ENABLE_CUSTOMIZATION` (set to `true` to re-enable personalization UI; defaults to `false` for disabled mode)
 
 The customer‑account API credentials are also required for login/refresh endpoints; public (web) clients do **not** include a secret, so `SHOPIFY_CUSTOMER_API_CLIENT_SECRET` may be left blank and the code will fall back to a PKCE‑only flow.
 
