@@ -6,9 +6,7 @@ const SHOPIFY_TOKEN_URL = process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL!;
 const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
 
 export async function GET(request: NextRequest) {
-  const refreshToken = request.cookies.get(
-    "shopify_customer_refresh_token",
-  )?.value;
+  const refreshToken = request.cookies.get("shopify_customer_refresh_token")?.value;
   if (!refreshToken) {
     return NextResponse.json({ error: "No refresh token" }, { status: 401 });
   }
@@ -33,27 +31,19 @@ export async function GET(request: NextRequest) {
   const tokenData = await tokenRes.json();
   // Set new tokens in cookies
   const response = NextResponse.json({ ok: true });
-  response.cookies.set(
-    "shopify_customer_access_token",
-    tokenData.access_token,
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: tokenData.expires_in,
-      path: "/",
-    },
-  );
-  response.cookies.set(
-    "shopify_customer_refresh_token",
-    tokenData.refresh_token,
-    {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    },
-  );
+  response.cookies.set("shopify_customer_access_token", tokenData.access_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: tokenData.expires_in,
+    path: "/",
+  });
+  response.cookies.set("shopify_customer_refresh_token", tokenData.refresh_token, {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 30,
+    path: "/",
+  });
   return response;
 }

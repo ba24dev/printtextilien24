@@ -1,8 +1,4 @@
-import {
-  base64urlEncode,
-  generatePKCE,
-  randomState,
-} from "@/lib/shopify/auth/pkce";
+import { base64urlEncode, generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
 import { describe, expect, it } from "vitest";
 
 describe("PKCE utils", () => {
