@@ -1,5 +1,5 @@
 export { FetchError, ResponseError } from "./api/generated"
-export {
+export type {
 	Imprint,
 	PrivacyPolicy,
 	PrivacyPolicySocialMedia,
