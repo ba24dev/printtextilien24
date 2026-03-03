@@ -31,7 +31,8 @@ export default function HomePage() {
         setLoading(false);
       }
     };
-    fetchData();
+    // fire-and-forget; lint rule requires explicit void when ignoring promise
+    void fetchData();
   }, []);
 
   if (loading) {

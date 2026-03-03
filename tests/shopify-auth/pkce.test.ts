@@ -1,5 +1,5 @@
 import { base64urlEncode, generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 // helper for loading modules with fresh env state
 async function importLoginRoute() {

@@ -9,7 +9,7 @@ interface ProductPageProps {
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {
-  const { handle } = await params;
+  const { handle } = params;
   if (!handle || typeof handle !== "string") {
     notFound();
   }

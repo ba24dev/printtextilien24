@@ -1,8 +1,8 @@
 import { INDEX_TTL_MS, SEARCH_LIMIT } from "@/config/app-config";
 import { create, insertMultiple, Orama, Results, search } from "@orama/orama";
+import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 import { fetchAllProductsForSearch } from "../shopify/product";
 import { SearchResult } from "./types";
-import { CurrencyCode } from "@shopify/hydrogen-react/storefront-api-types";
 
 const searchProductSchema = {
   id: "string",
@@ -34,7 +34,8 @@ let cachedIndex: Orama<SearchProductSchema> | null = null;
 let cachedAt = 0;
 
 async function buildIndex(): Promise<Orama<SearchProductSchema>> {
-  const index = await create({
+  // `create` is synchronous; no need to await its return value.
+  const index = create({
     schema: searchProductSchema,
   });
 
@@ -55,7 +56,7 @@ async function buildIndex(): Promise<Orama<SearchProductSchema>> {
         imageUrl: product.imageUrl,
       }))
       // Orama schema treats "string" as non-null, so convert nulls to empty strings when inserting.
-      .map((doc) => ({ ...doc, imageUrl: doc.imageUrl ?? "" }))
+      .map((doc) => ({ ...doc, imageUrl: doc.imageUrl ?? "" })),
   );
 
   cachedIndex = index;
@@ -79,13 +80,7 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
   const index = await getIndex();
   const result: Results<SearchProductDocument> = await search(index, {
     term: trimmedQuery,
-    properties: [
-      "title",
-      "handle",
-      "tagsText",
-      "collectionsText",
-      "vendorText",
-    ],
+    properties: ["title", "handle", "tagsText", "collectionsText", "vendorText"],
     limit: SEARCH_LIMIT,
   });
 
