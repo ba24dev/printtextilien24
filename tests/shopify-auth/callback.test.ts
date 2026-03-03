@@ -9,7 +9,7 @@ function makeRequest(url: string, cookies?: Record<string, string | undefined>) 
   return {
     url,
     cookies: {
-      get: (name: string) => ({ value: cookies?.[name] } as any),
+      get: (name: string) => ({ value: cookies?.[name] }) as any,
     },
   } as unknown as Request;
 }
@@ -17,9 +17,7 @@ function makeRequest(url: string, cookies?: Record<string, string | undefined>) 
 describe("callback route", () => {
   it("warns if Shopify returns a different scope than requested", async () => {
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
-    const req = makeRequest(
-      `https://example.com/?code=abc&state=xyz&scope=not_allowed",
-    );
+    const req = makeRequest("https://example.com/?code=abc&state=xyz&scope=not_allowed");
     // call handler; it will return early due to missing cookies but after
     // logging
     await GET(req as any);
@@ -34,25 +32,20 @@ describe("callback route", () => {
 
   it("uses stored post-login redirect when available", async () => {
     // stub fetch to return a successful token response
-    const fakeFetch = vi
-      .spyOn(global, "fetch" as any)
-      .mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          access_token: "token",
-          refresh_token: "refresh",
-          expires_in: 1234,
-        }),
-      } as any);
+    const fakeFetch = vi.spyOn(global, "fetch" as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "token",
+        refresh_token: "refresh",
+        expires_in: 1234,
+      }),
+    } as any);
 
-    const req = makeRequest(
-      "https://example.com/?code=abc&state=xyz",
-      {
-        shopify_oauth_state: "xyz",
-        shopify_pkce_verifier: "verifier",
-        shopify_post_login_redirect: "/checkout/somewhere",
-      },
-    );
+    const req = makeRequest("https://example.com/?code=abc&state=xyz", {
+      shopify_oauth_state: "xyz",
+      shopify_pkce_verifier: "verifier",
+      shopify_post_login_redirect: "/checkout/somewhere",
+    });
 
     const res: any = await GET(req as any);
     const loc = res.headers.get("location") || "";

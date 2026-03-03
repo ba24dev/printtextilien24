@@ -19,7 +19,8 @@ export default async function LoginPage({ searchParams = {} }: LoginPageProps) {
         try {
             const dest = decodeURIComponent(rawDest);
             // simple sanitation: ensure it’s a path or same-origin
-            if (dest.startsWith("/") || dest.startsWith(cookieStore.get("host") || "")) {
+            const hostValue = cookieStore.get("host")?.value || "";
+            if (dest.startsWith("/") || dest.startsWith(hostValue)) {
                 cookieStore.set("shopify_post_login_redirect", dest, {
                     httpOnly: true,
                     secure: true,
