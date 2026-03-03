@@ -6,7 +6,7 @@ export function useAuthSession() {
     email?: string;
   } | null>(null);
   useEffect(() => {
-    fetch("/api/customer/session")
+    fetch("/api/customer/session", { credentials: "include" })
       .then((res) => res.json())
       .then(setSession)
       .catch(() => setSession({ loggedIn: false }));

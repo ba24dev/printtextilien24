@@ -35,7 +35,7 @@ describe("PKCE utils", () => {
     delete process.env.SHOPIFY_CUSTOMER_API_SCOPES;
     vi.resetModules();
     const { SCOPES: defaultScopes } = await importScopes();
-    expect(defaultScopes).toContain("customer_read_customers");
+    expect(defaultScopes).toBe("customer-account-api:full");
 
     process.env.SHOPIFY_CUSTOMER_API_SCOPES = "custom scope1 scope2";
     vi.resetModules();

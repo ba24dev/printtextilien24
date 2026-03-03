@@ -25,8 +25,7 @@ export const KNOWN_SCOPES = [
 ];
 
 // read scopes from env var, falling back to the previous default.
-export const SCOPES =
-  process.env.SHOPIFY_CUSTOMER_API_SCOPES || "customer_read_customers customer_read_orders";
+export const SCOPES = process.env.SHOPIFY_CUSTOMER_API_SCOPES || "customer-account-api:full";
 
 /**
  * Split a space-separated scope string into an array of tokens.
