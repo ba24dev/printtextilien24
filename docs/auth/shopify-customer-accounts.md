@@ -2,6 +2,11 @@
 
 ## Backend Steps
 
+> 🔐 **Scope note:** the Customer Account API insists on the
+> `customer-account-api:full` OAuth scope. It’s now the default used by the
+> login handler, and you should include it in `SHOPIFY_CUSTOMER_API_SCOPES` if
+> you override the list.
+
 The system exposes a customer-facing login page at `/account/login`, which is
 exactly the URL Shopify will redirect customers to during headless checkout (the
 `checkout_url` query parameter is preserved). For convenience a second route
@@ -15,6 +20,12 @@ former URL is treated as the primary one to avoid unnecessary redirects.
    - Handles an optional `checkout_url` query param by preserving it in a
      temporary cookie so the callback can forward the user back to the
      checkout when they return from Shopify.
+
+     **Tokens & headers:** Shopify Customer Account API requires access tokens
+     to be prefixed with `shcat_` and sent directly as the `Authorization`
+     header value – do **not** use the standard `Bearer` prefix. The
+     helper `formatAccessToken()` applies the prefix if needed and strips any
+     stray `Bearer` text.
 
 2. **OAuth Callback Handler** (`/api/auth/customer/callback`)
    - Validates state from query/cookie.
