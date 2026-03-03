@@ -102,11 +102,15 @@ This document outlines the development chunks for the printshop MVP across five 
 **Done when:** Customized cart items reference the saved job payload.  
 **Status:** Pending.
 
----
+### Chunk 13 - Contact Form & Messaging
 
-## Phase 5 - Supporting Enhancements (Deferred)
-
-### Chunk 13 - Instant Add to Cart (Quick-Add)
+**Goal:** Provide users with a way to reach support directly from the storefront.
+**Tasks:** Build `/contact` page with a name/email/message form; implement `/api/contact` route
+that validates input and dispatches email via SMTP (nodemailer); add environment variables,
+copy entries and optional eRecht24 integration for automated legal texts; hide the
+deprecated mailto page.
+**Done when:** Form submits successfully, server returns appropriate status, and notifications appear on screen.
+**Status:** In progress (UI + API implemented, tests added).
 
 **Goal:** Add non-custom products directly from grid.  
 **Tasks:** Hover/Quick panel for size/color/variant; `addToCart` without PDP; shared cart drawer context so Quick-Add opens the drawer.  
