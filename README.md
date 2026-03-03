@@ -56,7 +56,8 @@ Copy `.env.example` to `.env.local` and provide your project values:
 - `NEXT_PUBLIC_SHOPIFY_REVALIDATION_SECRET`
 - `NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION`
 - `NEXT_PUBLIC_SHOPIFY_COUNTRY_ISO_CODE` / `NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE`
-- `ERECHT24_API_KEY` (optional) – retrieves privacy/imprint text from eRecht24 API if provided
+- `ERECHT24_API_KEY` (optional) – when set the site will attempt to fetch legal text from the eRecht24 **v2** endpoints (`/v2/privacyPolicy` and `/v2/imprint`).
+  The API key itself is not strictly required for the GET requests, so a blank value simply disables the feature; using an invalid key will cause harmless 404 warnings in the server log. The placeholder in `.env.example` is not meant to be functional.
 
 The customer‑account API credentials are also required for login/refresh endpoints; public (web) clients do **not** include a secret, so `SHOPIFY_CUSTOMER_API_CLIENT_SECRET` may be left blank and the code will fall back to a PKCE‑only flow.
 
