@@ -1,4 +1,9 @@
-export default function DatenschutzPage() {
+import { fetchLegalText } from "@/lib/erecht24";
+
+export default async function DatenschutzPage() {
+  // if API key is configured, attempt to pull the privacy text from eRecht24
+  const remoteHtml = await fetchLegalText("privacy");
+
   return (
     <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">
       <section className="bg-background/50 py-48 md:py-24">
@@ -11,14 +16,23 @@ export default function DatenschutzPage() {
             </header>
             <h2 className="text-2xl font-semibold mt-6">1. Datenschutz auf einen Blick</h2>
 
-            <h3 className="text-xl font-medium mt-4">Allgemeine Hinweise</h3>
-            <p className="text-base text-foreground/90 leading-relaxed">
-              Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren
-              personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene
-              Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.
-              Ausführliche Informationen zum Thema Datenschutz entnehmen Sie unserer unter diesem
-              Text aufgeführten Datenschutzerklärung.
-            </p>
+            {remoteHtml ? (
+              <div
+                className="prose max-w-full"
+                dangerouslySetInnerHTML={{ __html: remoteHtml }}
+              />
+            ) : (
+              <>
+                <h3 className="text-xl font-medium mt-4">Allgemeine Hinweise</h3>
+                <p className="text-base text-foreground/90 leading-relaxed">
+                  Die folgenden Hinweise geben einen einfachen Überblick darüber, was mit Ihren
+                  personenbezogenen Daten passiert, wenn Sie diese Website besuchen. Personenbezogene
+                  Daten sind alle Daten, mit denen Sie persönlich identifiziert werden können.
+                  Ausführliche Informationen zum Thema Datenschutz entnehmen Sie unserer unter diesem
+                  Text aufgeführten Datenschutzerklärung.
+                </p>
+              </>
+            )}
 
             <h3>Datenerfassung auf dieser Website</h3>
             <h4 className="text-lg font-medium mt-3">
