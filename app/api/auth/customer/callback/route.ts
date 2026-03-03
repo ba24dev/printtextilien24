@@ -81,8 +81,13 @@ export async function GET(request: NextRequest) {
     const tokenData = await tokenRes.json();
     // tokenData: { access_token, refresh_token, expires_in, id_token, ... }
 
-    // Set tokens in httpOnly cookies
-    const response = NextResponse.redirect("/account");
+    // determine where we should send the user after login; default to
+    // /account but allow a previously stored destination (e.g. a
+    // checkout_url from Shopify) to override.
+    const postLogin = request.cookies.get("shopify_post_login_redirect")?.value;
+    const redirectTarget = postLogin ? new URL(postLogin, request.url).toString() : "/account";
+
+    const response = NextResponse.redirect(redirectTarget);
     response.cookies.set("shopify_customer_access_token", tokenData.access_token, {
       httpOnly: true,
       secure: true,
@@ -101,6 +106,13 @@ export async function GET(request: NextRequest) {
     response.cookies.set("shopify_pkce_verifier", "", { maxAge: 0, path: "/" });
     response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });
     response.cookies.set("shopify_oauth_nonce", "", { maxAge: 0, path: "/" });
+    // and clear our custom destination cookie so it won't stick around
+    if (postLogin) {
+      response.cookies.set("shopify_post_login_redirect", "", {
+        maxAge: 0,
+        path: "/",
+      });
+    }
     return response;
   } catch (err) {
     console.error("callback handler unexpected error", err);
