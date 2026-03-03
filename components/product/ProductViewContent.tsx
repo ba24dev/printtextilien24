@@ -18,12 +18,14 @@ export default function ProductViewContent({
 }: ProductViewProps) {
   const surfaces = printSurfaces ?? [];
   const { selectedVariant } = useProduct();
+  const enableCustomization =
+    process.env.NEXT_PUBLIC_ENABLE_CUSTOMIZATION === "true";
   const isClient = useSyncExternalStore(
     () => () => { },
     () => true,
     () => false
   );
-  const requiresCustomization = surfaces.length > 0;
+  const requiresCustomization = enableCustomization && surfaces.length > 0;
   const variantId = selectedVariant?.id;
   const templateSizeKey = inferTemplateSizeKey(selectedVariant);
   const storageKey = useMemo(() => {
