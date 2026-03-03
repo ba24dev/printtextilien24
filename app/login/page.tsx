@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -40,11 +40,11 @@ export default function LoginPage() {
                     }
                 }
             })
-            .catch(() => {});
+            .catch(() => { });
     }, [router, searchParams]);
 
     return (
-        <main className="max-w-xl mx-auto py-16 px-4 text-center grow">
+        <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
             <h1 className="text-4xl font-bold mb-4 mt-16">Sign in</h1>
             <p className="mb-6">
                 You’ll be redirected to Shopify to authenticate your customer account.
