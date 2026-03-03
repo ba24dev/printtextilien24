@@ -145,6 +145,16 @@ export const copy = {
     cancel: "Abbrechen",
   },
 
+  contact: {
+    heading: "Schreiben Sie uns",
+    description: "Wir freuen uns auf Ihre Nachricht. Bitte füllen Sie das Formular aus.",
+    nameLabel: "Name",
+    emailLabel: "E-Mail",
+    messageLabel: "Nachricht",
+    success: "Ihre Nachricht wurde gesendet. Wir melden uns in Kürze.",
+    error: "Beim Senden Ihrer Nachricht ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+  },
+
   notifications: {
     successSubscription: "Vielen Dank für Ihre Anmeldung!",
     errorGeneric: "Etwas ist schiefgelaufen. Bitte versuchen Sie es erneut.",
