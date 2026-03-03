@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, FormEvent } from "react";
 import { copy } from "@/config/copy";
+import { FormEvent, useState } from "react";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
@@ -28,35 +28,38 @@ export default function ContactPage() {
     }
   };
 
+  const inputClass =
+    "mt-1 w-full rounded-lg border border-secondary-500 px-4 py-2 text-sm focus:border-black focus:outline-none focus:ring-2 focus:ring-black/20";
+
   return (
     <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">
       <section className="bg-background/50 py-48 md:py-24">
         <div className="mx-auto max-w-2xl px-6">
           <header className="mb-12 space-y-4 text-center">
             <h1 className="text-4xl font-semibold text-foreground">
-              {copy.contact.heading}
+              {copy.contact?.heading ?? "Kontakt"}
             </h1>
             <p className="text-lg text-foreground/70">
-              {copy.contact.description}
+              {copy.contact?.description ?? "Schreiben Sie uns"}
             </p>
           </header>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-foreground">
-                {copy.contact.nameLabel}
+                {copy.contact?.nameLabel ?? "Name"}
               </label>
               <input
                 name="name"
                 value={form.name}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className={inputClass}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground">
-                {copy.contact.emailLabel}
+                {copy.contact?.emailLabel ?? "E-Mail"}
               </label>
               <input
                 name="email"
@@ -64,12 +67,12 @@ export default function ContactPage() {
                 value={form.email}
                 onChange={handleChange}
                 required
-                className="mt-1 w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className={inputClass}
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-foreground">
-                {copy.contact.messageLabel}
+                {copy.contact?.messageLabel ?? "Nachricht"}
               </label>
               <textarea
                 name="message"
@@ -77,7 +80,7 @@ export default function ContactPage() {
                 onChange={handleChange}
                 required
                 rows={5}
-                className="mt-1 w-full rounded border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500"
+                className={inputClass}
               />
             </div>
             <button
@@ -85,15 +88,13 @@ export default function ContactPage() {
               disabled={status === "sending"}
               className="btn-primary w-full"
             >
-              {status === "sending"
-                ? "Senden…"
-                : copy.actions.submit}
+              {status === "sending" ? "Senden…" : copy.actions.submit}
             </button>
             {status === "success" && (
-              <p className="text-green-600">{copy.contact.success}</p>
+              <p className="text-green-600">{copy.contact?.success}</p>
             )}
             {status === "error" && (
-              <p className="text-red-600">{copy.contact.error}</p>
+              <p className="text-red-600">{copy.contact?.error}</p>
             )}
           </form>
         </div>

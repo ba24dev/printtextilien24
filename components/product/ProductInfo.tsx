@@ -4,8 +4,8 @@ import { copy } from "@/config/copy";
 import { CustomizationState } from "@/hooks/useCustomizationStorage";
 import { PrintSurface } from "@/lib/customizer/print-config";
 import { AddToCartButton, Money, useProduct } from "@shopify/hydrogen-react";
-import { useSyncExternalStore } from "react";
 import { ShoppingCart } from "lucide-react";
+import { useSyncExternalStore } from "react";
 import VariantSelector from "./VariantSelector";
 
 interface ProductInfoProps {
@@ -22,13 +22,15 @@ export default function ProductInfo({
   const { product, selectedVariant } = useProduct();
 
   const isHydrated = useSyncExternalStore(
-    () => () => {},
+    () => () => { },
     () => true,
     () => false
   );
 
   if (!product) return null;
 
+  const enableCustomization =
+    process.env.NEXT_PUBLIC_ENABLE_CUSTOMIZATION === "true";
   const hasPrintSurfaces = printSurfaces.length > 0;
   const price = selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
   const available = selectedVariant?.availableForSale ?? false;
@@ -36,7 +38,10 @@ export default function ProductInfo({
   const attributes = customization?.attributes ?? [];
 
   const needsCustomizationBlocker =
-    requiresCustomization && hasPrintSurfaces && (!isHydrated || !hasCustomization);
+    enableCustomization &&
+    requiresCustomization &&
+    hasPrintSurfaces &&
+    (!isHydrated || !hasCustomization);
 
   return (
     <aside className="rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
@@ -48,14 +53,14 @@ export default function ProductInfo({
               {copy.product.byLabel} {product.vendor}
             </p>
           ) : null}
-          {hasPrintSurfaces ? (
+          {enableCustomization && hasPrintSurfaces ? (
             <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary-600/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-100">
               Customizable
             </span>
           ) : null}
         </div>
 
-        {hasPrintSurfaces ? (
+        {enableCustomization && hasPrintSurfaces ? (
           <div className="mt-4">
             <h3 className="text-sm font-medium text-foreground/70">Druckflächen</h3>
             <ul className="mt-2 flex gap-3">
@@ -108,8 +113,8 @@ export default function ProductInfo({
             {!available
               ? copy.product.soldOut
               : needsCustomizationBlocker
-              ? "Upload & platzieren, um fortzufahren"
-              : copy.product.addToCart}
+                ? "Upload & platzieren, um fortzufahren"
+                : copy.product.addToCart}
           </AddToCartButton>
         ) : null}
       </div>

@@ -72,7 +72,7 @@ export const copy = {
       description:
         "Premium-Textilien zu fairen Preisen – mit schneller Produktion, individuellen Designs und persönlichem Service.",
       primaryCta: "Jetzt einkaufen",
-      secondaryCta: "",
+      secondaryCta: "Design anpassen",
       featureBullets: [
         {
           title: "Schneller Versand",
@@ -84,7 +84,7 @@ export const copy = {
         },
         {
           title: "Individuelle Gestaltung",
-          description: "Wählen Sie aus einer Vielzahl von Vorlagen und Größen.",
+          description: "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
         },
       ],
     },
