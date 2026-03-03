@@ -19,7 +19,7 @@ export default async function AccountPage() {
       <main className="max-w-xl mx-auto py-16 px-4 text-center">
         <h1 className="text-2xl font-bold mb-4">Account</h1>
         <p className="mb-6">Not logged in.</p>
-        <a href="/api/auth/customer/login" className="underline" rel="noopener noreferrer">
+        <a href="/login" className="underline" rel="noopener noreferrer">
           Sign in
         </a>
       </main>

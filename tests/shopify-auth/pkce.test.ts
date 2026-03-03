@@ -1,6 +1,14 @@
 import { base64urlEncode, generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
 import { describe, expect, it } from "vitest";
 
+// helper for loading modules with fresh env state
+async function importLoginRoute() {
+  return await import("@/app/api/auth/customer/login/route");
+}
+async function importScopes() {
+  return await import("@/lib/shopify/auth/scopes");
+}
+
 describe("PKCE utils", () => {
   it("generates a valid PKCE challenge and verifier", async () => {
     const { verifier, challenge } = await generatePKCE();
@@ -23,33 +31,33 @@ describe("PKCE utils", () => {
     expect(encoded).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 
-  it("reads scopes from env or falls back to default", () => {
-    // reset environments so module loads cleanly
+  it("reads scopes from env or falls back to default", async () => {
     delete process.env.SHOPIFY_CUSTOMER_API_SCOPES;
-    // re-import module to get fresh SCOPES
-    const { SCOPES: defaultScopes } = require("@/app/api/auth/customer/login/route");
+    vi.resetModules();
+    const { SCOPES: defaultScopes } = await importScopes();
     expect(defaultScopes).toContain("customer_read_customers");
 
     process.env.SHOPIFY_CUSTOMER_API_SCOPES = "custom scope1 scope2";
-    const { SCOPES: overridden } = require("@/app/api/auth/customer/login/route");
+    vi.resetModules();
+    const { SCOPES: overridden } = await importScopes();
     expect(overridden).toBe("custom scope1 scope2");
   });
 
-  it("warns about unknown scopes", () => {
-    const { unknownScopes } = require("@/lib/shopify/auth/scopes");
+  it("warns about unknown scopes", async () => {
+    const { unknownScopes } = await importScopes();
     const bad = unknownScopes("customer_read_customers foo_bar openid");
     expect(bad).toEqual(["foo_bar"]);
   });
 
-  it("normalizes comma-separated scopes", () => {
-    const { normalizeScopes } = require("@/lib/shopify/auth/scopes");
+  it("normalizes comma-separated scopes", async () => {
+    const { normalizeScopes } = await importScopes();
     expect(normalizeScopes("a,b,c")).toBe("a b c");
     expect(normalizeScopes("a, b  ,c")).toBe("a b c");
     expect(normalizeScopes("a a,b")).toBe("a b");
   });
 
-  it("recognizes the composite customer-account-api:full scope", () => {
-    const { unknownScopes } = require("@/lib/shopify/auth/scopes");
+  it("recognizes the composite customer-account-api:full scope", async () => {
+    const { unknownScopes } = await importScopes();
     expect(unknownScopes("customer-account-api:full")).toEqual([]);
   });
 });
