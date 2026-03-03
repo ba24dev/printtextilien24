@@ -8,8 +8,8 @@ interface LoginPageProps {
     };
 }
 
-export default function LoginPage({ searchParams = {} }: LoginPageProps) {
-    const cookieStore = cookies();
+export default async function LoginPage({ searchParams = {} }: LoginPageProps) {
+    const cookieStore = await cookies();
 
     // if a checkout_url is provided (Shopify does this when redirecting from
     // the cart/checkouts), preserve it in a cookie so the callback handler can
