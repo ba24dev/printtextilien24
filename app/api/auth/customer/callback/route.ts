@@ -57,7 +57,14 @@ export async function GET(request: NextRequest) {
     body: JSON.stringify(bodyPayload),
   });
   if (!tokenRes.ok) {
-    return NextResponse.json({ error: "Token exchange failed" }, { status: 400 });
+    const bodyText = await tokenRes.text();
+    console.error(
+      "Shopify token exchange error",
+      tokenRes.status,
+      bodyText,
+      bodyPayload,
+    );
+    return NextResponse.json({ error: "Token exchange failed", details: bodyText }, { status: 400 });
   }
   const tokenData = await tokenRes.json();
   // tokenData: { access_token, refresh_token, expires_in, id_token, ... }

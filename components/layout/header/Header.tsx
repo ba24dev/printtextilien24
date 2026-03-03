@@ -33,6 +33,7 @@ export default function Header() {
             <ThemeSwitcher />
             <Link
               href="/api/auth/customer/login"
+              prefetch={false}
               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
               title="Login"
               aria-label="Login"
