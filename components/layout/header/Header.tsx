@@ -39,7 +39,7 @@ export default function Header() {
               rel="noopener noreferrer"
             >
               <LogIn className="aspect-square w-5" />
-            </Link>
+            </a>
             <CartButton quantity={quantity} onClickAction={setDrawerOpen} />
           </div>
         </div>
