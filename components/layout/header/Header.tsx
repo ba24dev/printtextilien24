@@ -32,7 +32,7 @@ export default function Header() {
           <div className="ml-auto flex items-center gap-3 md:ml-0">
             <ThemeSwitcher />
             <a
-              href="/api/auth/customer/login"
+              href="/login"
               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
               title="Login"
               aria-label="Login"
