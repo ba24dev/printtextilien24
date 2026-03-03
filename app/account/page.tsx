@@ -2,11 +2,14 @@ import { cookies } from "next/headers";
 import Link from "next/link";
 
 async function getCustomerData() {
-  // avoid calling fetch with a relative URL in SSR; build the full URL using
-  // the current origin or just read cookies directly and call helper logic
-  // server-side.  Here we simply forward the same request by using the
-  // cookie store and letting the API route run normally on the server.
-  const res = await fetch(new URL("/api/customer/me", process.env.NEXT_PUBLIC_BASE_URL).toString(), {
+  // on a static export or during build we may not have a valid base URL; in
+  // that case just pretend the user is not logged in rather than throwing.
+  const base = process.env.NEXT_PUBLIC_BASE_URL;
+  if (!base) {
+    return null;
+  }
+
+  const res = await fetch(new URL("/api/customer/me", base).toString(), {
     headers: {
       Cookie: cookies().toString(),
     },
