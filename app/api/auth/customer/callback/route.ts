@@ -51,20 +51,24 @@ export async function GET(request: NextRequest) {
     bodyPayload.client_secret = SHOPIFY_CLIENT_SECRET;
   }
 
+  // Shopify expects a form‑encoded body rather than JSON
+  const urlencoded = new URLSearchParams();
+  Object.entries(bodyPayload).forEach(([k, v]) => {
+    if (v !== undefined && v !== null) urlencoded.set(k, String(v));
+  });
+
   const tokenRes = await fetch(SHOPIFY_TOKEN_URL, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(bodyPayload),
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: urlencoded.toString(),
   });
   if (!tokenRes.ok) {
     const bodyText = await tokenRes.text();
-    console.error(
-      "Shopify token exchange error",
-      tokenRes.status,
-      bodyText,
-      bodyPayload,
+    console.error("Shopify token exchange error", tokenRes.status, bodyText, bodyPayload);
+    return NextResponse.json(
+      { error: "Token exchange failed", details: bodyText },
+      { status: 400 },
     );
-    return NextResponse.json({ error: "Token exchange failed", details: bodyText }, { status: 400 });
   }
   const tokenData = await tokenRes.json();
   // tokenData: { access_token, refresh_token, expires_in, id_token, ... }
