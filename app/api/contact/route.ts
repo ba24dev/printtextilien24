@@ -3,16 +3,9 @@ import { z } from "zod";
 
 const ContactSchema = z.object({
   name: z.string().min(1),
-  email: z.string().email(),
+  email: z.email(),
   message: z.string().min(1),
 });
-
-interface ResendPayload {
-  from: string;
-  to: string;
-  subject: string;
-  html: string;
-}
 
 export async function POST(request: NextRequest) {
   let body: unknown;
@@ -29,16 +22,20 @@ export async function POST(request: NextRequest) {
 
   const { name, email, message } = parsed.data;
 
-  const apiKey = process.env.RESEND_API_KEY;
   const to = process.env.CONTACT_EMAIL || "sales@printtextilien.de";
-  const from = process.env.RESEND_FROM || "no-reply@printtextilien24.de";
+  const from = process.env.SMTP_FROM || "no-reply@printtextilien24.de";
 
-  if (!apiKey) {
-    console.error("RESEND_API_KEY not configured");
+  const smtpHost = process.env.SMTP_HOST;
+  const smtpPort = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
+  const smtpUser = process.env.SMTP_USER;
+  const smtpPass = process.env.SMTP_PASS;
+
+  if (!smtpHost || !smtpUser || !smtpPass) {
+    console.error("SMTP configuration incomplete");
     return NextResponse.json({ error: "Email service not configured" }, { status: 500 });
   }
 
-  const payload: ResendPayload = {
+  const payload = {
     from,
     to,
     subject: `Kontaktanfrage von ${name}`,
@@ -46,21 +43,18 @@ export async function POST(request: NextRequest) {
   };
 
   try {
-    const resp = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore: nodemailer may not be installed in minimal environments
+    const nodemailer = await import("nodemailer");
+    const transporter = nodemailer.createTransport({
+      host: smtpHost,
+      port: smtpPort,
+      secure: smtpPort === 465,
+      auth: { user: smtpUser, pass: smtpPass },
     });
-
-    if (!resp.ok) {
-      console.error("Resend error", await resp.text());
-      throw new Error("resend failed");
-    }
+    await transporter.sendMail(payload as any);
   } catch (err) {
-    console.error(err);
+    console.error("error sending via SMTP", err);
     return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
   }
 
