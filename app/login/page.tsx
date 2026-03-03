@@ -1,21 +1,44 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-async function getSession() {
-    const res = await fetch("/api/customer/session", {
-        headers: {
-            Cookie: cookies().toString(),
-        },
-        cache: "no-store",
-    });
-    if (!res.ok) return { loggedIn: false };
-    return res.json();
+interface LoginPageProps {
+    searchParams?: {
+        checkout_url?: string;
+        [key: string]: string | undefined;
+    };
 }
 
-export default async function LoginPage() {
-    const session = await getSession();
-    if (session?.loggedIn) {
-        // already signed in, send them to their account
+export default function LoginPage({ searchParams = {} }: LoginPageProps) {
+    const cookieStore = cookies();
+
+    // if a checkout_url is provided (Shopify does this when redirecting from
+    // the cart/checkouts), preserve it in a cookie so the callback handler can
+    // punt the user back there after authentication.
+    const rawDest = searchParams.checkout_url;
+    if (rawDest) {
+        try {
+            const dest = decodeURIComponent(rawDest);
+            // simple sanitation: ensure it’s a path or same-origin
+            if (dest.startsWith("/") || dest.startsWith(cookieStore.get("host") || "")) {
+                cookieStore.set("shopify_post_login_redirect", dest, {
+                    httpOnly: true,
+                    secure: true,
+                    sameSite: "lax",
+                    path: "/",
+                });
+            }
+        } catch {
+            // ignore malformed values
+        }
+    }
+
+    const token = cookieStore.get("shopify_customer_access_token")?.value;
+    if (token) {
+        // already signed in; if we recorded a checkout destination, go there
+        if (rawDest) {
+            const dest = decodeURIComponent(rawDest);
+            redirect(dest);
+        }
         redirect("/account");
     }
 

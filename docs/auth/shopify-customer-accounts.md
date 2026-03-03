@@ -2,10 +2,19 @@
 
 ## Backend Steps
 
+The system exposes a customer-facing login page at `/account/login`, which is
+exactly the URL Shopify will redirect customers to during headless checkout (the
+`checkout_url` query parameter is preserved). For convenience a second route
+`/login` is still available and is aliased to the same implementation, but the
+former URL is treated as the primary one to avoid unnecessary redirects.
+
 1. **OAuth Login Handler** (`/api/auth/customer/login`)
    - Generates PKCE verifier/challenge, state, nonce.
    - Sets httpOnly, secure cookies for verifier, state, nonce.
    - Redirects to Shopify authorize endpoint.
+   - Handles an optional `checkout_url` query param by preserving it in a
+     temporary cookie so the callback can forward the user back to the
+     checkout when they return from Shopify.
 
 2. **OAuth Callback Handler** (`/api/auth/customer/callback`)
    - Validates state from query/cookie.
