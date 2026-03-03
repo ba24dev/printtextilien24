@@ -16,7 +16,8 @@ const CallbackSchema = z.object({
 });
 
 export async function GET(request: NextRequest) {
-  const url = new URL(request.url);
+  try {
+    const url = new URL(request.url);
   const params = Object.fromEntries(url.searchParams.entries());
   console.debug("callback params", params);
   const parsed = CallbackSchema.safeParse(params);
@@ -100,4 +101,8 @@ export async function GET(request: NextRequest) {
   response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });
   response.cookies.set("shopify_oauth_nonce", "", { maxAge: 0, path: "/" });
   return response;
+  } catch (err) {
+    console.error("callback handler unexpected error", err);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  }
 }
