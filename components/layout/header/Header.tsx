@@ -31,12 +31,12 @@ export default function Header() {
           </div>
           <div className="ml-auto flex items-center gap-3 md:ml-0">
             <ThemeSwitcher />
-            <Link
+            <a
               href="/api/auth/customer/login"
-              prefetch={false}
               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
               title="Login"
               aria-label="Login"
+              rel="noopener noreferrer"
             >
               <LogIn className="aspect-square w-5" />
             </Link>
