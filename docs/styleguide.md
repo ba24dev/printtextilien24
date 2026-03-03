@@ -9,6 +9,7 @@ This document outlines the conventions and best practices for using TypeScript i
 To ensure consistency in our codebase, follow these rules when deciding between `interface` and `type`:
 
 ### Use `interface` When:
+
 1. **Defining Object Shapes**:
    - Use `interface` to define the structure of objects, especially for data models, API responses, or class contracts.
    - Example:
@@ -23,6 +24,7 @@ To ensure consistency in our codebase, follow these rules when deciding between 
 2. **Working with Classes**:
    - Use `interface` to enforce contracts for classes.
    - Example:
+
      ```typescript
      interface Product {
        id: string;
@@ -43,6 +45,7 @@ To ensure consistency in our codebase, follow these rules when deciding between 
 3. **When Declaration Merging is Needed**:
    - Use `interface` if you anticipate extending or merging the shape of an object in multiple places.
    - Example:
+
      ```typescript
      interface Product {
        id: string;
@@ -64,9 +67,11 @@ To ensure consistency in our codebase, follow these rules when deciding between 
 ---
 
 ### Use `type` When:
+
 1. **Defining Complex Types**:
    - Use `type` for unions, intersections, mapped types, or conditional types.
    - Example:
+
      ```typescript
      type ID = string | number;
 
@@ -81,6 +86,7 @@ To ensure consistency in our codebase, follow these rules when deciding between 
 2. **Aliasing Primitives or Functions**:
    - Use `type` to create aliases for primitive types or function signatures.
    - Example:
+
      ```typescript
      type ID = string | number;
 
@@ -100,6 +106,7 @@ To ensure consistency in our codebase, follow these rules when deciding between 
 ---
 
 ### Rule of Thumb
+
 - **Use `interface` for objects and class contracts.**
 - **Use `type` for everything else.**
 
@@ -113,6 +120,7 @@ To ensure consistency in our codebase, follow these rules when deciding between 
 2. **Prefer Explicit Types**:
    - Avoid relying on implicit `any`. Always define explicit types where possible.
    - Example:
+
      ```typescript
      // Avoid
      const fetchData = (url) => {
