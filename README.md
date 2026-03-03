@@ -57,9 +57,9 @@ Copy `.env.example` to `.env.local` and provide your project values:
 - `NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION`
 - `NEXT_PUBLIC_SHOPIFY_COUNTRY_ISO_CODE` / `NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE`
 - `ERECHT24_API_KEY` (optional) – when set the site will attempt to fetch legal text from the eRecht24 **v2** endpoints (`/v2/privacyPolicy` and `/v2/imprint`).
-  The value is trimmed so surrounding whitespace or quotes won’t accidentally be included.  Leaving it blank disables the feature entirely.  If you supply an invalid key you’ll see a _warning_ (instead of an error) such as `eRecht24 returned 401 – unauthorized` or `404, check API key or endpoint` in the server log; both cases just fall back to the built‑in static copy.
-
-The customer‑account API credentials are also required for login/refresh endpoints; public (web) clients do **not** include a secret, so `SHOPIFY_CUSTOMER_API_CLIENT_SECRET` may be left blank and the code will fall back to a PKCE‑only flow.
+  The value is trimmed so surrounding whitespace or quotes won’t accidentally be included. Leaving it blank disables the feature entirely. If you supply an invalid key you’ll see a _warning_ (instead of an error) such as `eRecht24 returned 401 – unauthorized` or `404, check API key or endpoint` in the server log; both cases just fall back to the built‑in static copy.
+  **Implementation note:** because the official `erecht24` package is no longer published, we have vendored its source under `lib/erecht24-package` and call it from `lib/erecht24.ts`. If you need to update it, grab the latest code from https://github.com/LILA-IT/eRecht24 and drop it in the same location.
+  The customer‑account API credentials are also required for login/refresh endpoints; public (web) clients do **not** include a secret, so `SHOPIFY_CUSTOMER_API_CLIENT_SECRET` may be left blank and the code will fall back to a PKCE‑only flow.
 
 The authorization step builds a URL using a space-separated list of scopes
 that is sourced entirely from the `SHOPIFY_CUSTOMER_API_SCOPES` environment
