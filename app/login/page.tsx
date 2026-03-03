@@ -1,51 +1,51 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
 
-interface LoginPageProps {
-    searchParams?: {
-        checkout_url?: string;
-        [key: string]: string | undefined;
-    };
-}
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect } from "react";
 
-export default async function LoginPage({ searchParams = {} }: LoginPageProps) {
-    const cookieStore = await cookies();
+export default function LoginPage() {
+    const router = useRouter();
+    const searchParams = useSearchParams();
 
-    // if a checkout_url is provided (Shopify does this when redirecting from
-    // the cart/checkouts), preserve it in a cookie so the callback handler can
-    // punt the user back there after authentication.
-    const rawDest = searchParams.checkout_url;
-    if (rawDest) {
-        try {
-            const dest = decodeURIComponent(rawDest);
-            // simple sanitation: ensure it’s a path or same-origin
-            const hostValue = cookieStore.get("host")?.value || "";
-            if (dest.startsWith("/") || dest.startsWith(hostValue)) {
-                cookieStore.set("shopify_post_login_redirect", dest, {
-                    httpOnly: true,
-                    secure: true,
-                    sameSite: "lax",
-                    path: "/",
-                });
-            }
-        } catch {
-            // ignore malformed values
-        }
-    }
-
-    const token = cookieStore.get("shopify_customer_access_token")?.value;
-    if (token) {
-        // already signed in; if we recorded a checkout destination, go there
+    // preserve checkout_url in a regular cookie; callback handler will
+    // still read it server-side from the same cookie.
+    useEffect(() => {
+        const rawDest = searchParams.get("checkout_url");
         if (rawDest) {
-            const dest = decodeURIComponent(rawDest);
-            redirect(dest);
+            try {
+                const dest = decodeURIComponent(rawDest);
+                // basic sanitization: only keep path-like values
+                if (dest.startsWith("/")) {
+                    document.cookie = `shopify_post_login_redirect=${encodeURIComponent(
+                        dest,
+                    )};path=/;max-age=300;SameSite=Lax`;
+                }
+            } catch {
+                // skip malformed
+            }
         }
-        redirect("/account");
-    }
+    }, [searchParams]);
+
+    // if already logged in, send straight to account/checkouts
+    useEffect(() => {
+        fetch("/api/customer/session", { credentials: "include" })
+            .then((res) => res.json())
+            .then((sess) => {
+                if (sess?.loggedIn) {
+                    const dest = searchParams.get("checkout_url");
+                    if (dest) {
+                        router.replace(dest);
+                    } else {
+                        router.replace("/account");
+                    }
+                }
+            })
+            .catch(() => { });
+    }, [router, searchParams]);
 
     return (
-        <main className="max-w-xl mx-auto py-16 px-4 text-center">
-            <h1 className="text-2xl font-bold mb-4">Sign in</h1>
+        <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
+            <h1 className="text-4xl font-bold mb-4 mt-16">Sign in</h1>
             <p className="mb-6">
                 You’ll be redirected to Shopify to authenticate your customer account.
             </p>
