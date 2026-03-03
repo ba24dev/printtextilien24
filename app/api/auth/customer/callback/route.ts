@@ -18,24 +18,30 @@ const CallbackSchema = z.object({
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const params = Object.fromEntries(url.searchParams.entries());
+  console.debug("callback params", params);
   const parsed = CallbackSchema.safeParse(params);
   if (!parsed.success) {
+    console.warn("callback params failed validation", params);
     return NextResponse.json({ error: "Invalid callback params" }, { status: 400 });
   }
   const { code, state, scope } = parsed.data;
+  console.debug("received code,state,scope", { code, state, scope });
   if (scope && scope !== SCOPES) {
     console.warn("Shopify returned a different scope than requested:", scope, "expected", SCOPES);
   }
 
   // Validate state matches cookie
   const stateCookie = request.cookies.get("shopify_oauth_state")?.value;
+  const verifier = request.cookies.get("shopify_pkce_verifier")?.value;
+  console.debug("cookies", { stateCookie, verifier });
   if (!stateCookie || stateCookie !== state) {
+    console.warn("state cookie mismatch", stateCookie, state);
     return NextResponse.json({ error: "Invalid state" }, { status: 400 });
   }
 
   // Get PKCE verifier from cookie
-  const verifier = request.cookies.get("shopify_pkce_verifier")?.value;
   if (!verifier) {
+    console.warn("no PKCE verifier cookie present");
     return NextResponse.json({ error: "Missing PKCE verifier" }, { status: 400 });
   }
 
