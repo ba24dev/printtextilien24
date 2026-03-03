@@ -47,7 +47,23 @@ describe("eRecht24 helper", () => {
       expect(result).toBeNull();
       expect(warn).toHaveBeenCalled();
     });
-
+    it("returns null and warns on 401 (invalid key)", async () => {
+      fetchMock.mockResolvedValue(
+        // @ts-ignore
+        {
+          ok: false,
+          status: 401,
+          text: async () =>
+            '{"message":"No API key was passed to the eRecht24 legal texts API when requested."}',
+        },
+      );
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const result = await fetchLegalText("privacy");
+      expect(result).toBeNull();
+      expect(warn).toHaveBeenCalledWith(
+        "eRecht24 returned 401 – unauthorized. make sure ERECHT24_API_KEY is valid",
+      );
+    });
     it("returns null and errors on non-404 failure", async () => {
       fetchMock.mockResolvedValue(
         // @ts-ignore
