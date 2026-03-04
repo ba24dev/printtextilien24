@@ -2,7 +2,7 @@ import { SCOPES } from "@/lib/shopify/auth/scopes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getShopifyTokenUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+import { getShopifyClientId, getShopifyTokenUrl } from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_TOKEN_URL = getShopifyTokenUrl();
@@ -128,4 +128,4 @@ export async function GET(request: NextRequest) {
 export function __testConfig() {
   return { SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL, REDIRECT_URI } as const;
 }
-export { SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL, REDIRECT_URI };
+export { REDIRECT_URI, SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getShopifyTokenUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+import { getShopifyClientId, getShopifyTokenUrl } from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_TOKEN_URL = getShopifyTokenUrl();
