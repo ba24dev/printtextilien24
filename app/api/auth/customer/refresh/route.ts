@@ -47,6 +47,15 @@ export async function GET(request: NextRequest) {
     maxAge: 60 * 60 * 24 * 30,
     path: "/",
   });
+  if (tokenData.id_token) {
+    response.cookies.set("shopify_customer_id_token", tokenData.id_token, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: tokenData.expires_in,
+      path: "/",
+    });
+  }
   return response;
 }
 

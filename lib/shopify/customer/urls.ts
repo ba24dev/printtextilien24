@@ -36,3 +36,14 @@ export function getShopifyLogoutUrl(): string {
   // logout URL is optional; if not provided we simply redirect locally
   return process.env.SHOPIFY_CUSTOMER_API_LOGOUT_URL || "";
 }
+
+export function getShopifyStorefrontOrigin(): string | null {
+  const raw =
+    process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL ?? process.env.SHOPIFY_STOREFRONT_URL;
+  if (!raw) return null;
+  try {
+    return new URL(raw).origin;
+  } catch {
+    return null;
+  }
+}

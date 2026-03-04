@@ -1,23 +1,59 @@
 import { generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
 import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scopes";
-import { getShopifyAuthUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+import {
+  getShopifyAuthUrl,
+  getShopifyClientId,
+  getShopifyStorefrontOrigin,
+} from "@/lib/shopify/customer/urls";
 import { NextRequest, NextResponse } from "next/server";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_AUTH_URL = getShopifyAuthUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
+const SHOPIFY_STOREFRONT_ORIGIN = getShopifyStorefrontOrigin();
+const SHOPIFY_STOREFRONT_URL = SHOPIFY_STOREFRONT_ORIGIN
+  ? new URL(SHOPIFY_STOREFRONT_ORIGIN)
+  : null;
 
 // note: SCOPES is now imported from a shared helper.  It defaults to the two
 // basic read scopes and can be overridden via
 // SHOPIFY_CUSTOMER_API_SCOPES in the environment.
 
-export function sanitizePostLoginRedirect(raw: string | null): string | null {
+export function sanitizePostLoginRedirect(
+  raw: string | null,
+  requestUrl?: URL,
+): string | null {
   if (!raw) return null;
   const value = raw.trim();
-  if (!value.startsWith("/") || value.startsWith("//")) {
+  if (!value) return null;
+
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    if (value.startsWith("/checkouts/") && SHOPIFY_STOREFRONT_URL) {
+      return new URL(value, SHOPIFY_STOREFRONT_URL).toString();
+    }
+    return value;
+  }
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
     return null;
   }
-  return value;
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+
+  const allowedHosts = new Set<string>();
+  if (requestUrl?.host) allowedHosts.add(requestUrl.host);
+  if (SHOPIFY_STOREFRONT_URL?.host) allowedHosts.add(SHOPIFY_STOREFRONT_URL.host);
+
+  if (parsed.pathname.startsWith("/checkouts/") && SHOPIFY_STOREFRONT_URL) {
+    parsed.protocol = SHOPIFY_STOREFRONT_URL.protocol;
+    parsed.host = SHOPIFY_STOREFRONT_URL.host;
+    return parsed.toString();
+  }
+
+  if (!allowedHosts.has(parsed.host)) return null;
+  return parsed.toString();
 }
 
 export async function GET(request: NextRequest) {
@@ -55,6 +91,9 @@ export async function GET(request: NextRequest) {
       scope: normalizeScopes(SCOPES),
       redirect_uri: REDIRECT_URI,
       response_type: "code",
+      // shared devices: always force explicit credential entry instead of
+      // silently reusing an existing Shopify SSO session.
+      prompt: "login",
       state,
       nonce,
       code_challenge: challenge,
@@ -66,7 +105,7 @@ export async function GET(request: NextRequest) {
     console.info("normalized scopes to", normalizeScopes(SCOPES), "from", SCOPES);
   }
   const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
-  const postLoginRedirect = sanitizePostLoginRedirect(checkoutUrl);
+  const postLoginRedirect = sanitizePostLoginRedirect(checkoutUrl, request.nextUrl);
 
   const response = NextResponse.redirect(authUrl);
   response.cookies.set("shopify_pkce_verifier", verifier, {
