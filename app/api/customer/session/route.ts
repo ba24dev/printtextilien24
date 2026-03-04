@@ -7,14 +7,20 @@ export async function GET(request: NextRequest) {
     "shopify_customer_access_token",
   )?.value;
   if (!accessToken) {
-    return NextResponse.json({ loggedIn: false });
+    const resp = NextResponse.json({ loggedIn: false });
+    resp.cookies.set("shopify_customer_access_token", "", { maxAge: 0, path: "/" });
+    resp.cookies.set("shopify_customer_refresh_token", "", { maxAge: 0, path: "/" });
+    return resp;
   }
   try {
     const customerRes = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY);
     const customer = customerRes.customer;
     return NextResponse.json({ loggedIn: true, email: customer?.email });
   } catch (e) {
-    // token invalid/expired
-    return NextResponse.json({ loggedIn: false });
+    // token invalid/expired – clear them
+    const resp = NextResponse.json({ loggedIn: false });
+    resp.cookies.set("shopify_customer_access_token", "", { maxAge: 0, path: "/" });
+    resp.cookies.set("shopify_customer_refresh_token", "", { maxAge: 0, path: "/" });
+    return resp;
   }
 }
