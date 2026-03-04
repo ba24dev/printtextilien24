@@ -2,11 +2,19 @@ import { SCOPES } from "@/lib/shopify/auth/scopes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-import { getShopifyClientId, getShopifyTokenUrl } from "@/lib/shopify/customer/urls";
+import {
+  getShopifyClientId,
+  getShopifyStorefrontOrigin,
+  getShopifyTokenUrl,
+} from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_TOKEN_URL = getShopifyTokenUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
+const SHOPIFY_STOREFRONT_ORIGIN = getShopifyStorefrontOrigin();
+const SHOPIFY_STOREFRONT_URL = SHOPIFY_STOREFRONT_ORIGIN
+  ? new URL(SHOPIFY_STOREFRONT_ORIGIN)
+  : null;
 // public (web) clients have no secret; it’s optional
 const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
 
@@ -16,6 +24,23 @@ const CallbackSchema = z.object({
   scope: z.string().optional(),
   context: z.string().optional(),
 });
+
+export function resolvePostLoginRedirect(postLogin: string | undefined, requestUrl: string): string {
+  const fallback = new URL("/account", requestUrl).toString();
+  if (!postLogin) return fallback;
+
+  try {
+    const parsed = new URL(postLogin, requestUrl);
+    if (parsed.pathname.startsWith("/checkouts/") && SHOPIFY_STOREFRONT_URL) {
+      parsed.protocol = SHOPIFY_STOREFRONT_URL.protocol;
+      parsed.host = SHOPIFY_STOREFRONT_URL.host;
+      return parsed.toString();
+    }
+    return parsed.toString();
+  } catch {
+    return fallback;
+  }
+}
 
 export async function GET(request: NextRequest) {
   console.debug("callback handler invoked");
@@ -87,9 +112,7 @@ export async function GET(request: NextRequest) {
     // /account but allow a previously stored destination (e.g. a
     // checkout_url from Shopify) to override.
     const postLogin = request.cookies.get("shopify_post_login_redirect")?.value;
-    const redirectTarget = postLogin
-      ? new URL(postLogin, request.url).toString()
-      : new URL("/account", request.url).toString();
+    const redirectTarget = resolvePostLoginRedirect(postLogin, request.url);
 
     const response = NextResponse.redirect(redirectTarget);
     response.cookies.set("shopify_customer_access_token", tokenData.access_token, {
@@ -106,6 +129,20 @@ export async function GET(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 30, // 30 days
       path: "/",
     });
+    if (tokenData.id_token) {
+      response.cookies.set("shopify_customer_id_token", tokenData.id_token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: "lax",
+        maxAge: tokenData.expires_in,
+        path: "/",
+      });
+    } else {
+      response.cookies.set("shopify_customer_id_token", "", {
+        maxAge: 0,
+        path: "/",
+      });
+    }
     // Clear PKCE and state cookies
     response.cookies.set("shopify_pkce_verifier", "", { maxAge: 0, path: "/" });
     response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });

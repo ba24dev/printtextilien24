@@ -5,24 +5,56 @@ export const dynamic = "force-dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo } from "react";
 
-function getSafeCheckoutPath(raw: string | null): string | null {
+const STOREFRONT_HOST = (() => {
+    const raw = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL;
     if (!raw) return null;
-    const value = raw.trim();
-    if (!value.startsWith("/") || value.startsWith("//")) {
+    try {
+        return new URL(raw).host;
+    } catch {
         return null;
     }
-    return value;
+})();
+
+function getSafeCheckoutUrl(raw: string | null): string | null {
+    if (!raw) return null;
+    const value = raw.trim();
+    if (!value) return null;
+
+    if (value.startsWith("/") && !value.startsWith("//")) {
+        return value;
+    }
+
+    try {
+        const parsed = new URL(value);
+        if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+            return null;
+        }
+
+        if (parsed.pathname.startsWith("/checkouts/") && STOREFRONT_HOST) {
+            parsed.protocol = "https:";
+            parsed.host = STOREFRONT_HOST;
+            return parsed.toString();
+        }
+
+        if (STOREFRONT_HOST && parsed.host === STOREFRONT_HOST) {
+            return parsed.toString();
+        }
+
+        return null;
+    } catch {
+        return null;
+    }
 }
 
 function LoginClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const checkoutPath = useMemo(
-        () => getSafeCheckoutPath(searchParams.get("checkout_url")),
+    const checkoutUrl = useMemo(
+        () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
         [searchParams],
     );
-    const loginHref = checkoutPath
-        ? `/api/auth/customer/login?checkout_url=${encodeURIComponent(checkoutPath)}`
+    const loginHref = checkoutUrl
+        ? `/api/auth/customer/login?checkout_url=${encodeURIComponent(checkoutUrl)}`
         : "/api/auth/customer/login";
 
     // if already logged in, send straight to account/checkouts
@@ -31,15 +63,19 @@ function LoginClient() {
             .then((res) => res.json())
             .then((sess) => {
                 if (sess?.loggedIn) {
-                    if (checkoutPath) {
-                        router.replace(checkoutPath);
+                    if (checkoutUrl) {
+                        if (checkoutUrl.startsWith("http://") || checkoutUrl.startsWith("https://")) {
+                            window.location.href = checkoutUrl;
+                            return;
+                        }
+                        router.replace(checkoutUrl);
                     } else {
                         router.replace("/account");
                     }
                 }
             })
             .catch(() => { });
-    }, [checkoutPath, router]);
+    }, [checkoutUrl, router]);
 
     return (
         <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
