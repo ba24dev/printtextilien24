@@ -2,8 +2,10 @@ import { SCOPES } from "@/lib/shopify/auth/scopes";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
-const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
-const SHOPIFY_TOKEN_URL = process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL!;
+import { getShopifyTokenUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+
+const SHOPIFY_CLIENT_ID = getShopifyClientId();
+const SHOPIFY_TOKEN_URL = getShopifyTokenUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
 // public (web) clients have no secret; it’s optional
 const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
@@ -121,3 +123,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
+
+// exports/helpers for tests
+export function __testConfig() {
+  return { SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL, REDIRECT_URI } as const;
+}
+export { SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL, REDIRECT_URI };
