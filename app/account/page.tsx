@@ -1,11 +1,11 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
-import Link from "next/link";
 import { shopifyCustomerGraphQL } from "@/lib/shopify/customer/graphql";
 import {
   CUSTOMER_ORDERS_QUERY,
   CUSTOMER_QUERY,
 } from "@/lib/shopify/customer/queries";
+import { cookies } from "next/headers";
+import Link from "next/link";
+import { redirect } from "next/navigation";
 
 type AccountCustomer = {
   email?: string;
@@ -59,7 +59,7 @@ export default async function AccountPage() {
   const orders = data?.orders;
   return (
     <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
-      <h1 className="text-2xl font-bold mb-4">Account</h1>
+      <h1 className="text-4xl font-bold mb-4 mt-16">Account</h1>
       <div className="mb-6">
         {customer ? (
           <>
