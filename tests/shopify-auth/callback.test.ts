@@ -27,6 +27,7 @@ describe("callback route", () => {
     process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL = "https://shopify.com/authentication/123/oauth/token";
     process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI =
       "https://example.com/api/auth/customer/callback";
+    process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL = "https://12d54a-a9.myshopify.com";
   });
 
   it("warns if Shopify returns a different scope than requested", async () => {
@@ -55,6 +56,7 @@ describe("callback route", () => {
         access_token: "token",
         refresh_token: "refresh",
         expires_in: 1234,
+        id_token: "id-token-1",
       }),
     } as any);
 
@@ -67,6 +69,32 @@ describe("callback route", () => {
     const res: any = await GET(req as any);
     const loc = res.headers.get("location") || "";
     expect(loc).toBe("https://example.com/checkout/somewhere");
+    expect(res.cookies.get("shopify_customer_id_token")?.value).toBe("id-token-1");
+
+    fakeFetch.mockRestore();
+  });
+
+  it("forces checkout redirects to the Shopify storefront host", async () => {
+    const { GET } = await importCallbackRoute();
+    const fakeFetch = vi.spyOn(global, "fetch" as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "token",
+        refresh_token: "refresh",
+        expires_in: 1234,
+        id_token: "id-token-2",
+      }),
+    } as any);
+
+    const req = makeRequest("https://example.com/?code=abc&state=xyz", {
+      shopify_oauth_state: "xyz",
+      shopify_pkce_verifier: "verifier",
+      shopify_post_login_redirect: "/checkouts/cn/abc?locale=de-DE",
+    });
+
+    const res: any = await GET(req as any);
+    const loc = res.headers.get("location") || "";
+    expect(loc).toBe("https://12d54a-a9.myshopify.com/checkouts/cn/abc?locale=de-DE");
 
     fakeFetch.mockRestore();
   });

@@ -1,6 +1,7 @@
 "use client";
 
 import { copy } from "@/config/copy";
+import { useAuthSession } from "@/hooks/useAuthSession";
 import { useCart } from "@shopify/hydrogen-react";
 import { LogIn } from "lucide-react";
 import Link from "next/link";
@@ -14,7 +15,11 @@ import HeaderNav from "./HeaderNav";
 export default function Header() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { totalQuantity } = useCart();
+  const session = useAuthSession();
   const quantity = totalQuantity ?? 0;
+  const isLoggedIn = Boolean(session?.loggedIn);
+  const accountHref = isLoggedIn ? "/account" : "/login";
+  const accountLabel = isLoggedIn ? "Account" : "Login";
 
   return (
     <>
@@ -32,10 +37,10 @@ export default function Header() {
           <div className="ml-auto flex items-center gap-3 md:ml-0">
             <ThemeSwitcher />
             <a
-              href="/login"
+              href={accountHref}
               className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
-              title="Login"
-              aria-label="Login"
+              title={accountLabel}
+              aria-label={accountLabel}
               rel="noopener noreferrer"
             >
               <LogIn className="aspect-square w-5" />
