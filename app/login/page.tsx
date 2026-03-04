@@ -3,30 +3,27 @@
 export const dynamic = "force-dynamic";
 
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect } from "react";
+import { Suspense, useEffect, useMemo } from "react";
+
+function getSafeCheckoutPath(raw: string | null): string | null {
+    if (!raw) return null;
+    const value = raw.trim();
+    if (!value.startsWith("/") || value.startsWith("//")) {
+        return null;
+    }
+    return value;
+}
 
 function LoginClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
-
-    // preserve checkout_url in a regular cookie; callback handler will
-    // still read it server-side from the same cookie.
-    useEffect(() => {
-        const rawDest = searchParams.get("checkout_url");
-        if (rawDest) {
-            try {
-                const dest = decodeURIComponent(rawDest);
-                // basic sanitization: only keep path-like values
-                if (dest.startsWith("/")) {
-                    document.cookie = `shopify_post_login_redirect=${encodeURIComponent(
-                        dest,
-                    )};path=/;max-age=300;SameSite=Lax`;
-                }
-            } catch {
-                // skip malformed
-            }
-        }
-    }, [searchParams]);
+    const checkoutPath = useMemo(
+        () => getSafeCheckoutPath(searchParams.get("checkout_url")),
+        [searchParams],
+    );
+    const loginHref = checkoutPath
+        ? `/api/auth/customer/login?checkout_url=${encodeURIComponent(checkoutPath)}`
+        : "/api/auth/customer/login";
 
     // if already logged in, send straight to account/checkouts
     useEffect(() => {
@@ -34,16 +31,15 @@ function LoginClient() {
             .then((res) => res.json())
             .then((sess) => {
                 if (sess?.loggedIn) {
-                    const dest = searchParams.get("checkout_url");
-                    if (dest) {
-                        router.replace(dest);
+                    if (checkoutPath) {
+                        router.replace(checkoutPath);
                     } else {
                         router.replace("/account");
                     }
                 }
             })
             .catch(() => { });
-    }, [router, searchParams]);
+    }, [checkoutPath, router]);
 
     return (
         <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
@@ -52,7 +48,7 @@ function LoginClient() {
                 You’ll be redirected to Shopify to authenticate your customer account.
             </p>
             <a
-                href="/api/auth/customer/login"
+                href={loginHref}
                 target="_self"
                 className="inline-block rounded bg-primary-600 px-6 py-3 text-white hover:bg-primary-700"
                 rel="noopener noreferrer"
@@ -61,7 +57,7 @@ function LoginClient() {
                     // fetch the API route instead of letting the browser
                     // handle the redirect response.  Force a hard load.
                     e.preventDefault();
-                    window.location.href = "/api/auth/customer/login";
+                    window.location.href = loginHref;
                 }}
             >
                 Log in with Shopify

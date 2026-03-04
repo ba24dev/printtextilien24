@@ -1,7 +1,7 @@
 import { generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
 import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scopes";
-import { NextRequest, NextResponse } from "next/server";
 import { getShopifyAuthUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+import { NextRequest, NextResponse } from "next/server";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_AUTH_URL = getShopifyAuthUrl();
@@ -10,6 +10,15 @@ const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
 // note: SCOPES is now imported from a shared helper.  It defaults to the two
 // basic read scopes and can be overridden via
 // SHOPIFY_CUSTOMER_API_SCOPES in the environment.
+
+export function sanitizePostLoginRedirect(raw: string | null): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (!value.startsWith("/") || value.startsWith("//")) {
+    return null;
+  }
+  return value;
+}
 
 export async function GET(request: NextRequest) {
   // warn if the scopes string is blank – this is a common misconfiguration
@@ -56,6 +65,8 @@ export async function GET(request: NextRequest) {
   if (SCOPES !== normalizeScopes(SCOPES)) {
     console.info("normalized scopes to", normalizeScopes(SCOPES), "from", SCOPES);
   }
+  const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
+  const postLoginRedirect = sanitizePostLoginRedirect(checkoutUrl);
 
   const response = NextResponse.redirect(authUrl);
   response.cookies.set("shopify_pkce_verifier", verifier, {
@@ -79,6 +90,15 @@ export async function GET(request: NextRequest) {
     maxAge: 300,
     path: "/",
   });
+  if (postLoginRedirect) {
+    response.cookies.set("shopify_post_login_redirect", postLoginRedirect, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 300,
+      path: "/",
+    });
+  }
   return response;
 }
 
@@ -88,4 +108,4 @@ export function __testConfig() {
 }
 
 // also export raw constants in case a test needs them
-export { SHOPIFY_CLIENT_ID, SHOPIFY_AUTH_URL, REDIRECT_URI };
+export { REDIRECT_URI, SHOPIFY_AUTH_URL, SHOPIFY_CLIENT_ID };

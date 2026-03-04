@@ -9,7 +9,9 @@
 function requiredEnv(name: string): string {
   const val = process.env[name];
   if (!val) {
-    throw new Error(`${name} is required for Customer Account OAuth and must be set to the full Shopify URL (including the numeric identifier)`);
+    throw new Error(
+      `${name} is required for Customer Account OAuth and must be set to the full Shopify URL (including the numeric identifier)`,
+    );
   }
   return val;
 }
