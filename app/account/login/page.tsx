@@ -1,10 +1,10 @@
 import LoginPage from "../login/page";
 
 // `/account/login` is the canonical URL Shopify uses when redirecting from
-// cart/checkouts.  Instead of bouncing to `/login`, we render the same
-// component directly so the link matches exactly what Shopify expects.
-// The shared page already understands `searchParams` (including
-// `checkout_url`), so this wrapper simply forwards props.
-export default function AccountLoginPage(props: { searchParams?: Record<string, string> }) {
-    return <LoginPage {...props} />;
+// cart/checkouts.  We don’t forward any props because the client component
+// already reads `useSearchParams()` itself; passing the `searchParams` object
+// would include a `get()` function which cannot be serialized and causes the
+// runtime error seen in production.
+export default function AccountLoginPage() {
+    return <LoginPage />;
 }
