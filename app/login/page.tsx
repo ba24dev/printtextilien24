@@ -53,8 +53,16 @@ function LoginClient() {
             </p>
             <a
                 href="/api/auth/customer/login"
+                target="_self"
                 className="inline-block rounded bg-primary-600 px-6 py-3 text-white hover:bg-primary-700"
                 rel="noopener noreferrer"
+                onClick={(e) => {
+                    // prevent Next.js client-side navigation which would
+                    // fetch the API route instead of letting the browser
+                    // handle the redirect response.  Force a hard load.
+                    e.preventDefault();
+                    window.location.href = "/api/auth/customer/login";
+                }}
             >
                 Log in with Shopify
             </a>

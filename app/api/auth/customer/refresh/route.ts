@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
-const SHOPIFY_TOKEN_URL = process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL!;
+import { getShopifyTokenUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+
+const SHOPIFY_CLIENT_ID = getShopifyClientId();
+const SHOPIFY_TOKEN_URL = getShopifyTokenUrl();
 // public client flows don't supply a secret
 const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
 
@@ -47,3 +49,9 @@ export async function GET(request: NextRequest) {
   });
   return response;
 }
+
+// exports/helpers for tests
+export function __testConfig() {
+  return { SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL } as const;
+}
+export { SHOPIFY_CLIENT_ID, SHOPIFY_TOKEN_URL };
