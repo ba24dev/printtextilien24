@@ -72,16 +72,16 @@ former URL is treated as the primary one to avoid unnecessary redirects.
 ## Local Development
 
 - Use a tunnel (e.g., ngrok) for HTTPS callback URLs: `https://<ngrok-id>.ngrok.io/api/auth/customer/callback`.
-- **Environment variables:** you must supply the client ID and redirect URI.  The three provider URLs
+- **Environment variables:** you must supply the client ID and redirect URI. The three provider URLs
   (`SHOPIFY_CUSTOMER_API_AUTH_URL`, `SHOPIFY_CUSTOMER_API_TOKEN_URL`,
   `SHOPIFY_CUSTOMER_API_LOGOUT_URL`) **must** also be set to the full Shopify
   endpoints you copied from the admin; they include a numeric identifier that
-  cannot be inferred from the client ID or any other value.  Omitting them will
-  cause the login flow to throw an error at runtime.  This is a one-time copy‑paste
+  cannot be inferred from the client ID or any other value. Omitting them will
+  cause the login flow to throw an error at runtime. This is a one-time copy‑paste
   cost, and it prevents the endless mis‑config loops we’ve been chasing.
 
   The only Shopify URL that actually uses your store’s domain is
-  `NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL` (for the Storefront API).  Don’t try to
+  `NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL` (for the Storefront API). Don’t try to
   build the OAuth endpoints from it: the authorization server is completely
   separate.
 

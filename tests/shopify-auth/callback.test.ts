@@ -1,6 +1,4 @@
-import { GET } from "@/app/api/auth/customer/callback/route";
-import { SCOPES } from "@/lib/shopify/auth/scopes";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // create a fake request-like object with a URL property and optional
 // cookies.  The middleware handler only reads `cookies.get().value`, so we
@@ -14,8 +12,26 @@ function makeRequest(url: string, cookies?: Record<string, string | undefined>) 
   } as unknown as Request;
 }
 
+async function importCallbackRoute() {
+  return await import("@/app/api/auth/customer/callback/route");
+}
+
+async function importScopes() {
+  return await import("@/lib/shopify/auth/scopes");
+}
+
 describe("callback route", () => {
+  beforeEach(() => {
+    vi.resetModules();
+    process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID = "test-client-id";
+    process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL = "https://shopify.com/authentication/123/oauth/token";
+    process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI =
+      "https://example.com/api/auth/customer/callback";
+  });
+
   it("warns if Shopify returns a different scope than requested", async () => {
+    const { GET } = await importCallbackRoute();
+    const { SCOPES } = await importScopes();
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const req = makeRequest("https://example.com/?code=abc&state=xyz&scope=not_allowed");
     // call handler; it will return early due to missing cookies but after
@@ -31,6 +47,7 @@ describe("callback route", () => {
   });
 
   it("uses stored post-login redirect when available", async () => {
+    const { GET } = await importCallbackRoute();
     // stub fetch to return a successful token response
     const fakeFetch = vi.spyOn(global, "fetch" as any).mockResolvedValue({
       ok: true,
