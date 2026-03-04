@@ -1,9 +1,10 @@
 import { generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
 import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scopes";
 import { NextRequest, NextResponse } from "next/server";
+import { getShopifyAuthUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
 
-const SHOPIFY_CLIENT_ID = process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID!;
-const SHOPIFY_AUTH_URL = process.env.SHOPIFY_CUSTOMER_API_AUTH_URL!;
+const SHOPIFY_CLIENT_ID = getShopifyClientId();
+const SHOPIFY_AUTH_URL = getShopifyAuthUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
 
 // note: SCOPES is now imported from a shared helper.  It defaults to the two
@@ -80,3 +81,11 @@ export async function GET(request: NextRequest) {
   });
   return response;
 }
+
+// helpers exported for tests
+export function __testConfig() {
+  return { SHOPIFY_CLIENT_ID, SHOPIFY_AUTH_URL, REDIRECT_URI } as const;
+}
+
+// also export raw constants in case a test needs them
+export { SHOPIFY_CLIENT_ID, SHOPIFY_AUTH_URL, REDIRECT_URI };
