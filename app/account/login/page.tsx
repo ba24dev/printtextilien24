@@ -1,10 +1,10 @@
+"use client";
+
 import LoginPage from "../login/page";
 
-// `/account/login` is the canonical URL Shopify uses when redirecting from
-// cart/checkouts.  We don’t forward any props because the client component
-// already reads `useSearchParams()` itself; passing the `searchParams` object
-// would include a `get()` function which cannot be serialized and causes the
-// runtime error seen in production.
+// `/account/login` is the canonical Shopify callback URL.  We make this a
+// client component as well so that the request never attempts server rendering
+// (avoiding serialization errors entirely).
 export default function AccountLoginPage() {
     return <LoginPage />;
 }
