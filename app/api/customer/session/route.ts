@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   applyCustomerAuthCookies,
   clearCustomerAuthCookies,
+  readCustomerCookie,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
 import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
@@ -13,14 +14,14 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   if (!isShopifyCustomerAuthV2Enabled()) {
-    const hasToken = Boolean(request.cookies.get("shopify_customer_access_token")?.value);
+    const hasToken = Boolean(readCustomerCookie(request.cookies, "shopify_customer_access_token"));
     const response = NextResponse.json({ loggedIn: hasToken });
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }
 
-  const accessToken = request.cookies.get("shopify_customer_access_token")?.value;
-  const refreshToken = request.cookies.get("shopify_customer_refresh_token")?.value;
+  const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
+  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
 
   const validation = await validateCustomerSession(accessToken, refreshToken);
   if (!validation.authenticated) {
