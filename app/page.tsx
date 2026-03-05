@@ -1,5 +1,6 @@
 "use client";
 
+import { copy } from "@/config/copy";
 import FeaturedProducts from "@/components/marketing/FeaturedProducts";
 import Hero from "@/components/marketing/Hero";
 import ProductCarousel from "@/components/marketing/ProductCarousel";
@@ -36,7 +37,7 @@ export default function HomePage() {
   }, []);
 
   if (loading) {
-    return <div className="px-6 py-12 text-sm text-foreground/70">Loading homepage…</div>;
+    return <div className="px-6 py-12 text-sm text-foreground/70">{copy.home.loading}</div>;
   }
 
   return (

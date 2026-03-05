@@ -7,6 +7,10 @@ export const copy = {
     noImageLabel: "Kein Bild verfügbar",
   },
 
+  home: {
+    loading: "Startseite wird geladen…",
+  },
+
   header: {
     brand: "Printtextilien24",
     nav: [
@@ -27,6 +31,7 @@ export const copy = {
   catalog: {
     collectionsTitle: "Kollektionen",
     sortTitle: "Sortierung",
+    loading: "Lädt…",
     noProducts: "Keine Produkte in dieser Kollektion gefunden.",
     productFallbackDescription: "Premium-Qualität – bereit für Ihr Design.",
     productFallbackTitle: "Produktname nicht verfügbar",
@@ -56,6 +61,10 @@ export const copy = {
     addToCart: "In den Warenkorb",
     addingToCart: "Wird zum Warenkorb hinzugefügt…",
     soldOut: "Ausverkauft",
+    customizableBadge: "Individualisierbar",
+    printSurfacesTitle: "Druckflächen",
+    uploadRequired: "Bitte Bild hochladen und platzieren, um fortzufahren",
+    previewAlt: (name: string) => `Vorschau ${name}`,
     descriptionTitle: "Beschreibung",
     highlightsTitle: "Highlights",
     detailsTitle: "Details",
@@ -142,7 +151,59 @@ export const copy = {
   actions: {
     close: "Schließen",
     submit: "Senden",
+    sending: "Wird gesendet…",
     cancel: "Abbrechen",
+  },
+
+  auth: {
+    loginLabel: "Anmelden",
+    accountMenuLabel: "Kontomenü",
+    profileLabel: "Profil",
+    logoutLabel: "Abmelden",
+    signInTitle: "Anmelden",
+    signInWithShopify: "Mit Shopify anmelden",
+    redirectHint: "Sie werden zu Shopify weitergeleitet, um Ihr Kundenkonto zu authentifizieren.",
+    logoutNotice:
+      "Sie wurden auf dieser Seite abgemeldet. Auf gemeinsam genutzten Geräten kann beim Anbieter weiterhin eine Sitzung bestehen. Klicken Sie unten, um sich explizit neu anzumelden.",
+    checkoutUnavailable:
+      "Ihre vorherige Checkout-Sitzung ist nicht mehr verfügbar. Bitte öffnen Sie den Checkout erneut aus dem Warenkorb.",
+    sessionExpired:
+      "Ihre Anmeldesitzung ist abgelaufen. Bitte klicken Sie erneut auf Anmelden.",
+    invalidCallback:
+      "Ungültige Authentifizierungs-Antwort. Bitte starten Sie die Anmeldung erneut.",
+  },
+
+  account: {
+    title: "Konto",
+    loadErrorTitle: "Kontodaten konnten nicht geladen werden.",
+    hostError: "Host konnte für die Kontodaten-Anfrage nicht ermittelt werden.",
+    apiError: (status: number) => `Konto-API Anfrage fehlgeschlagen (${status}).`,
+    profileFetchError: "Kundenprofil konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+    retry: "Erneut versuchen",
+    checkoutUnavailable:
+      "Ihre vorherige Checkout-Sitzung ist nicht mehr verfügbar. Bitte gehen Sie zurück zum Warenkorb und starten Sie den Checkout erneut.",
+    noEmail: "Keine E-Mail verfügbar",
+    profileUnavailable: "Profildaten konnten nicht geladen werden.",
+    ordersTitle: "Bestellungen",
+    noOrders: "Noch keine Bestellungen vorhanden.",
+    orderPrefix: "Bestellung",
+    orderDateLabel: "Datum",
+    orderTotalLabel: "Gesamt",
+  },
+
+  sitemap: {
+    title: "Sitemap",
+    description: "Übersicht über die wichtigsten Seiten dieser Website.",
+    paths: [
+      { label: "Startseite", href: "/" },
+      { label: "Produkte", href: "/products" },
+      { label: "Kollektion: TSV", href: "/collections/tsv" },
+      { label: "Kollektion: Allgemein", href: "/collections/allgemein" },
+      { label: "Kontakt", href: "/contact" },
+      { label: "Datenschutz", href: "/privacy" },
+      { label: "Impressum", href: "/imprint" },
+      { label: "XML Sitemap (für Suchmaschinen)", href: "/sitemap.xml" },
+    ],
   },
 
   contact: {

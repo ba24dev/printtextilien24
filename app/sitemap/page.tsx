@@ -1,14 +1,7 @@
+import { copy } from "@/config/copy";
+
 export default function SitemapPage() {
-  const paths = [
-    { label: "Startseite", href: "/" },
-    { label: "Produkte", href: "/products" },
-    { label: "Kollektion: TSV", href: "/collections/tsv" },
-    { label: "Kollektion: Allgemein", href: "/collections/allgemein" },
-    { label: "Kontakt", href: "/contact" },
-    { label: "Datenschutz", href: "/privacy" },
-    { label: "Impressum", href: "/imprint" },
-    { label: "XML Sitemap (für Suchmaschinen)", href: "/sitemap.xml" },
-  ];
+  const paths = copy.sitemap.paths;
 
   return (
     <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">
@@ -17,10 +10,10 @@ export default function SitemapPage() {
           <div className="flex-1 space-y-6">
             <header className="space-y-4">
               <h1 className="text-4xl font-semibold leading-tight text-foreground sm:text-5xl md:text-6xl">
-                Sitemap
+                {copy.sitemap.title}
               </h1>
               <p className="max-w-lg text-base text-foreground/70 md:text-lg">
-                Übersicht über die wichtigsten Seiten dieser Website.
+                {copy.sitemap.description}
               </p>
             </header>
 
