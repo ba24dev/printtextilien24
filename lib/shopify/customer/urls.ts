@@ -47,3 +47,13 @@ export function getShopifyStorefrontOrigin(): string | null {
     return null;
   }
 }
+
+export function getShopifyCustomerApiDiscoveryUrl(): string {
+  const storefrontOrigin = getShopifyStorefrontOrigin();
+  if (!storefrontOrigin) {
+    throw new Error(
+      "NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL (or SHOPIFY_STOREFRONT_URL) is required to discover Customer API endpoints.",
+    );
+  }
+  return new URL("/.well-known/customer-account-api", storefrontOrigin).toString();
+}

@@ -1,12 +1,38 @@
 import { formatAccessToken } from "@/lib/shopify/auth/token";
+import { getCustomerApiDiscovery } from "./discovery";
+import { getShopifyStorefrontOrigin } from "./urls";
+
+let cachedCustomerGraphqlEndpoint: string | null = null;
+
+async function resolveCustomerGraphqlEndpoint(): Promise<string> {
+  if (cachedCustomerGraphqlEndpoint) return cachedCustomerGraphqlEndpoint;
+
+  const discovery = await getCustomerApiDiscovery();
+  if (discovery?.graphql_api) {
+    cachedCustomerGraphqlEndpoint = discovery.graphql_api;
+    return cachedCustomerGraphqlEndpoint;
+  }
+
+  // Fallback for environments where discovery is unavailable.
+  const storefrontOrigin = getShopifyStorefrontOrigin();
+  if (!storefrontOrigin) {
+    throw new Error(
+      "Could not resolve Shopify Customer GraphQL endpoint: missing storefront URL configuration.",
+    );
+  }
+  cachedCustomerGraphqlEndpoint = new URL(
+    "/account/customer/api/latest/graphql.json",
+    storefrontOrigin,
+  ).toString();
+  return cachedCustomerGraphqlEndpoint;
+}
 
 export async function shopifyCustomerGraphQL<T = any>(
   accessToken: string,
   query: string,
   variables?: Record<string, any>,
 ): Promise<T> {
-  const SHOPIFY_DOMAIN = process.env.NEXT_PUBLIC_SHOPIFY_DOMAIN!;
-  const endpoint = `https://${SHOPIFY_DOMAIN}/account/customer/api/2023-10/graphql.json`;
+  const endpoint = await resolveCustomerGraphqlEndpoint();
   // ensure token has correct prefix and no Bearer keyword
   const token = formatAccessToken(accessToken);
   const res = await fetch(endpoint, {
