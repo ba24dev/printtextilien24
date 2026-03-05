@@ -1,6 +1,7 @@
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { copy } from "@/config/copy";
 
 type AccountCustomer = {
   id?: string;
@@ -50,7 +51,7 @@ async function getCustomerData(): Promise<AccountFetchResult> {
   if (!host) {
     return {
       status: "error",
-      message: "Could not determine request host for account lookup.",
+      message: copy.account.hostError,
     };
   }
   const protoHeader = requestHeaders.get("x-forwarded-proto");
@@ -70,7 +71,7 @@ async function getCustomerData(): Promise<AccountFetchResult> {
     if (!response.ok) {
       return {
         status: "error",
-        message: payload.error ?? `Account API request failed (${response.status}).`,
+        message: payload.error ?? copy.account.apiError(response.status),
       };
     }
 
@@ -81,7 +82,7 @@ async function getCustomerData(): Promise<AccountFetchResult> {
   } catch {
     return {
       status: "error",
-      message: "Could not load customer profile. Please try again.",
+      message: copy.account.profileFetchError,
     };
   }
 }
@@ -99,11 +100,11 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   if (result.status === "error") {
     return (
       <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
-        <h1 className="text-4xl font-bold mb-4 mt-16">Account</h1>
-        <p className="text-sm text-red-500 mb-4">Could not load account details.</p>
+        <h1 className="text-4xl font-bold mb-4 mt-16">{copy.account.title}</h1>
+        <p className="text-sm text-red-500 mb-4">{copy.account.loadErrorTitle}</p>
         <p className="text-sm text-gray-500 mb-6">{result.message}</p>
         <Link href="/account" className="underline">
-          Retry
+          {copy.account.retry}
         </Link>
       </main>
     );
@@ -114,44 +115,43 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   return (
     <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
-      <h1 className="text-4xl font-bold mb-4 mt-16">Account</h1>
+      <h1 className="text-4xl font-bold mb-4 mt-16">{copy.account.title}</h1>
       {checkoutError ? (
         <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
-          Your previous checkout session is no longer available. Please return to cart and
-          start checkout again.
+          {copy.account.checkoutUnavailable}
         </div>
       ) : null}
       <div className="mb-6">
         {customer ? (
           <>
-            <div className="font-medium">{customer.email ?? "No email available"}</div>
+            <div className="font-medium">{customer.email ?? copy.account.noEmail}</div>
             <div className="text-xs text-gray-500">{customer.id}</div>
             <div>
               {customer.firstName ?? ""} {customer.lastName ?? ""}
             </div>
           </>
         ) : (
-          <div className="text-sm text-red-500">Could not load customer profile details.</div>
+          <div className="text-sm text-red-500">{copy.account.profileUnavailable}</div>
         )}
         <Link href="/api/auth/customer/logout" className="text-red-600 underline text-sm">
-          Logout
+          {copy.auth.logoutLabel}
         </Link>
       </div>
-      <h2 className="text-xl font-semibold mb-2">Orders</h2>
+      <h2 className="text-xl font-semibold mb-2">{copy.account.ordersTitle}</h2>
       {orders?.edges?.length ? (
         <ul className="space-y-2">
           {orders.edges.map(({ node }) => (
             <li key={node.id} className="border rounded p-3">
-              <div className="font-medium">Order {node.name}</div>
-              <div>Date: {new Date(node.processedAt).toLocaleDateString()}</div>
+              <div className="font-medium">{copy.account.orderPrefix} {node.name}</div>
+              <div>{copy.account.orderDateLabel}: {new Date(node.processedAt).toLocaleDateString()}</div>
               <div>
-                Total: {node.totalPrice.amount} {node.totalPrice.currencyCode}
+                {copy.account.orderTotalLabel}: {node.totalPrice.amount} {node.totalPrice.currencyCode}
               </div>
             </li>
           ))}
         </ul>
       ) : (
-        <div className="text-sm text-gray-500">No orders yet.</div>
+        <div className="text-sm text-gray-500">{copy.account.noOrders}</div>
       )}
     </main>
   );

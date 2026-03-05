@@ -1,3 +1,4 @@
+import { copy } from "@/config/copy";
 import ProductGrid from "@/components/catalog/ProductGrid";
 import { fetchCollectionsWithProducts } from "@/lib/shopify/collection";
 import { Suspense } from "react";
@@ -9,7 +10,7 @@ export default async function ProductsPage() {
   );
 
   return (
-    <Suspense fallback={<div className="py-24 text-center">Lädt…</div>}>
+    <Suspense fallback={<div className="py-24 text-center">{copy.catalog.loading}</div>}>
       <ProductGrid collections={visibleCollections} />
     </Suspense>
   );

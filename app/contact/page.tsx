@@ -88,7 +88,7 @@ export default function ContactPage() {
               disabled={status === "sending"}
               className="btn-primary w-full"
             >
-              {status === "sending" ? "Senden…" : copy.actions.submit}
+              {status === "sending" ? copy.actions.sending : copy.actions.submit}
             </button>
             {status === "success" && (
               <p className="text-green-600">{copy.contact?.success}</p>

@@ -55,14 +55,14 @@ export default function ProductInfo({
           ) : null}
           {enableCustomization && hasPrintSurfaces ? (
             <span className="mt-3 inline-flex items-center gap-2 rounded-full bg-primary-600/20 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary-100">
-              Customizable
+              {copy.product.customizableBadge}
             </span>
           ) : null}
         </div>
 
         {enableCustomization && hasPrintSurfaces ? (
           <div className="mt-4">
-            <h3 className="text-sm font-medium text-foreground/70">Druckflächen</h3>
+            <h3 className="text-sm font-medium text-foreground/70">{copy.product.printSurfacesTitle}</h3>
             <ul className="mt-2 flex gap-3">
               {printSurfaces.map((s, idx) => (
                 <li
@@ -74,7 +74,7 @@ export default function ProductInfo({
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={s.previewImageUrl}
-                      alt={`Vorschau ${s.name}`}
+                      alt={copy.product.previewAlt(s.name)}
                       className="h-10 w-10 rounded-md object-cover"
                     />
                   ) : (
@@ -113,7 +113,7 @@ export default function ProductInfo({
             {!available
               ? copy.product.soldOut
               : needsCustomizationBlocker
-                ? "Upload & platzieren, um fortzufahren"
+                ? copy.product.uploadRequired
                 : copy.product.addToCart}
           </AddToCartButton>
         ) : null}

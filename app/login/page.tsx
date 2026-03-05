@@ -2,6 +2,7 @@
 
 export const dynamic = "force-dynamic";
 
+import { copy } from "@/config/copy";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo } from "react";
 
@@ -88,30 +89,29 @@ function LoginClient() {
 
     return (
         <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
-            <h1 className="text-4xl font-bold mb-4 mt-16">Sign in</h1>
+            <h1 className="text-4xl font-bold mb-4 mt-16">{copy.auth.signInTitle}</h1>
             {logoutNotice ? (
                 <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
-                    This signs you out of this site. On shared devices, provider sessions can still exist.
-                    Click the button below to re-authenticate explicitly.
+                    {copy.auth.logoutNotice}
                 </div>
             ) : null}
             {checkoutUnavailable ? (
                 <div className="mb-4 rounded border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
-                    Your previous checkout session is no longer available. Please reopen checkout from your cart.
+                    {copy.auth.checkoutUnavailable}
                 </div>
             ) : null}
             {authSessionExpired ? (
                 <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
-                    Your sign-in session expired. Please click the login button again.
+                    {copy.auth.sessionExpired}
                 </div>
             ) : null}
             {authInvalidCallback ? (
                 <div className="mb-4 rounded border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
-                    Invalid authentication callback. Please restart login.
+                    {copy.auth.invalidCallback}
                 </div>
             ) : null}
             <p className="mb-6">
-                You’ll be redirected to Shopify to authenticate your customer account.
+                {copy.auth.redirectHint}
             </p>
             <a
                 href={loginHref}
@@ -126,7 +126,7 @@ function LoginClient() {
                     window.location.href = loginHref;
                 }}
             >
-                Log in with Shopify
+                {copy.auth.signInWithShopify}
             </a>
         </main>
     );
