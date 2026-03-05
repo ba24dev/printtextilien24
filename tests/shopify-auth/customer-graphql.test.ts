@@ -72,4 +72,47 @@ describe("customer graphql client", () => {
     );
     fetchSpy.mockRestore();
   });
+
+  it("retries with alternate authorization header formats on unauthorized", async () => {
+    const fetchSpy = vi
+      .spyOn(global, "fetch" as any)
+      .mockImplementation(async (...args: unknown[]) => {
+        const url = String(args[0]);
+        if (url.endsWith("/.well-known/customer-account-api")) {
+          return {
+            ok: true,
+            json: async () => ({
+              graphql_api:
+                "https://12d54a-a9.myshopify.com/account/customer/api/2025-10/graphql.json",
+            }),
+          } as any;
+        }
+        const auth = String((args[1] as any)?.headers?.Authorization || "");
+        if (auth === "shcat_abc123") {
+          return {
+            ok: true,
+            json: async () => ({ errors: [{ message: "Invalid token" }] }),
+          } as any;
+        }
+        if (auth === "Bearer abc123") {
+          return {
+            ok: true,
+            json: async () => ({ data: { customer: { email: "fallback-auth@example.com" } } }),
+          } as any;
+        }
+        return {
+          ok: true,
+          json: async () => ({ errors: [{ message: "Unauthorized" }] }),
+        } as any;
+      });
+
+    const { shopifyCustomerGraphQL } = await importCustomerGraphql();
+    const result = await shopifyCustomerGraphQL<{ customer: { email: string } }>(
+      "abc123",
+      "query Customer { customer { email } }",
+    );
+
+    expect(result.customer.email).toBe("fallback-auth@example.com");
+    fetchSpy.mockRestore();
+  });
 });

@@ -33,22 +33,56 @@ export async function shopifyCustomerGraphQL<T = any>(
   variables?: Record<string, any>,
 ): Promise<T> {
   const endpoint = await resolveCustomerGraphqlEndpoint();
-  // ensure token has correct prefix and no Bearer keyword
-  const token = formatAccessToken(accessToken);
-  const res = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: token,
-    },
-    body: JSON.stringify({ query, variables }),
-  });
-  if (!res.ok) {
-    throw new Error(`Shopify Customer API error: ${res.status}`);
+  const normalized = accessToken.trim().replace(/^Bearer\s+/i, "");
+  const prefixed = formatAccessToken(normalized);
+  const unprefixed = prefixed.startsWith("shcat_") ? prefixed.slice("shcat_".length) : normalized;
+
+  const tokenCandidates = Array.from(
+    new Set([normalized, prefixed, unprefixed].filter((token) => token.length > 0)),
+  );
+  const authHeaderCandidates = Array.from(
+    new Set(
+      tokenCandidates.flatMap((token) => [
+        token,
+        `Bearer ${token}`,
+      ]),
+    ),
+  );
+
+  let lastUnauthorizedError: Error | null = null;
+  for (const authHeader of authHeaderCandidates) {
+    const res = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: authHeader,
+      },
+      body: JSON.stringify({ query, variables }),
+    });
+    if (!res.ok) {
+      if (res.status === 401 || res.status === 403) {
+        lastUnauthorizedError = new Error(`Shopify Customer API error: ${res.status}`);
+        continue;
+      }
+      throw new Error(`Shopify Customer API error: ${res.status}`);
+    }
+
+    const json = await res.json();
+    if (json.errors) {
+      const message = json.errors.map((e: any) => e.message).join("; ");
+      const lower = message.toLowerCase();
+      if (
+        lower.includes("invalid token") ||
+        lower.includes("unauthorized") ||
+        lower.includes("access denied")
+      ) {
+        lastUnauthorizedError = new Error(message);
+        continue;
+      }
+      throw new Error(message);
+    }
+    return json.data;
   }
-  const json = await res.json();
-  if (json.errors) {
-    throw new Error(json.errors.map((e: any) => e.message).join("; "));
-  }
-  return json.data;
+
+  throw lastUnauthorizedError ?? new Error("Shopify Customer API unauthorized");
 }
