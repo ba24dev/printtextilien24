@@ -18,6 +18,10 @@ type CustomerCookieOptions = {
   maxAge?: number;
 };
 
+const TOKEN_COOKIE_CHUNK_SIZE = 1800;
+const MAX_TOKEN_COOKIE_CHUNKS = 12;
+const CHUNKED_COOKIE_SENTINEL = "__chunked__";
+
 function customerCookieOptions(options?: CustomerCookieOptions) {
   const domain = getCustomerCookieDomain();
   return {
@@ -30,8 +34,107 @@ function customerCookieOptions(options?: CustomerCookieOptions) {
   };
 }
 
-export function clearCustomerCookie(response: NextResponse, name: string): void {
+type CookieStoreLike = {
+  get(name: string): { value: string } | undefined;
+};
+
+function serializeTokenCookieValue(value: string): string {
+  return `uri:${encodeURIComponent(value)}`;
+}
+
+function deserializeTokenCookieValue(value: string): string {
+  if (!value.startsWith("uri:")) return value;
+  const encoded = value.slice("uri:".length);
+  try {
+    return decodeURIComponent(encoded);
+  } catch {
+    return encoded;
+  }
+}
+
+function chunkCountCookieName(name: string): string {
+  return `${name}_chunks`;
+}
+
+function chunkCookieName(name: string, index: number): string {
+  return `${name}_${index}`;
+}
+
+function clearCookie(response: NextResponse, name: string): void {
   response.cookies.set(name, "", customerCookieOptions({ httpOnly: false, maxAge: 0 }));
+}
+
+function clearTokenChunkCookies(response: NextResponse, name: string): void {
+  clearCookie(response, chunkCountCookieName(name));
+  for (let index = 0; index < MAX_TOKEN_COOKIE_CHUNKS; index += 1) {
+    clearCookie(response, chunkCookieName(name, index));
+  }
+}
+
+function setTokenCookie(
+  response: NextResponse,
+  name: string,
+  tokenValue: string,
+  maxAge: number,
+): void {
+  const serialized = serializeTokenCookieValue(tokenValue);
+  if (serialized.length <= TOKEN_COOKIE_CHUNK_SIZE) {
+    response.cookies.set(name, serialized, customerCookieOptions({ maxAge }));
+    clearTokenChunkCookies(response, name);
+    return;
+  }
+
+  const chunkCount = Math.ceil(serialized.length / TOKEN_COOKIE_CHUNK_SIZE);
+  if (chunkCount > MAX_TOKEN_COOKIE_CHUNKS) {
+    throw new Error("Token too large to store in cookies");
+  }
+
+  response.cookies.set(name, CHUNKED_COOKIE_SENTINEL, customerCookieOptions({ maxAge }));
+  response.cookies.set(
+    chunkCountCookieName(name),
+    String(chunkCount),
+    customerCookieOptions({ maxAge }),
+  );
+  for (let index = 0; index < chunkCount; index += 1) {
+    const start = index * TOKEN_COOKIE_CHUNK_SIZE;
+    const end = start + TOKEN_COOKIE_CHUNK_SIZE;
+    const chunk = serialized.slice(start, end);
+    response.cookies.set(chunkCookieName(name, index), chunk, customerCookieOptions({ maxAge }));
+  }
+  for (let index = chunkCount; index < MAX_TOKEN_COOKIE_CHUNKS; index += 1) {
+    clearCookie(response, chunkCookieName(name, index));
+  }
+}
+
+export function readCustomerCookie(cookieStore: CookieStoreLike, name: string): string | undefined {
+  const baseValue = cookieStore.get(name)?.value;
+  if (baseValue && baseValue !== CHUNKED_COOKIE_SENTINEL) {
+    return deserializeTokenCookieValue(baseValue);
+  }
+
+  const chunkCountRaw = cookieStore.get(chunkCountCookieName(name))?.value;
+  if (!chunkCountRaw) {
+    return undefined;
+  }
+
+  const chunkCount = Number.parseInt(chunkCountRaw, 10);
+  if (!Number.isInteger(chunkCount) || chunkCount < 1 || chunkCount > MAX_TOKEN_COOKIE_CHUNKS) {
+    return undefined;
+  }
+
+  let combined = "";
+  for (let index = 0; index < chunkCount; index += 1) {
+    const chunk = cookieStore.get(chunkCookieName(name, index))?.value;
+    if (!chunk) return undefined;
+    combined += chunk;
+  }
+  if (!combined) return undefined;
+  return deserializeTokenCookieValue(combined);
+}
+
+export function clearCustomerCookie(response: NextResponse, name: string): void {
+  clearCookie(response, name);
+  clearTokenChunkCookies(response, name);
 }
 
 export type CustomerIdentity = {
@@ -77,24 +180,18 @@ export function clearCustomerAuthCookies(response: NextResponse): void {
 }
 
 export function applyCustomerAuthCookies(response: NextResponse, tokenData: TokenResponse): void {
-  response.cookies.set(
-    "shopify_customer_access_token",
-    tokenData.access_token,
-    customerCookieOptions({ maxAge: tokenMaxAge(tokenData.expires_in) }),
-  );
+  const accessTokenMaxAge = tokenMaxAge(tokenData.expires_in);
+  setTokenCookie(response, "shopify_customer_access_token", tokenData.access_token, accessTokenMaxAge);
   if (tokenData.refresh_token) {
-    response.cookies.set(
+    setTokenCookie(
+      response,
       "shopify_customer_refresh_token",
       tokenData.refresh_token,
-      customerCookieOptions({ maxAge: 60 * 60 * 24 * 30 }),
+      60 * 60 * 24 * 30,
     );
   }
   if (tokenData.id_token) {
-    response.cookies.set(
-      "shopify_customer_id_token",
-      tokenData.id_token,
-      customerCookieOptions({ maxAge: tokenMaxAge(tokenData.expires_in) }),
-    );
+    setTokenCookie(response, "shopify_customer_id_token", tokenData.id_token, accessTokenMaxAge);
   }
 }
 

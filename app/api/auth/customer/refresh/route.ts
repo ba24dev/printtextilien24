@@ -3,11 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import {
   applyCustomerAuthCookies,
   clearCustomerAuthCookies,
+  readCustomerCookie,
   refreshCustomerTokens,
 } from "@/lib/shopify/customer/session";
 
 export async function GET(request: NextRequest) {
-  const refreshToken = request.cookies.get("shopify_customer_refresh_token")?.value;
+  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
   if (!refreshToken) {
     const response = NextResponse.json({ error: "No refresh token" }, { status: 401 });
     clearCustomerAuthCookies(response);

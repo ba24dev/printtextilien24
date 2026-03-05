@@ -85,6 +85,59 @@ describe("session route", () => {
     fetchSpy.mockRestore();
   });
 
+  it("reads chunked access-token cookies", async () => {
+    const longToken = "a".repeat(2600);
+    const serialized = `uri:${encodeURIComponent(longToken)}`;
+    const chunkSize = 1800;
+    const chunks = [
+      serialized.slice(0, chunkSize),
+      serialized.slice(chunkSize),
+    ];
+
+    const fetchSpy = vi
+      .spyOn(global, "fetch" as any)
+      .mockImplementation(async (...args: unknown[]) => {
+        const url = String(args[0]);
+        if (url.endsWith("/.well-known/customer-account-api")) {
+          return {
+            ok: true,
+            json: async () => ({
+              graphql_api: "https://12d54a-a9.myshopify.com/account/customer/api/latest/graphql.json",
+            }),
+          } as any;
+        }
+        const auth = String((args[1] as any)?.headers?.Authorization || "");
+        expect(auth.length).toBeGreaterThan(2000);
+        return {
+          ok: true,
+          json: async () => ({
+            data: {
+              customer: {
+                id: "gid://shopify/Customer/99",
+                email: "chunked@example.com",
+              },
+            },
+          }),
+        } as any;
+      });
+
+    const { GET } = await importSessionRoute();
+    const req = makeRequest({
+      shopify_customer_access_token: "__chunked__",
+      shopify_customer_access_token_chunks: "2",
+      shopify_customer_access_token_0: chunks[0],
+      shopify_customer_access_token_1: chunks[1],
+    });
+    const res = await GET(req);
+
+    await expect(res.json()).resolves.toEqual({
+      loggedIn: true,
+      customerId: "gid://shopify/Customer/99",
+      email: "chunked@example.com",
+    });
+    fetchSpy.mockRestore();
+  });
+
   it("refreshes token once if access token is invalid", async () => {
     const fetchSpy = vi
       .spyOn(global, "fetch" as any)
@@ -141,8 +194,8 @@ describe("session route", () => {
       customerId: "gid://shopify/Customer/2",
       email: "refresh@example.com",
     });
-    expect(res.cookies.get("shopify_customer_access_token")?.value).toBe("shcat_new-token");
-    expect(res.cookies.get("shopify_customer_refresh_token")?.value).toBe("new-refresh");
+    expect(res.cookies.get("shopify_customer_access_token")?.value).toBe("uri:shcat_new-token");
+    expect(res.cookies.get("shopify_customer_refresh_token")?.value).toBe("uri:new-refresh");
     fetchSpy.mockRestore();
   });
 
