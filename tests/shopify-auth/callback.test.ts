@@ -37,13 +37,14 @@ describe("callback route", () => {
     const req = makeRequest("https://example.com/?code=abc&state=xyz&scope=not_allowed");
     // call handler; it will return early due to missing cookies but after
     // logging
-    await GET(req as any);
+    const res: any = await GET(req as any);
     expect(warn).toHaveBeenCalledWith(
       "Shopify returned a different scope than requested:",
       "not_allowed",
       "expected",
       SCOPES,
     );
+    expect(res.headers.get("location")).toBe("https://example.com/login?reason=auth_session_expired");
     warn.mockRestore();
   });
 

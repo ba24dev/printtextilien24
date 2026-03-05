@@ -50,10 +50,13 @@ function getSafeCheckoutUrl(raw: string | null): string | null {
 function LoginClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const reason = searchParams.get("reason");
     const logoutNotice = searchParams.get("logout") === "1";
     const checkoutUnavailable =
-        searchParams.get("reason") === "checkout_unavailable" ||
+        reason === "checkout_unavailable" ||
         searchParams.get("checkout_error") === "1";
+    const authSessionExpired = reason === "auth_session_expired";
+    const authInvalidCallback = reason === "auth_invalid_callback";
     const checkoutUrl = useMemo(
         () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
         [searchParams],
@@ -95,6 +98,16 @@ function LoginClient() {
             {checkoutUnavailable ? (
                 <div className="mb-4 rounded border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
                     Your previous checkout session is no longer available. Please reopen checkout from your cart.
+                </div>
+            ) : null}
+            {authSessionExpired ? (
+                <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
+                    Your sign-in session expired. Please click the login button again.
+                </div>
+            ) : null}
+            {authInvalidCallback ? (
+                <div className="mb-4 rounded border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
+                    Invalid authentication callback. Please restart login.
                 </div>
             ) : null}
             <p className="mb-6">
