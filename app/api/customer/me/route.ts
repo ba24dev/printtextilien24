@@ -37,6 +37,12 @@ export async function GET(request: NextRequest) {
   const refreshToken = request.cookies.get("shopify_customer_refresh_token")?.value;
   const validation = await validateCustomerSession(accessToken, refreshToken);
   if (!validation.authenticated) {
+    if (validation.reason === "provider_unavailable" && accessToken) {
+      return NextResponse.json(
+        { error: "Customer API temporarily unavailable. Please retry shortly." },
+        { status: 503 },
+      );
+    }
     const response = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     clearCustomerAuthCookies(response);
     return response;

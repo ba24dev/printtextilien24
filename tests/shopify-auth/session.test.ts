@@ -146,6 +146,35 @@ describe("session route", () => {
     fetchSpy.mockRestore();
   });
 
+  it("keeps logged-in state when customer API is temporarily unavailable", async () => {
+    const fetchSpy = vi
+      .spyOn(global, "fetch" as any)
+      .mockImplementation(async (...args: unknown[]) => {
+        const url = String(args[0]);
+        if (url.endsWith("/.well-known/customer-account-api")) {
+          return {
+            ok: true,
+            json: async () => ({
+              graphql_api: "https://12d54a-a9.myshopify.com/account/customer/api/latest/graphql.json",
+            }),
+          } as any;
+        }
+        return {
+          ok: false,
+          status: 404,
+          text: async () => "Not found",
+        } as any;
+      });
+
+    const { GET } = await importSessionRoute();
+    const req = makeRequest({ shopify_customer_access_token: "token-123" });
+    const res = await GET(req);
+
+    await expect(res.json()).resolves.toEqual({ loggedIn: true, degraded: true });
+    expect(res.cookies.get("shopify_customer_access_token")).toBeUndefined();
+    fetchSpy.mockRestore();
+  });
+
   it("clears auth cookies when refresh fails", async () => {
     const fetchSpy = vi
       .spyOn(global, "fetch" as any)
