@@ -15,6 +15,10 @@ import { clearCustomerCookie } from "@/lib/shopify/customer/session";
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_AUTH_URL = getShopifyAuthUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
+const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 // note: SCOPES is imported from a shared helper. It defaults to
 // customer-account-api:full and can be overridden via env.
@@ -43,7 +47,9 @@ export async function GET(request: NextRequest) {
   const canonicalOrigin = getCanonicalOriginFromRedirectUri();
   if (canonicalOrigin && request.nextUrl.origin !== canonicalOrigin) {
     const canonicalUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, canonicalOrigin);
-    return NextResponse.redirect(canonicalUrl.toString());
+    const response = NextResponse.redirect(canonicalUrl.toString());
+    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+    return response;
   }
 
   // warn if the scopes string is blank – this is a common misconfiguration
@@ -110,6 +116,7 @@ export async function GET(request: NextRequest) {
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");
   }
+  response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }
 

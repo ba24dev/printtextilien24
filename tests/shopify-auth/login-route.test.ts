@@ -31,6 +31,7 @@ describe("login route", () => {
     const parsed = new URL(location);
     expect(parsed.searchParams.get("prompt")).toBe("login");
     expect(parsed.searchParams.get("max_age")).toBe("0");
+    expect(response.headers.get("cache-control")).toContain("no-store");
   });
 
   it("does not store post-login redirect cookie when checkout_url is external", async () => {

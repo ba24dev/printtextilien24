@@ -6,6 +6,10 @@ import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/
 
 const SHOPIFY_LOGOUT_URL = getShopifyLogoutUrl();
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
+const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 type IdTokenPayload = {
   exp?: number;
@@ -74,5 +78,6 @@ export async function GET(request: NextRequest) {
   clearCustomerCookie(response, "shopify_pkce_verifier");
   clearCustomerCookie(response, "shopify_oauth_state");
   clearCustomerCookie(response, "shopify_oauth_nonce");
+  response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }
