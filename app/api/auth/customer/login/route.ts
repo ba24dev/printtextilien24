@@ -4,11 +4,9 @@ import {
   getCheckoutUnavailableRedirect,
   sanitizePostLoginRedirect,
 } from "@/lib/shopify/customer/redirects";
-import {
-  getShopifyAuthUrl,
-  getShopifyClientId,
-} from "@/lib/shopify/customer/urls";
+import { getShopifyAuthUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
+import { setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { NextRequest, NextResponse } from "next/server";
 import { clearCustomerCookie } from "@/lib/shopify/customer/session";
 
@@ -46,8 +44,12 @@ function getTransientCookieOptions() {
 export async function GET(request: NextRequest) {
   const canonicalOrigin = getCanonicalOriginFromRedirectUri();
   if (canonicalOrigin && request.nextUrl.origin !== canonicalOrigin) {
-    const canonicalUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, canonicalOrigin);
+    const canonicalUrl = new URL(
+      request.nextUrl.pathname + request.nextUrl.search,
+      canonicalOrigin,
+    );
     const response = NextResponse.redirect(canonicalUrl.toString());
+    setCustomerDebugTrace(response, "login_canonical_redirect");
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }
@@ -116,6 +118,7 @@ export async function GET(request: NextRequest) {
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");
   }
+  setCustomerDebugTrace(response, "login_oauth_started");
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }

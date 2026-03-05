@@ -50,6 +50,7 @@ describe("customer debug route", () => {
     process.env.SHOPIFY_CUSTOMER_API_TOKEN_URL = "https://shopify.com/authentication/123/oauth/token";
     process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI =
       "https://printtextilien24.de/api/auth/customer/callback";
+    process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN = ".printtextilien24.de";
 
     const { GET } = await importDebugRoute();
     const res = await GET(
@@ -66,6 +67,9 @@ describe("customer debug route", () => {
     expect(body.cookies.hasCookieHeader).toBe(true);
     expect(body.probe.enabled).toBe(false);
     expect(body.env.redirectOriginMatchesRequestOrigin).toBe(true);
+    expect(body.env.cookieDomain).toBe(".printtextilien24.de");
+    expect(body.env.cookieDomainRaw).toBe(".printtextilien24.de");
+    expect(body.env.cookieDomainEnvPresent).toBe(true);
   });
 
   it("accepts debug key from query param", async () => {

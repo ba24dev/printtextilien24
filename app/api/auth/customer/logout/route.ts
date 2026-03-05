@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getOidcConfiguration } from "@/lib/shopify/customer/discovery";
+import { clearCustomerDebugTrace, setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { clearCustomerCookie } from "@/lib/shopify/customer/session";
 import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
@@ -78,6 +79,8 @@ export async function GET(request: NextRequest) {
   clearCustomerCookie(response, "shopify_pkce_verifier");
   clearCustomerCookie(response, "shopify_oauth_state");
   clearCustomerCookie(response, "shopify_oauth_nonce");
+  clearCustomerDebugTrace(response);
+  setCustomerDebugTrace(response, "logout_completed");
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }
