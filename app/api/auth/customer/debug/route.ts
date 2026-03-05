@@ -3,7 +3,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { getCustomerApiDiscovery, getOidcConfiguration } from "@/lib/shopify/customer/discovery";
 import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
-import { readCustomerCookie, validateCustomerSession } from "@/lib/shopify/customer/session";
+import { shopifyCustomerGraphQL } from "@/lib/shopify/customer/graphql";
+import {
+  readCustomerCookie,
+  refreshCustomerTokens,
+  validateCustomerSession,
+} from "@/lib/shopify/customer/session";
 import {
   getShopifyAuthUrl,
   getShopifyClientId,
@@ -75,6 +80,36 @@ function redactUrl(url: string): string {
     return parsed.toString();
   } catch {
     return url;
+  }
+}
+
+async function probeCustomerIdentity(
+  accessToken: string,
+): Promise<{ ok: true; customerId: string | null; email: string | null } | { ok: false; error: string }> {
+  try {
+    const data = await shopifyCustomerGraphQL<{
+      customer?: { id?: string | null; email?: string | null };
+    }>(
+      accessToken,
+      `
+        query DebugCustomerIdentity {
+          customer {
+            id
+            email
+          }
+        }
+      `,
+    );
+    return {
+      ok: true,
+      customerId: data.customer?.id ?? null,
+      email: data.customer?.email ?? null,
+    };
+  } catch (error) {
+    return {
+      ok: false,
+      error: error instanceof Error ? error.message : "Unknown customer probe error",
+    };
   }
 }
 
@@ -227,12 +262,35 @@ export async function GET(request: NextRequest) {
         error instanceof Error ? error.message : "Unknown session validation error";
     }
 
+    let directAccessProbe: unknown = null;
+    if (accessToken) {
+      directAccessProbe = await probeCustomerIdentity(accessToken);
+    }
+
+    let refreshProbe: unknown = null;
+    if (refreshToken) {
+      const refreshed = await refreshCustomerTokens(refreshToken);
+      if (!refreshed?.access_token) {
+        refreshProbe = { ok: false, refreshed: false };
+      } else {
+        const refreshedIdentity = await probeCustomerIdentity(refreshed.access_token);
+        refreshProbe = {
+          ok: refreshedIdentity.ok,
+          refreshed: true,
+          refreshedTokenPreview: refreshed.access_token.slice(0, 12),
+          refreshedIdentity,
+        };
+      }
+    }
+
     probe = {
       enabled: true,
       discovery,
       discoveryError,
       sessionValidation,
       sessionValidationError,
+      directAccessProbe,
+      refreshProbe,
     };
   }
 
