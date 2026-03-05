@@ -111,6 +111,7 @@ function getEnvReport(request: NextRequest) {
   const storefrontOrigin = safe(() => getShopifyStorefrontOrigin());
 
   const redirectUriRaw = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI || null;
+  const cookieDomainRaw = process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN ?? null;
   const redirectOrigin = safe(() => (redirectUriRaw ? new URL(redirectUriRaw).origin : null));
   const requestOrigin = request.nextUrl.origin;
 
@@ -125,6 +126,9 @@ function getEnvReport(request: NextRequest) {
         : null,
     storefrontOrigin: storefrontOrigin.ok ? storefrontOrigin.value : null,
     cookieDomain: getCustomerCookieDomain() ?? null,
+    cookieDomainRaw,
+    cookieDomainEnvPresent: cookieDomainRaw !== null,
+    typoCookieDomainRaw: process.env.SHOPTEY_CUSTOMER_COOKIE_DOMAIN ?? null,
     clientIdPreview: clientId.ok ? clientId.value.slice(0, 8) : null,
     authUrl: authUrl.ok ? redactUrl(authUrl.value) : null,
     tokenUrl: tokenUrl.ok ? redactUrl(tokenUrl.value) : null,
