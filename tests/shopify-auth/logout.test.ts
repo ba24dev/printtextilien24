@@ -36,7 +36,35 @@ describe("logout route", () => {
   beforeEach(() => {
     vi.resetModules();
     process.env.SHOPIFY_CUSTOMER_API_LOGOUT_URL = "https://shopify.com/authentication/123/logout";
+    process.env.SHOPIFY_CUSTOMER_API_AUTH_URL =
+      "https://shopify.com/authentication/123/oauth/authorize";
     process.env.SHOPIFY_CUSTOMER_API_CLIENT_ID = "test-client-id";
+  });
+
+  it("prefers OIDC end-session endpoint when discovery provides one", async () => {
+    const fetchSpy = vi.spyOn(global, "fetch" as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        end_session_endpoint: "https://shopify.com/authentication/123/oidc/logout",
+      }),
+    } as any);
+
+    const { GET } = await importLogoutRoute();
+    const res = await GET(
+      makeRequest("https://printtextilien24.de/api/auth/customer/logout", {
+        shopify_customer_id_token: makeIdToken("test-client-id"),
+      }),
+    );
+    const location = res.headers.get("location") || "";
+    const parsed = new URL(location);
+
+    expect(parsed.origin + parsed.pathname).toBe(
+      "https://shopify.com/authentication/123/oidc/logout",
+    );
+    expect(parsed.searchParams.get("post_logout_redirect_uri")).toBe(
+      "https://printtextilien24.de/login?logout=1",
+    );
+    fetchSpy.mockRestore();
   });
 
   it("calls Shopify logout with id_token_hint and return URI when id token exists", async () => {
@@ -51,20 +79,22 @@ describe("logout route", () => {
 
     expect(parsed.origin + parsed.pathname).toBe("https://shopify.com/authentication/123/logout");
     expect(parsed.searchParams.get("id_token_hint")).toBeTruthy();
-    expect(parsed.searchParams.get("post_logout_redirect_uri")).toBe("https://printtextilien24.de/");
+    expect(parsed.searchParams.get("post_logout_redirect_uri")).toBe(
+      "https://printtextilien24.de/login?logout=1",
+    );
     expect(res.cookies.get("shopify_customer_access_token")?.value).toBe("");
     expect(res.cookies.get("shopify_customer_refresh_token")?.value).toBe("");
     expect(res.cookies.get("shopify_customer_id_token")?.value).toBe("");
   });
 
-  it("falls back to local home redirect when id token is missing", async () => {
+  it("falls back to local login redirect when id token is missing", async () => {
     const { GET } = await importLogoutRoute();
     const res = await GET(makeRequest("https://printtextilien24.de/api/auth/customer/logout"));
     const location = res.headers.get("location") || "";
-    expect(location).toBe("https://printtextilien24.de/");
+    expect(location).toBe("https://printtextilien24.de/login?logout=1");
   });
 
-  it("falls back to local home redirect when id token is invalid", async () => {
+  it("falls back to local login redirect when id token is invalid", async () => {
     const { GET } = await importLogoutRoute();
     const res = await GET(
       makeRequest("https://printtextilien24.de/api/auth/customer/logout", {
@@ -72,6 +102,6 @@ describe("logout route", () => {
       }),
     );
     const location = res.headers.get("location") || "";
-    expect(location).toBe("https://printtextilien24.de/");
+    expect(location).toBe("https://printtextilien24.de/login?logout=1");
   });
 });
