@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   applyCustomerAuthCookies,
-  clearCustomerAuthCookies,
   readCustomerCookie,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
@@ -30,8 +29,10 @@ export async function GET(request: NextRequest) {
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
-    const response = NextResponse.json({ loggedIn: false });
-    clearCustomerAuthCookies(response);
+    const response = NextResponse.json({
+      loggedIn: false,
+      reason: validation.reason,
+    });
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }
