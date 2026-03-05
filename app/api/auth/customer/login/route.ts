@@ -8,6 +8,7 @@ import {
   getShopifyAuthUrl,
   getShopifyClientId,
 } from "@/lib/shopify/customer/urls";
+import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { NextRequest, NextResponse } from "next/server";
 import { clearCustomerCookie } from "@/lib/shopify/customer/session";
 
@@ -27,7 +28,7 @@ function getCanonicalOriginFromRedirectUri(): string | null {
 }
 
 function getTransientCookieOptions() {
-  const domain = process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN?.trim();
+  const domain = getCustomerCookieDomain();
   return {
     httpOnly: true,
     secure: true,
