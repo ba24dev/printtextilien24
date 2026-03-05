@@ -33,6 +33,7 @@ function getSafeCheckoutUrl(raw: string | null): string | null {
         if (parsed.pathname.startsWith("/checkouts/") && STOREFRONT_HOST) {
             parsed.protocol = "https:";
             parsed.host = STOREFRONT_HOST;
+            parsed.searchParams.set("logged_in", "true");
             return parsed.toString();
         }
 
@@ -49,6 +50,10 @@ function getSafeCheckoutUrl(raw: string | null): string | null {
 function LoginClient() {
     const router = useRouter();
     const searchParams = useSearchParams();
+    const logoutNotice = searchParams.get("logout") === "1";
+    const checkoutUnavailable =
+        searchParams.get("reason") === "checkout_unavailable" ||
+        searchParams.get("checkout_error") === "1";
     const checkoutUrl = useMemo(
         () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
         [searchParams],
@@ -59,6 +64,7 @@ function LoginClient() {
 
     // if already logged in, send straight to account/checkouts
     useEffect(() => {
+        if (logoutNotice) return;
         fetch("/api/customer/session", { credentials: "include" })
             .then((res) => res.json())
             .then((sess) => {
@@ -75,11 +81,22 @@ function LoginClient() {
                 }
             })
             .catch(() => { });
-    }, [checkoutUrl, router]);
+    }, [checkoutUrl, logoutNotice, router]);
 
     return (
         <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
             <h1 className="text-4xl font-bold mb-4 mt-16">Sign in</h1>
+            {logoutNotice ? (
+                <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
+                    This signs you out of this site. On shared devices, provider sessions can still exist.
+                    Click the button below to re-authenticate explicitly.
+                </div>
+            ) : null}
+            {checkoutUnavailable ? (
+                <div className="mb-4 rounded border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
+                    Your previous checkout session is no longer available. Please reopen checkout from your cart.
+                </div>
+            ) : null}
             <p className="mb-6">
                 You’ll be redirected to Shopify to authenticate your customer account.
             </p>
