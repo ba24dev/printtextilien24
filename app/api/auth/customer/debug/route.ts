@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
 import { getCustomerApiDiscovery, getOidcConfiguration } from "@/lib/shopify/customer/discovery";
-import { validateCustomerSession } from "@/lib/shopify/customer/session";
+import { readCustomerCookie, validateCustomerSession } from "@/lib/shopify/customer/session";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import {
   getShopifyAuthUrl,
@@ -157,9 +157,9 @@ export async function GET(request: NextRequest) {
   const probeEnabled = toBoolParam(request.nextUrl.searchParams.get("probe"));
   const setTestCookie = toBoolParam(request.nextUrl.searchParams.get("set_test_cookie"));
   const clearTestCookie = toBoolParam(request.nextUrl.searchParams.get("clear_test_cookie"));
-  const accessToken = readCookie(request, "shopify_customer_access_token");
-  const refreshToken = readCookie(request, "shopify_customer_refresh_token");
-  const idToken = readCookie(request, "shopify_customer_id_token");
+  const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
+  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
+  const idToken = readCustomerCookie(request.cookies, "shopify_customer_id_token");
 
   const idPayload = decodeJwtPayload(idToken);
   const idTokenExp = typeof idPayload?.exp === "number" ? idPayload.exp : null;

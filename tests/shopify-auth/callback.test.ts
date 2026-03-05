@@ -73,7 +73,7 @@ describe("callback route", () => {
     const res: any = await GET(req as any);
     const loc = res.headers.get("location") || "";
     expect(loc).toBe("https://example.com/checkout/somewhere");
-    expect(res.cookies.get("shopify_customer_id_token")?.value).toBe("id-token-1");
+    expect(res.cookies.get("shopify_customer_id_token")?.value).toBe("uri:id-token-1");
     expect(res.cookies.get("shopify_customer_debug_trace")?.value).toContain(
       "callback_success_cookies_set",
     );
