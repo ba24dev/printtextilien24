@@ -27,6 +27,9 @@ describe("login route", () => {
     );
 
     expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe("/checkout/abc");
+    expect(response.cookies.get("shopify_customer_debug_trace")?.value).toContain(
+      "login_oauth_started",
+    );
     const location = response.headers.get("location") || "";
     const parsed = new URL(location);
     expect(parsed.searchParams.get("prompt")).toBe("login");

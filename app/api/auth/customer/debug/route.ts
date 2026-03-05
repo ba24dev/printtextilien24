@@ -182,6 +182,10 @@ export async function GET(request: NextRequest) {
       present: Boolean(readCookie(request, "shopify_post_login_redirect")),
       value: readCookie(request, "shopify_post_login_redirect") ?? null,
     },
+    shopify_customer_debug_trace: {
+      present: Boolean(readCookie(request, "shopify_customer_debug_trace")),
+      value: readCookie(request, "shopify_customer_debug_trace") ?? null,
+    },
   };
 
   let probe: Record<string, unknown> = { enabled: false };

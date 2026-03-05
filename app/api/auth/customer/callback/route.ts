@@ -1,5 +1,6 @@
 import { SCOPES } from "@/lib/shopify/auth/scopes";
 import { applyCustomerAuthCookies, clearCustomerCookie } from "@/lib/shopify/customer/session";
+import { setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -36,6 +37,7 @@ function redirectToLogin(requestUrl: string, reason: string): NextResponse {
   const loginUrl = new URL("/login", requestUrl);
   loginUrl.searchParams.set("reason", reason);
   const response = NextResponse.redirect(loginUrl.toString());
+  setCustomerDebugTrace(response, `callback_redirect_${reason}`);
   clearOAuthTransientCookies(response);
   clearCustomerCookie(response, "shopify_post_login_redirect");
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
@@ -104,6 +106,7 @@ export async function GET(request: NextRequest) {
         { error: "Token exchange failed", details: bodyText },
         { status: 400 },
       );
+      setCustomerDebugTrace(response, `callback_token_exchange_failed_${tokenRes.status}`);
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
@@ -113,6 +116,7 @@ export async function GET(request: NextRequest) {
         { error: "Missing access token from Shopify" },
         { status: 400 },
       );
+      setCustomerDebugTrace(response, "callback_missing_access_token");
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
@@ -135,11 +139,13 @@ export async function GET(request: NextRequest) {
     if (postLogin) {
       clearCustomerCookie(response, "shopify_post_login_redirect");
     }
+    setCustomerDebugTrace(response, "callback_success_cookies_set");
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   } catch (err) {
     console.error("callback handler unexpected error", err);
     const response = NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    setCustomerDebugTrace(response, "callback_unexpected_error");
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }

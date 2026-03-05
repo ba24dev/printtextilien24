@@ -45,6 +45,9 @@ describe("callback route", () => {
       SCOPES,
     );
     expect(res.headers.get("location")).toBe("https://example.com/login?reason=auth_session_expired");
+    expect(res.cookies.get("shopify_customer_debug_trace")?.value).toContain(
+      "callback_redirect_auth_session_expired",
+    );
     warn.mockRestore();
   });
 
@@ -71,6 +74,9 @@ describe("callback route", () => {
     const loc = res.headers.get("location") || "";
     expect(loc).toBe("https://example.com/checkout/somewhere");
     expect(res.cookies.get("shopify_customer_id_token")?.value).toBe("id-token-1");
+    expect(res.cookies.get("shopify_customer_debug_trace")?.value).toContain(
+      "callback_success_cookies_set",
+    );
 
     fakeFetch.mockRestore();
   });
