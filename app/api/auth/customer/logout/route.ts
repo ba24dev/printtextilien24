@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getOidcConfiguration } from "@/lib/shopify/customer/discovery";
 import { clearCustomerDebugTrace, setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
-import { clearCustomerCookie } from "@/lib/shopify/customer/session";
+import { clearCustomerCookie, readCustomerCookie } from "@/lib/shopify/customer/session";
 import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_LOGOUT_URL = getShopifyLogoutUrl();
@@ -53,7 +53,7 @@ export function isUsableIdToken(raw: string | undefined): raw is string {
 
 export async function GET(request: NextRequest) {
   const localRedirect = new URL("/login?logout=1", request.url).toString();
-  const rawIdToken = request.cookies.get("shopify_customer_id_token")?.value;
+  const rawIdToken = readCustomerCookie(request.cookies, "shopify_customer_id_token");
   let oidcConfig: Awaited<ReturnType<typeof getOidcConfiguration>> = null;
   try {
     oidcConfig = await getOidcConfiguration();

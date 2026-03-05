@@ -8,6 +8,7 @@ import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
 import {
   applyCustomerAuthCookies,
   clearCustomerAuthCookies,
+  readCustomerCookie,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
 import { NextRequest, NextResponse } from "next/server";
@@ -19,7 +20,7 @@ export const revalidate = 0;
 
 export async function GET(request: NextRequest) {
   if (!isShopifyCustomerAuthV2Enabled()) {
-    const accessToken = request.cookies.get("shopify_customer_access_token")?.value;
+    const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
     if (!accessToken) {
       const response = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
@@ -44,8 +45,8 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const accessToken = request.cookies.get("shopify_customer_access_token")?.value;
-  const refreshToken = request.cookies.get("shopify_customer_refresh_token")?.value;
+  const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
+  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
   const validation = await validateCustomerSession(accessToken, refreshToken);
   if (!validation.authenticated) {
     if (validation.reason === "provider_unavailable" && accessToken) {
