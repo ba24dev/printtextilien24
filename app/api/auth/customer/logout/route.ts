@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { getOidcConfiguration } from "@/lib/shopify/customer/discovery";
+import { clearCustomerCookie } from "@/lib/shopify/customer/session";
 import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_LOGOUT_URL = getShopifyLogoutUrl();
@@ -66,33 +67,12 @@ export async function GET(request: NextRequest) {
 
   // Clear all customer auth cookies
   const response = NextResponse.redirect(target);
-  response.cookies.set("shopify_customer_access_token", "", {
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set("shopify_customer_refresh_token", "", {
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set("shopify_customer_id_token", "", {
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set("shopify_post_login_redirect", "", {
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set("shopify_pkce_verifier", "", {
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set("shopify_oauth_state", "", {
-    maxAge: 0,
-    path: "/",
-  });
-  response.cookies.set("shopify_oauth_nonce", "", {
-    maxAge: 0,
-    path: "/",
-  });
+  clearCustomerCookie(response, "shopify_customer_access_token");
+  clearCustomerCookie(response, "shopify_customer_refresh_token");
+  clearCustomerCookie(response, "shopify_customer_id_token");
+  clearCustomerCookie(response, "shopify_post_login_redirect");
+  clearCustomerCookie(response, "shopify_pkce_verifier");
+  clearCustomerCookie(response, "shopify_oauth_state");
+  clearCustomerCookie(response, "shopify_oauth_nonce");
   return response;
 }
