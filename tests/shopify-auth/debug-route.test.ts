@@ -77,4 +77,18 @@ describe("customer debug route", () => {
 
     expect(res.status).toBe(200);
   });
+
+  it("can set a test cookie for browser/proxy diagnostics", async () => {
+    const { GET } = await importDebugRoute();
+    const res = await GET(
+      makeRequest(
+        "https://printtextilien24.de/api/auth/customer/debug?set_test_cookie=1",
+        {},
+        { host: "printtextilien24.de" },
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.cookies.get("shopify_customer_debug_test")?.value).toContain("ok-");
+  });
 });
