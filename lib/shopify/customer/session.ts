@@ -48,8 +48,21 @@ type SessionValidationResult =
     }
   | {
       authenticated: false;
-      reason: "missing_access" | "invalid_access" | "refresh_failed";
+      reason: "missing_access" | "invalid_access" | "refresh_failed" | "provider_unavailable";
     };
+
+function isProviderUnavailableError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    message.includes("could not resolve shopify customer graphql endpoint") ||
+    message.includes("shopify customer api error: 404") ||
+    message.includes("shopify customer api error: 429") ||
+    message.includes("shopify customer api error: 5") ||
+    message.includes("fetch failed") ||
+    message.includes("network error")
+  );
+}
 
 function tokenMaxAge(expiresIn?: number): number {
   if (!expiresIn || Number.isNaN(expiresIn)) return 60 * 60;
@@ -151,7 +164,10 @@ export async function validateCustomerSession(
       const normalized = formatAccessToken(accessToken);
       const customer = await fetchCustomerIdentity(normalized);
       return { authenticated: true, accessToken: normalized, customer };
-    } catch {
+    } catch (error) {
+      if (isProviderUnavailableError(error)) {
+        return { authenticated: false, reason: "provider_unavailable" };
+      }
       // continue with refresh fallback
     }
   }
@@ -173,7 +189,10 @@ export async function validateCustomerSession(
       customer,
       refreshedTokens: refreshed,
     };
-  } catch {
+  } catch (error) {
+    if (isProviderUnavailableError(error)) {
+      return { authenticated: false, reason: "provider_unavailable" };
+    }
     return { authenticated: false, reason: "refresh_failed" };
   }
 }
