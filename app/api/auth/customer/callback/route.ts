@@ -22,6 +22,21 @@ const CallbackSchema = z.object({
   context: z.string().optional(),
 });
 
+function clearOAuthTransientCookies(response: NextResponse): void {
+  response.cookies.set("shopify_pkce_verifier", "", { maxAge: 0, path: "/" });
+  response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });
+  response.cookies.set("shopify_oauth_nonce", "", { maxAge: 0, path: "/" });
+}
+
+function redirectToLogin(requestUrl: string, reason: string): NextResponse {
+  const loginUrl = new URL("/login", requestUrl);
+  loginUrl.searchParams.set("reason", reason);
+  const response = NextResponse.redirect(loginUrl.toString());
+  clearOAuthTransientCookies(response);
+  response.cookies.set("shopify_post_login_redirect", "", { maxAge: 0, path: "/" });
+  return response;
+}
+
 export async function GET(request: NextRequest) {
   console.debug("callback handler invoked");
   try {
@@ -31,7 +46,7 @@ export async function GET(request: NextRequest) {
     const parsed = CallbackSchema.safeParse(params);
     if (!parsed.success) {
       console.warn("callback params failed validation", params);
-      return NextResponse.json({ error: "Invalid callback params" }, { status: 400 });
+      return redirectToLogin(request.url, "auth_invalid_callback");
     }
     const { code, state, scope } = parsed.data;
     console.debug("received code,state,scope", { code, state, scope });
@@ -45,13 +60,13 @@ export async function GET(request: NextRequest) {
     console.debug("cookies", { stateCookie, verifier });
     if (!stateCookie || stateCookie !== state) {
       console.warn("state cookie mismatch", stateCookie, state);
-      return NextResponse.json({ error: "Invalid state" }, { status: 400 });
+      return redirectToLogin(request.url, "auth_session_expired");
     }
 
     // Get PKCE verifier from cookie
     if (!verifier) {
       console.warn("no PKCE verifier cookie present");
-      return NextResponse.json({ error: "Missing PKCE verifier" }, { status: 400 });
+      return redirectToLogin(request.url, "auth_session_expired");
     }
 
     // Exchange code for tokens
@@ -106,9 +121,7 @@ export async function GET(request: NextRequest) {
       });
     }
     // Clear PKCE and state cookies
-    response.cookies.set("shopify_pkce_verifier", "", { maxAge: 0, path: "/" });
-    response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });
-    response.cookies.set("shopify_oauth_nonce", "", { maxAge: 0, path: "/" });
+    clearOAuthTransientCookies(response);
     // and clear our custom destination cookie so it won't stick around
     if (postLogin) {
       response.cookies.set("shopify_post_login_redirect", "", {
