@@ -5,7 +5,9 @@ function normalizeCookieDomain(raw: string): string {
 }
 
 export function getCustomerCookieDomain(): string | undefined {
-  const raw = process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN;
+  const raw =
+    process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN ??
+    process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_COOKIE_DOMAIN;
   if (!raw) return undefined;
 
   const normalized = normalizeCookieDomain(raw);

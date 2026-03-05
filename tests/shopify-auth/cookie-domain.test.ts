@@ -8,6 +8,7 @@ describe("customer cookie domain helper", () => {
   beforeEach(() => {
     vi.resetModules();
     delete process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN;
+    delete process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_COOKIE_DOMAIN;
   });
 
   it("returns undefined when env var is empty", async () => {
@@ -24,6 +25,12 @@ describe("customer cookie domain helper", () => {
 
   it("accepts quoted values from deployment env UIs", async () => {
     process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN = "\".printtextilien24.de\"";
+    const { getCustomerCookieDomain } = await importCookieHelper();
+    expect(getCustomerCookieDomain()).toBe(".printtextilien24.de");
+  });
+
+  it("falls back to NEXT_PUBLIC cookie-domain when server var is absent", async () => {
+    process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_COOKIE_DOMAIN = ".printtextilien24.de";
     const { getCustomerCookieDomain } = await importCookieHelper();
     expect(getCustomerCookieDomain()).toBe(".printtextilien24.de");
   });
