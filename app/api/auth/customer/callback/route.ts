@@ -1,5 +1,5 @@
 import { SCOPES } from "@/lib/shopify/auth/scopes";
-import { applyCustomerAuthCookies } from "@/lib/shopify/customer/session";
+import { applyCustomerAuthCookies, clearCustomerCookie } from "@/lib/shopify/customer/session";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -23,9 +23,9 @@ const CallbackSchema = z.object({
 });
 
 function clearOAuthTransientCookies(response: NextResponse): void {
-  response.cookies.set("shopify_pkce_verifier", "", { maxAge: 0, path: "/" });
-  response.cookies.set("shopify_oauth_state", "", { maxAge: 0, path: "/" });
-  response.cookies.set("shopify_oauth_nonce", "", { maxAge: 0, path: "/" });
+  clearCustomerCookie(response, "shopify_pkce_verifier");
+  clearCustomerCookie(response, "shopify_oauth_state");
+  clearCustomerCookie(response, "shopify_oauth_nonce");
 }
 
 function redirectToLogin(requestUrl: string, reason: string): NextResponse {
@@ -33,7 +33,7 @@ function redirectToLogin(requestUrl: string, reason: string): NextResponse {
   loginUrl.searchParams.set("reason", reason);
   const response = NextResponse.redirect(loginUrl.toString());
   clearOAuthTransientCookies(response);
-  response.cookies.set("shopify_post_login_redirect", "", { maxAge: 0, path: "/" });
+  clearCustomerCookie(response, "shopify_post_login_redirect");
   return response;
 }
 
@@ -115,19 +115,13 @@ export async function GET(request: NextRequest) {
     const response = NextResponse.redirect(redirectTarget);
     applyCustomerAuthCookies(response, tokenData);
     if (!tokenData.id_token) {
-      response.cookies.set("shopify_customer_id_token", "", {
-        maxAge: 0,
-        path: "/",
-      });
+      clearCustomerCookie(response, "shopify_customer_id_token");
     }
     // Clear PKCE and state cookies
     clearOAuthTransientCookies(response);
     // and clear our custom destination cookie so it won't stick around
     if (postLogin) {
-      response.cookies.set("shopify_post_login_redirect", "", {
-        maxAge: 0,
-        path: "/",
-      });
+      clearCustomerCookie(response, "shopify_post_login_redirect");
     }
     return response;
   } catch (err) {

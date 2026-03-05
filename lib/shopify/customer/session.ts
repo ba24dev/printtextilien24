@@ -12,6 +12,32 @@ type TokenResponse = {
   id_token?: string;
 };
 
+function getCustomerCookieDomain(): string | undefined {
+  const raw = process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN?.trim();
+  return raw ? raw : undefined;
+}
+
+type CustomerCookieOptions = {
+  httpOnly?: boolean;
+  maxAge?: number;
+};
+
+function customerCookieOptions(options?: CustomerCookieOptions) {
+  const domain = getCustomerCookieDomain();
+  return {
+    httpOnly: options?.httpOnly ?? true,
+    secure: true,
+    sameSite: "lax" as const,
+    maxAge: options?.maxAge,
+    path: "/",
+    ...(domain ? { domain } : {}),
+  };
+}
+
+export function clearCustomerCookie(response: NextResponse, name: string): void {
+  response.cookies.set(name, "", customerCookieOptions({ httpOnly: false, maxAge: 0 }));
+}
+
 export type CustomerIdentity = {
   id: string;
   email: string | null;
@@ -35,37 +61,31 @@ function tokenMaxAge(expiresIn?: number): number {
 }
 
 export function clearCustomerAuthCookies(response: NextResponse): void {
-  response.cookies.set("shopify_customer_access_token", "", { maxAge: 0, path: "/" });
-  response.cookies.set("shopify_customer_refresh_token", "", { maxAge: 0, path: "/" });
-  response.cookies.set("shopify_customer_id_token", "", { maxAge: 0, path: "/" });
-  response.cookies.set("shopify_post_login_redirect", "", { maxAge: 0, path: "/" });
+  clearCustomerCookie(response, "shopify_customer_access_token");
+  clearCustomerCookie(response, "shopify_customer_refresh_token");
+  clearCustomerCookie(response, "shopify_customer_id_token");
+  clearCustomerCookie(response, "shopify_post_login_redirect");
 }
 
 export function applyCustomerAuthCookies(response: NextResponse, tokenData: TokenResponse): void {
-  response.cookies.set("shopify_customer_access_token", tokenData.access_token, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    maxAge: tokenMaxAge(tokenData.expires_in),
-    path: "/",
-  });
+  response.cookies.set(
+    "shopify_customer_access_token",
+    tokenData.access_token,
+    customerCookieOptions({ maxAge: tokenMaxAge(tokenData.expires_in) }),
+  );
   if (tokenData.refresh_token) {
-    response.cookies.set("shopify_customer_refresh_token", tokenData.refresh_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 24 * 30,
-      path: "/",
-    });
+    response.cookies.set(
+      "shopify_customer_refresh_token",
+      tokenData.refresh_token,
+      customerCookieOptions({ maxAge: 60 * 60 * 24 * 30 }),
+    );
   }
   if (tokenData.id_token) {
-    response.cookies.set("shopify_customer_id_token", tokenData.id_token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: tokenMaxAge(tokenData.expires_in),
-      path: "/",
-    });
+    response.cookies.set(
+      "shopify_customer_id_token",
+      tokenData.id_token,
+      customerCookieOptions({ maxAge: tokenMaxAge(tokenData.expires_in) }),
+    );
   }
 }
 
