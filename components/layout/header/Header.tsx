@@ -3,7 +3,8 @@
 import { copy } from "@/config/copy";
 import { useAuthSession } from "@/hooks/useAuthSession";
 import { useCart } from "@shopify/hydrogen-react";
-import { LogIn } from "lucide-react";
+import { DropdownMenu } from "radix-ui";
+import { LogIn, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import CartDrawer from "../../cart/CartDrawer";
@@ -18,8 +19,7 @@ export default function Header() {
   const session = useAuthSession();
   const quantity = totalQuantity ?? 0;
   const isLoggedIn = Boolean(session?.loggedIn);
-  const accountHref = isLoggedIn ? "/account" : "/login";
-  const accountLabel = isLoggedIn ? "Account" : "Login";
+  const accountInitial = session?.email?.trim().charAt(0).toUpperCase() ?? "A";
 
   return (
     <>
@@ -36,15 +36,53 @@ export default function Header() {
           </div>
           <div className="ml-auto flex items-center gap-3 md:ml-0">
             <ThemeSwitcher />
-            <a
-              href={accountHref}
-              className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
-              title={accountLabel}
-              aria-label={accountLabel}
-              rel="noopener noreferrer"
-            >
-              <LogIn className="aspect-square w-5" />
-            </a>
+            {isLoggedIn ? (
+              <DropdownMenu.Root modal={false}>
+                <DropdownMenu.Trigger asChild>
+                  <button
+                    type="button"
+                    className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600"
+                    title={copy.auth.accountMenuLabel}
+                    aria-label={copy.auth.accountMenuLabel}
+                  >
+                    <span className="text-sm font-semibold leading-none">{accountInitial}</span>
+                  </button>
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content
+                  sideOffset={8}
+                  align="end"
+                  className="min-w-44 rounded-xl border border-primary-900/40 bg-background p-2 text-sm text-foreground shadow-lg shadow-primary-900/40"
+                >
+                  <DropdownMenu.Item asChild>
+                    <Link
+                      href="/account"
+                      className="flex select-none items-center gap-3 rounded-lg px-3 py-2 hover:bg-primary-900/25 focus:outline-none"
+                    >
+                      <UserRound className="h-4 w-4" />
+                      {copy.auth.profileLabel}
+                    </Link>
+                  </DropdownMenu.Item>
+                  <DropdownMenu.Item asChild>
+                    <a
+                      href="/api/auth/customer/logout"
+                      className="flex select-none items-center gap-3 rounded-lg px-3 py-2 text-red-300 hover:bg-primary-900/25 focus:outline-none"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {copy.auth.logoutLabel}
+                    </a>
+                  </DropdownMenu.Item>
+                </DropdownMenu.Content>
+              </DropdownMenu.Root>
+            ) : (
+              <Link
+                href="/login"
+                className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
+                title={copy.auth.loginLabel}
+                aria-label={copy.auth.loginLabel}
+              >
+                <LogIn className="aspect-square w-5" />
+              </Link>
+            )}
             <CartButton quantity={quantity} onClickAction={setDrawerOpen} />
           </div>
         </div>
