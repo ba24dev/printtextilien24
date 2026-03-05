@@ -1,11 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
+import { getOidcConfiguration } from "@/lib/shopify/customer/discovery";
+import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_LOGOUT_URL = getShopifyLogoutUrl();
+const SHOPIFY_CLIENT_ID = getShopifyClientId();
 
 type IdTokenPayload = {
   exp?: number;
+  aud?: string | string[];
 };
 
 function parseJwtPayload(token: string): IdTokenPayload | null {
@@ -30,16 +33,32 @@ export function isUsableIdToken(raw: string | undefined): raw is string {
     const now = Math.floor(Date.now() / 1000);
     if (payload.exp <= now) return false;
   }
+
+  if (payload.aud) {
+    if (typeof payload.aud === "string" && payload.aud !== SHOPIFY_CLIENT_ID) {
+      return false;
+    }
+    if (Array.isArray(payload.aud) && !payload.aud.includes(SHOPIFY_CLIENT_ID)) {
+      return false;
+    }
+  }
   return true;
 }
 
 export async function GET(request: NextRequest) {
-  const localRedirect = new URL("/", request.url).toString();
+  const localRedirect = new URL("/login?logout=1", request.url).toString();
   const rawIdToken = request.cookies.get("shopify_customer_id_token")?.value;
+  let oidcConfig: Awaited<ReturnType<typeof getOidcConfiguration>> = null;
+  try {
+    oidcConfig = await getOidcConfiguration();
+  } catch {
+    oidcConfig = null;
+  }
+  const providerLogoutUrl = oidcConfig?.end_session_endpoint || SHOPIFY_LOGOUT_URL;
 
   let target = localRedirect;
-  if (SHOPIFY_LOGOUT_URL && isUsableIdToken(rawIdToken)) {
-    const logoutUrl = new URL(SHOPIFY_LOGOUT_URL);
+  if (providerLogoutUrl && isUsableIdToken(rawIdToken)) {
+    const logoutUrl = new URL(providerLogoutUrl);
     logoutUrl.searchParams.set("id_token_hint", rawIdToken);
     logoutUrl.searchParams.set("post_logout_redirect_uri", localRedirect);
     target = logoutUrl.toString();

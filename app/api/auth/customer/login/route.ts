@@ -1,60 +1,21 @@
 import { generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
 import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scopes";
 import {
+  getCheckoutUnavailableRedirect,
+  sanitizePostLoginRedirect,
+} from "@/lib/shopify/customer/redirects";
+import {
   getShopifyAuthUrl,
   getShopifyClientId,
-  getShopifyStorefrontOrigin,
 } from "@/lib/shopify/customer/urls";
 import { NextRequest, NextResponse } from "next/server";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_AUTH_URL = getShopifyAuthUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
-const SHOPIFY_STOREFRONT_ORIGIN = getShopifyStorefrontOrigin();
-const SHOPIFY_STOREFRONT_URL = SHOPIFY_STOREFRONT_ORIGIN
-  ? new URL(SHOPIFY_STOREFRONT_ORIGIN)
-  : null;
 
-// note: SCOPES is now imported from a shared helper.  It defaults to the two
-// basic read scopes and can be overridden via
-// SHOPIFY_CUSTOMER_API_SCOPES in the environment.
-
-export function sanitizePostLoginRedirect(
-  raw: string | null,
-  requestUrl?: URL,
-): string | null {
-  if (!raw) return null;
-  const value = raw.trim();
-  if (!value) return null;
-
-  if (value.startsWith("/") && !value.startsWith("//")) {
-    if (value.startsWith("/checkouts/") && SHOPIFY_STOREFRONT_URL) {
-      return new URL(value, SHOPIFY_STOREFRONT_URL).toString();
-    }
-    return value;
-  }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(value);
-  } catch {
-    return null;
-  }
-  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
-
-  const allowedHosts = new Set<string>();
-  if (requestUrl?.host) allowedHosts.add(requestUrl.host);
-  if (SHOPIFY_STOREFRONT_URL?.host) allowedHosts.add(SHOPIFY_STOREFRONT_URL.host);
-
-  if (parsed.pathname.startsWith("/checkouts/") && SHOPIFY_STOREFRONT_URL) {
-    parsed.protocol = SHOPIFY_STOREFRONT_URL.protocol;
-    parsed.host = SHOPIFY_STOREFRONT_URL.host;
-    return parsed.toString();
-  }
-
-  if (!allowedHosts.has(parsed.host)) return null;
-  return parsed.toString();
-}
+// note: SCOPES is imported from a shared helper. It defaults to
+// customer-account-api:full and can be overridden via env.
 
 export async function GET(request: NextRequest) {
   // warn if the scopes string is blank – this is a common misconfiguration
@@ -108,6 +69,8 @@ export async function GET(request: NextRequest) {
   }
   const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
   const postLoginRedirect = sanitizePostLoginRedirect(checkoutUrl, request.nextUrl);
+  const fallbackRedirect = checkoutUrl ? getCheckoutUnavailableRedirect(request.nextUrl) : null;
+  const redirectToStore = postLoginRedirect ?? fallbackRedirect;
 
   const response = NextResponse.redirect(authUrl);
   response.cookies.set("shopify_pkce_verifier", verifier, {
@@ -131,8 +94,8 @@ export async function GET(request: NextRequest) {
     maxAge: 300,
     path: "/",
   });
-  if (postLoginRedirect) {
-    response.cookies.set("shopify_post_login_redirect", postLoginRedirect, {
+  if (redirectToStore) {
+    response.cookies.set("shopify_post_login_redirect", redirectToStore, {
       httpOnly: true,
       secure: true,
       sameSite: "lax",

@@ -94,7 +94,32 @@ describe("callback route", () => {
 
     const res: any = await GET(req as any);
     const loc = res.headers.get("location") || "";
-    expect(loc).toBe("https://12d54a-a9.myshopify.com/checkouts/cn/abc?locale=de-DE");
+    expect(loc).toBe("https://12d54a-a9.myshopify.com/checkouts/cn/abc?locale=de-DE&logged_in=true");
+
+    fakeFetch.mockRestore();
+  });
+
+  it("falls back to account when stored checkout redirect is invalid", async () => {
+    const { GET } = await importCallbackRoute();
+    const fakeFetch = vi.spyOn(global, "fetch" as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "token",
+        refresh_token: "refresh",
+        expires_in: 1234,
+        id_token: "id-token-3",
+      }),
+    } as any);
+
+    const req = makeRequest("https://example.com/?code=abc&state=xyz", {
+      shopify_oauth_state: "xyz",
+      shopify_pkce_verifier: "verifier",
+      shopify_post_login_redirect: "https://evil.com/stale-checkout",
+    });
+
+    const res: any = await GET(req as any);
+    const loc = res.headers.get("location") || "";
+    expect(loc).toBe("https://example.com/account?checkout_error=1");
 
     fakeFetch.mockRestore();
   });

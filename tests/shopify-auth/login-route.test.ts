@@ -41,7 +41,9 @@ describe("login route", () => {
       ),
     );
 
-    expect(response.cookies.get("shopify_post_login_redirect")).toBeUndefined();
+    expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe(
+      "https://example.com/account?checkout_error=1",
+    );
   });
 
   it("normalizes checkout redirects to the Shopify storefront host", async () => {
@@ -53,7 +55,7 @@ describe("login route", () => {
     );
 
     expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe(
-      "https://12d54a-a9.myshopify.com/checkouts/cn/abc?locale=de-DE",
+      "https://12d54a-a9.myshopify.com/checkouts/cn/abc?locale=de-DE&logged_in=true",
     );
   });
 });
