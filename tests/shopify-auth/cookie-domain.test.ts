@@ -22,6 +22,12 @@ describe("customer cookie domain helper", () => {
     expect(getCustomerCookieDomain()).toBe(".printtextilien24.de");
   });
 
+  it("accepts quoted values from deployment env UIs", async () => {
+    process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN = "\".printtextilien24.de\"";
+    const { getCustomerCookieDomain } = await importCookieHelper();
+    expect(getCustomerCookieDomain()).toBe(".printtextilien24.de");
+  });
+
   it("rejects invalid values like full URLs", async () => {
     process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN = "https://printtextilien24.de/";
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
