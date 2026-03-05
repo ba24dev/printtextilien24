@@ -1,4 +1,5 @@
 import { formatAccessToken } from "@/lib/shopify/auth/token";
+import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { CUSTOMER_QUERY } from "@/lib/shopify/customer/queries";
 import { getShopifyClientId, getShopifyTokenUrl } from "@/lib/shopify/customer/urls";
 import { NextResponse } from "next/server";
@@ -11,11 +12,6 @@ type TokenResponse = {
   expires_in?: number;
   id_token?: string;
 };
-
-function getCustomerCookieDomain(): string | undefined {
-  const raw = process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN?.trim();
-  return raw ? raw : undefined;
-}
 
 type CustomerCookieOptions = {
   httpOnly?: boolean;
