@@ -17,6 +17,9 @@ export async function GET(request: NextRequest) {
 
   const validation = await validateCustomerSession(accessToken, refreshToken);
   if (!validation.authenticated) {
+    if (validation.reason === "provider_unavailable" && accessToken) {
+      return NextResponse.json({ loggedIn: true, degraded: true });
+    }
     const response = NextResponse.json({ loggedIn: false });
     clearCustomerAuthCookies(response);
     return response;
