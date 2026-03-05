@@ -7,7 +7,6 @@ import {
 import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
 import {
   applyCustomerAuthCookies,
-  clearCustomerAuthCookies,
   readCustomerCookie,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
@@ -57,8 +56,10 @@ export async function GET(request: NextRequest) {
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
-    const response = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-    clearCustomerAuthCookies(response);
+    const response = NextResponse.json(
+      { error: "Not authenticated", reason: validation.reason },
+      { status: 401 },
+    );
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }
