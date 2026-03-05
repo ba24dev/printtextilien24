@@ -12,6 +12,9 @@ import {
   getShopifyTokenUrl,
 } from "@/lib/shopify/customer/urls";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 type SafeResult<T> = { ok: true; value: T } | { ok: false; error: string };
 
 function safe<T>(fn: () => T): SafeResult<T> {
