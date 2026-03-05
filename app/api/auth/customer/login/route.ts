@@ -94,6 +94,8 @@ export async function GET(request: NextRequest) {
       // shared devices: always force explicit credential entry instead of
       // silently reusing an existing Shopify SSO session.
       prompt: "login",
+      // force a fresh authentication event (OIDC); complements prompt=login.
+      max_age: "0",
       state,
       nonce,
       code_challenge: challenge,
