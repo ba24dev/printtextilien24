@@ -12,8 +12,12 @@ import { resolvePostLoginRedirect } from "@/lib/shopify/customer/redirects";
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_TOKEN_URL = getShopifyTokenUrl();
 const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
+const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
 // public (web) clients have no secret; it’s optional
 const SHOPIFY_CLIENT_SECRET = process.env.SHOPIFY_CUSTOMER_API_CLIENT_SECRET;
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 const CallbackSchema = z.object({
   code: z.string(),
@@ -34,6 +38,7 @@ function redirectToLogin(requestUrl: string, reason: string): NextResponse {
   const response = NextResponse.redirect(loginUrl.toString());
   clearOAuthTransientCookies(response);
   clearCustomerCookie(response, "shopify_post_login_redirect");
+  response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }
 
@@ -95,14 +100,21 @@ export async function GET(request: NextRequest) {
     if (!tokenRes.ok) {
       const bodyText = await tokenRes.text();
       console.error("Shopify token exchange error", tokenRes.status, bodyText, bodyPayload);
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: "Token exchange failed", details: bodyText },
         { status: 400 },
       );
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
     }
     const tokenData = await tokenRes.json();
     if (!tokenData?.access_token) {
-      return NextResponse.json({ error: "Missing access token from Shopify" }, { status: 400 });
+      const response = NextResponse.json(
+        { error: "Missing access token from Shopify" },
+        { status: 400 },
+      );
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
     }
     // tokenData: { access_token, refresh_token, expires_in, id_token, ... }
 
@@ -123,10 +135,13 @@ export async function GET(request: NextRequest) {
     if (postLogin) {
       clearCustomerCookie(response, "shopify_post_login_redirect");
     }
+    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   } catch (err) {
     console.error("callback handler unexpected error", err);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const response = NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+    return response;
   }
 }
 

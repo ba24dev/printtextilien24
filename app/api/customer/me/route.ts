@@ -12,24 +12,35 @@ import {
 } from "@/lib/shopify/customer/session";
 import { NextRequest, NextResponse } from "next/server";
 
+const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 export async function GET(request: NextRequest) {
   if (!isShopifyCustomerAuthV2Enabled()) {
     const accessToken = request.cookies.get("shopify_customer_access_token")?.value;
     if (!accessToken) {
-      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      const response = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
     }
 
     try {
       const token = formatAccessToken(accessToken);
       const customer = await shopifyCustomerGraphQL(token, CUSTOMER_QUERY);
       const orders = await shopifyCustomerGraphQL(token, CUSTOMER_ORDERS_QUERY);
-      return NextResponse.json({
+      const response = NextResponse.json({
         customer: customer.customer,
         orders: orders.customer.orders,
       });
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : "Customer API request failed";
-      return NextResponse.json({ error: message }, { status: 502 });
+      const response = NextResponse.json({ error: message }, { status: 502 });
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
     }
   }
 
@@ -38,13 +49,16 @@ export async function GET(request: NextRequest) {
   const validation = await validateCustomerSession(accessToken, refreshToken);
   if (!validation.authenticated) {
     if (validation.reason === "provider_unavailable" && accessToken) {
-      return NextResponse.json(
+      const response = NextResponse.json(
         { error: "Customer API temporarily unavailable. Please retry shortly." },
         { status: 503 },
       );
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
     }
     const response = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     clearCustomerAuthCookies(response);
+    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }
 
@@ -62,9 +76,12 @@ export async function GET(request: NextRequest) {
     if (validation.refreshedTokens) {
       applyCustomerAuthCookies(response, validation.refreshedTokens);
     }
+    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Customer API request failed";
-    return NextResponse.json({ error: message }, { status: 502 });
+    const response = NextResponse.json({ error: message }, { status: 502 });
+    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+    return response;
   }
 }
