@@ -17,7 +17,21 @@ const REDIRECT_URI = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI!;
 // note: SCOPES is imported from a shared helper. It defaults to
 // customer-account-api:full and can be overridden via env.
 
+function getCanonicalOriginFromRedirectUri(): string | null {
+  try {
+    return new URL(REDIRECT_URI).origin;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET(request: NextRequest) {
+  const canonicalOrigin = getCanonicalOriginFromRedirectUri();
+  if (canonicalOrigin && request.nextUrl.origin !== canonicalOrigin) {
+    const canonicalUrl = new URL(request.nextUrl.pathname + request.nextUrl.search, canonicalOrigin);
+    return NextResponse.redirect(canonicalUrl.toString());
+  }
+
   // warn if the scopes string is blank – this is a common misconfiguration
   if (!SCOPES || SCOPES.trim() === "") {
     console.warn("SHOPIFY_CUSTOMER_API_SCOPES is empty; authorization URL will fail");
