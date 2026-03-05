@@ -8,7 +8,9 @@ import {
   getShopifyAuthUrl,
   getShopifyClientId,
 } from "@/lib/shopify/customer/urls";
+import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { NextRequest, NextResponse } from "next/server";
+import { clearCustomerCookie } from "@/lib/shopify/customer/session";
 
 const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const SHOPIFY_AUTH_URL = getShopifyAuthUrl();
@@ -23,6 +25,18 @@ function getCanonicalOriginFromRedirectUri(): string | null {
   } catch {
     return null;
   }
+}
+
+function getTransientCookieOptions() {
+  const domain = getCustomerCookieDomain();
+  return {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax" as const,
+    maxAge: 300,
+    path: "/",
+    ...(domain ? { domain } : {}),
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -87,35 +101,14 @@ export async function GET(request: NextRequest) {
   const redirectToStore = postLoginRedirect ?? fallbackRedirect;
 
   const response = NextResponse.redirect(authUrl);
-  response.cookies.set("shopify_pkce_verifier", verifier, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    maxAge: 300,
-    path: "/",
-  });
-  response.cookies.set("shopify_oauth_state", state, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    maxAge: 300,
-    path: "/",
-  });
-  response.cookies.set("shopify_oauth_nonce", nonce, {
-    httpOnly: true,
-    secure: true,
-    sameSite: "lax",
-    maxAge: 300,
-    path: "/",
-  });
+  const transientCookieOptions = getTransientCookieOptions();
+  response.cookies.set("shopify_pkce_verifier", verifier, transientCookieOptions);
+  response.cookies.set("shopify_oauth_state", state, transientCookieOptions);
+  response.cookies.set("shopify_oauth_nonce", nonce, transientCookieOptions);
   if (redirectToStore) {
-    response.cookies.set("shopify_post_login_redirect", redirectToStore, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 300,
-      path: "/",
-    });
+    response.cookies.set("shopify_post_login_redirect", redirectToStore, transientCookieOptions);
+  } else {
+    clearCustomerCookie(response, "shopify_post_login_redirect");
   }
   return response;
 }
