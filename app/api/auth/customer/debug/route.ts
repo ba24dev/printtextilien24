@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
-import { getCustomerApiDiscovery, getOidcConfiguration } from "@/lib/shopify/customer/discovery";
-import { readCustomerCookie, validateCustomerSession } from "@/lib/shopify/customer/session";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
+import { getCustomerApiDiscovery, getOidcConfiguration } from "@/lib/shopify/customer/discovery";
+import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
+import { readCustomerCookie, validateCustomerSession } from "@/lib/shopify/customer/session";
 import {
   getShopifyAuthUrl,
   getShopifyClientId,
@@ -89,7 +89,9 @@ async function getDiscoveryReport() {
     customerApiDiscovery: customerDiscovery
       ? {
           available: true,
-          graphql_api: customerDiscovery.graphql_api ? redactUrl(customerDiscovery.graphql_api) : null,
+          graphql_api: customerDiscovery.graphql_api
+            ? redactUrl(customerDiscovery.graphql_api)
+            : null,
         }
       : { available: false, graphql_api: null },
     oidc: oidc
@@ -128,7 +130,6 @@ function getEnvReport(request: NextRequest) {
     cookieDomain: getCustomerCookieDomain() ?? null,
     cookieDomainRaw,
     cookieDomainEnvPresent: cookieDomainRaw !== null,
-    typoCookieDomainRaw: process.env.SHOPTEY_CUSTOMER_COOKIE_DOMAIN ?? null,
     clientIdPreview: clientId.ok ? clientId.value.slice(0, 8) : null,
     authUrl: authUrl.ok ? redactUrl(authUrl.value) : null,
     tokenUrl: tokenUrl.ok ? redactUrl(tokenUrl.value) : null,

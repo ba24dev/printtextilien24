@@ -29,7 +29,7 @@ describe("session route", () => {
     const { GET } = await importSessionRoute();
     const req = makeRequest({});
     const res = await GET(req);
-    await expect(res.json()).resolves.toEqual({ loggedIn: false });
+    await expect(res.json()).resolves.toEqual({ loggedIn: false, reason: "missing_access" });
   });
 
   it("uses legacy cookie-presence mode when SHOPIFY_CUSTOMER_AUTH_V2=false", async () => {
@@ -228,7 +228,7 @@ describe("session route", () => {
     fetchSpy.mockRestore();
   });
 
-  it("clears auth cookies when refresh fails", async () => {
+  it("returns loggedOut without clearing cookies when refresh fails", async () => {
     const fetchSpy = vi
       .spyOn(global, "fetch" as any)
       .mockImplementation(async (...args: unknown[]) => {
@@ -261,9 +261,9 @@ describe("session route", () => {
     });
     const res = await GET(req);
 
-    await expect(res.json()).resolves.toEqual({ loggedIn: false });
-    expect(res.cookies.get("shopify_customer_access_token")?.value).toBe("");
-    expect(res.cookies.get("shopify_customer_refresh_token")?.value).toBe("");
+    await expect(res.json()).resolves.toEqual({ loggedIn: false, reason: "refresh_failed" });
+    expect(res.cookies.get("shopify_customer_access_token")).toBeUndefined();
+    expect(res.cookies.get("shopify_customer_refresh_token")).toBeUndefined();
     fetchSpy.mockRestore();
   });
 });
