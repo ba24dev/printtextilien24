@@ -31,6 +31,18 @@ function toBoolParam(value: string | null): boolean {
   return normalized === "1" || normalized === "true" || normalized === "yes" || normalized === "on";
 }
 
+function getTestCookieOptions() {
+  const domain = getCustomerCookieDomain();
+  return {
+    httpOnly: true,
+    secure: true,
+    sameSite: "lax" as const,
+    maxAge: 60 * 10,
+    path: "/",
+    ...(domain ? { domain } : {}),
+  };
+}
+
 function tokenSummary(token?: string) {
   if (!token) return { present: false };
   return {
@@ -139,6 +151,8 @@ export async function GET(request: NextRequest) {
   }
 
   const probeEnabled = toBoolParam(request.nextUrl.searchParams.get("probe"));
+  const setTestCookie = toBoolParam(request.nextUrl.searchParams.get("set_test_cookie"));
+  const clearTestCookie = toBoolParam(request.nextUrl.searchParams.get("clear_test_cookie"));
   const accessToken = readCookie(request, "shopify_customer_access_token");
   const refreshToken = readCookie(request, "shopify_customer_refresh_token");
   const idToken = readCookie(request, "shopify_customer_id_token");
@@ -213,10 +227,24 @@ export async function GET(request: NextRequest) {
         xForwardedProto: request.headers.get("x-forwarded-proto"),
       },
       cookies: cookieReport,
+      testCookie: {
+        setRequested: setTestCookie,
+        clearRequested: clearTestCookie,
+        presentOnRequest: Boolean(readCookie(request, "shopify_customer_debug_test")),
+      },
       probe,
     },
     { status: 200 },
   );
+  if (setTestCookie) {
+    response.cookies.set("shopify_customer_debug_test", `ok-${Date.now()}`, getTestCookieOptions());
+  }
+  if (clearTestCookie) {
+    response.cookies.set("shopify_customer_debug_test", "", {
+      ...getTestCookieOptions(),
+      maxAge: 0,
+    });
+  }
   response.headers.set("Cache-Control", "no-store");
   return response;
 }
