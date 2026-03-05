@@ -114,10 +114,19 @@ function getEnvReport(request: NextRequest) {
 
   const redirectUriRaw = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI || null;
   const cookieDomainRaw = process.env.SHOPIFY_CUSTOMER_COOKIE_DOMAIN ?? null;
+  const cookieDomainPublicRaw = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_COOKIE_DOMAIN ?? null;
   const redirectOrigin = safe(() => (redirectUriRaw ? new URL(redirectUriRaw).origin : null));
   const requestOrigin = request.nextUrl.origin;
 
   return {
+    runtime: {
+      nodeEnv: process.env.NODE_ENV ?? null,
+      vercelEnv: process.env.VERCEL_ENV ?? null,
+      vercelUrl: process.env.VERCEL_URL ?? null,
+      vercelRegion: process.env.VERCEL_REGION ?? null,
+      vercelGitCommitSha: process.env.VERCEL_GIT_COMMIT_SHA ?? null,
+      vercelGitCommitRef: process.env.VERCEL_GIT_COMMIT_REF ?? null,
+    },
     authV2Enabled: isShopifyCustomerAuthV2Enabled(),
     redirectUri: redirectUriRaw,
     redirectUriOrigin: redirectOrigin.ok ? redirectOrigin.value : null,
@@ -129,7 +138,9 @@ function getEnvReport(request: NextRequest) {
     storefrontOrigin: storefrontOrigin.ok ? storefrontOrigin.value : null,
     cookieDomain: getCustomerCookieDomain() ?? null,
     cookieDomainRaw,
+    cookieDomainPublicRaw,
     cookieDomainEnvPresent: cookieDomainRaw !== null,
+    cookieDomainPublicEnvPresent: cookieDomainPublicRaw !== null,
     clientIdPreview: clientId.ok ? clientId.value.slice(0, 8) : null,
     authUrl: authUrl.ok ? redactUrl(authUrl.value) : null,
     tokenUrl: tokenUrl.ok ? redactUrl(tokenUrl.value) : null,
