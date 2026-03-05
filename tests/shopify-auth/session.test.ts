@@ -110,7 +110,7 @@ describe("session route", () => {
           } as any;
         }
         const auth = String((args[1] as any)?.headers?.Authorization || "");
-        if (auth.includes("shcat_token-123")) {
+        if (auth.includes("token-123")) {
           return {
             ok: true,
             json: async () => ({ errors: [{ message: "Invalid token" }] }),
