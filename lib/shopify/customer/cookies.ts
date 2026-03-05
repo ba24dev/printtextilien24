@@ -1,5 +1,5 @@
 function normalizeCookieDomain(raw: string): string {
-  const trimmed = raw.trim();
+  const trimmed = raw.trim().replace(/^['"]|['"]$/g, "");
   if (!trimmed) return "";
   return trimmed.startsWith(".") ? trimmed.slice(1) : trimmed;
 }
