@@ -53,21 +53,24 @@ export function isUsableIdToken(raw: string | undefined): raw is string {
 
 export async function GET(request: NextRequest) {
   const localRedirect = new URL("/login?logout=1", request.url).toString();
-  const rawIdToken = readCustomerCookie(request.cookies, "shopify_customer_id_token");
-  let oidcConfig: Awaited<ReturnType<typeof getOidcConfiguration>> = null;
-  try {
-    oidcConfig = await getOidcConfiguration();
-  } catch {
-    oidcConfig = null;
-  }
-  const providerLogoutUrl = oidcConfig?.end_session_endpoint || SHOPIFY_LOGOUT_URL;
-
   let target = localRedirect;
-  if (providerLogoutUrl && isUsableIdToken(rawIdToken)) {
-    const logoutUrl = new URL(providerLogoutUrl);
-    logoutUrl.searchParams.set("id_token_hint", rawIdToken);
-    logoutUrl.searchParams.set("post_logout_redirect_uri", localRedirect);
-    target = logoutUrl.toString();
+  try {
+    const rawIdToken = readCustomerCookie(request.cookies, "shopify_customer_id_token");
+    let oidcConfig: Awaited<ReturnType<typeof getOidcConfiguration>> = null;
+    try {
+      oidcConfig = await getOidcConfiguration();
+    } catch {
+      oidcConfig = null;
+    }
+    const providerLogoutUrl = oidcConfig?.end_session_endpoint || SHOPIFY_LOGOUT_URL;
+    if (providerLogoutUrl && isUsableIdToken(rawIdToken)) {
+      const logoutUrl = new URL(providerLogoutUrl);
+      logoutUrl.searchParams.set("id_token_hint", rawIdToken);
+      logoutUrl.searchParams.set("post_logout_redirect_uri", localRedirect);
+      target = logoutUrl.toString();
+    }
+  } catch {
+    target = localRedirect;
   }
 
   // Clear all customer auth cookies
