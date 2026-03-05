@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
+import { getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
 const SHOPIFY_LOGOUT_URL = getShopifyLogoutUrl();
-const SHOPIFY_CLIENT_ID = getShopifyClientId();
 
 type IdTokenPayload = {
-  aud?: string | string[];
   exp?: number;
 };
 
@@ -28,10 +26,6 @@ export function isUsableIdToken(raw: string | undefined): raw is string {
   const payload = parseJwtPayload(token);
   if (!payload) return false;
 
-  const audList = Array.isArray(payload.aud) ? payload.aud : payload.aud ? [payload.aud] : [];
-  if (!audList.includes(SHOPIFY_CLIENT_ID)) {
-    return false;
-  }
   if (typeof payload.exp === "number") {
     const now = Math.floor(Date.now() / 1000);
     if (payload.exp <= now) return false;
