@@ -5,8 +5,6 @@ import { clearCustomerDebugTrace, setCustomerDebugTrace } from "@/lib/shopify/cu
 import { clearCustomerCookie, readCustomerCookie } from "@/lib/shopify/customer/session";
 import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
-const SHOPIFY_LOGOUT_URL = getShopifyLogoutUrl();
-const SHOPIFY_CLIENT_ID = getShopifyClientId();
 const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
 
 export const dynamic = "force-dynamic";
@@ -28,7 +26,23 @@ function parseJwtPayload(token: string): IdTokenPayload | null {
   }
 }
 
-export function isUsableIdToken(raw: string | undefined): raw is string {
+function safeGetShopifyClientId(): string | undefined {
+  try {
+    return getShopifyClientId();
+  } catch {
+    return undefined;
+  }
+}
+
+function safeGetShopifyLogoutUrl(): string {
+  try {
+    return getShopifyLogoutUrl();
+  } catch {
+    return "";
+  }
+}
+
+export function isUsableIdToken(raw: string | undefined, clientId?: string): raw is string {
   if (!raw) return false;
   const token = raw.trim();
   if (!token) return false;
@@ -40,11 +54,13 @@ export function isUsableIdToken(raw: string | undefined): raw is string {
     if (payload.exp <= now) return false;
   }
 
+  if (!clientId) return false;
+
   if (payload.aud) {
-    if (typeof payload.aud === "string" && payload.aud !== SHOPIFY_CLIENT_ID) {
+    if (typeof payload.aud === "string" && payload.aud !== clientId) {
       return false;
     }
-    if (Array.isArray(payload.aud) && !payload.aud.includes(SHOPIFY_CLIENT_ID)) {
+    if (Array.isArray(payload.aud) && !payload.aud.includes(clientId)) {
       return false;
     }
   }
@@ -52,9 +68,12 @@ export function isUsableIdToken(raw: string | undefined): raw is string {
 }
 
 export async function GET(request: NextRequest) {
-  const localRedirect = new URL("/login?logout=1", request.url).toString();
+  const localRedirect = new URL("/account/login?logout=1", request.url).toString();
   let target = localRedirect;
+  let logoutTrace = "logout_completed:local_fallback";
   try {
+    const clientId = safeGetShopifyClientId();
+    const configuredLogoutUrl = safeGetShopifyLogoutUrl();
     const rawIdToken = readCustomerCookie(request.cookies, "shopify_customer_id_token");
     let oidcConfig: Awaited<ReturnType<typeof getOidcConfiguration>> = null;
     try {
@@ -62,15 +81,17 @@ export async function GET(request: NextRequest) {
     } catch {
       oidcConfig = null;
     }
-    const providerLogoutUrl = oidcConfig?.end_session_endpoint || SHOPIFY_LOGOUT_URL;
-    if (providerLogoutUrl && isUsableIdToken(rawIdToken)) {
+    const providerLogoutUrl = oidcConfig?.end_session_endpoint || configuredLogoutUrl;
+    if (providerLogoutUrl && isUsableIdToken(rawIdToken, clientId)) {
       const logoutUrl = new URL(providerLogoutUrl);
       logoutUrl.searchParams.set("id_token_hint", rawIdToken);
       logoutUrl.searchParams.set("post_logout_redirect_uri", localRedirect);
       target = logoutUrl.toString();
+      logoutTrace = "logout_completed:provider_redirect";
     }
   } catch {
     target = localRedirect;
+    logoutTrace = "logout_completed:local_fallback_error";
   }
 
   // Clear all customer auth cookies
@@ -83,7 +104,7 @@ export async function GET(request: NextRequest) {
   clearCustomerCookie(response, "shopify_oauth_state");
   clearCustomerCookie(response, "shopify_oauth_nonce");
   clearCustomerDebugTrace(response);
-  setCustomerDebugTrace(response, "logout_completed");
+  setCustomerDebugTrace(response, logoutTrace);
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }

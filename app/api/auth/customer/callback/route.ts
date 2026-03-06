@@ -34,7 +34,7 @@ function clearOAuthTransientCookies(response: NextResponse): void {
 }
 
 function redirectToLogin(requestUrl: string, reason: string): NextResponse {
-  const loginUrl = new URL("/login", requestUrl);
+  const loginUrl = new URL("/account/login", requestUrl);
   loginUrl.searchParams.set("reason", reason);
   const response = NextResponse.redirect(loginUrl.toString());
   setCustomerDebugTrace(response, `callback_redirect_${reason}`);
