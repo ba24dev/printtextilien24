@@ -133,9 +133,11 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         ) : (
           <div className="text-sm text-red-500">{copy.account.profileUnavailable}</div>
         )}
-        <Link href="/account/logout" className="text-red-600 underline text-sm">
-          {copy.auth.logoutLabel}
-        </Link>
+        <form action="/account/logout" method="post" className="inline">
+          <button type="submit" className="text-red-600 underline text-sm cursor-pointer">
+            {copy.auth.logoutLabel}
+          </button>
+        </form>
       </div>
       <h2 className="text-xl font-semibold mb-2">{copy.account.ordersTitle}</h2>
       {orders?.edges?.length ? (

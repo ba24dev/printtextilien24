@@ -63,13 +63,15 @@ export default function Header() {
                     </Link>
                   </DropdownMenu.Item>
                   <DropdownMenu.Item asChild>
-                    <a
-                      href="/account/logout"
-                      className="flex select-none items-center gap-3 rounded-lg px-3 py-2 text-red-300 hover:bg-primary-900/25 focus:outline-none"
-                    >
+                    <form action="/account/logout" method="post" className="w-full">
+                      <button
+                        type="submit"
+                        className="flex w-full select-none items-center gap-3 rounded-lg px-3 py-2 text-red-300 hover:bg-primary-900/25 focus:outline-none"
+                      >
                       <LogOut className="h-4 w-4" />
                       {copy.auth.logoutLabel}
-                    </a>
+                      </button>
+                    </form>
                   </DropdownMenu.Item>
                 </DropdownMenu.Content>
               </DropdownMenu.Root>
