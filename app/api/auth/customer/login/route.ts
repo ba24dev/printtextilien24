@@ -29,6 +29,34 @@ function getCanonicalOriginFromRedirectUri(): string | null {
   }
 }
 
+function normalizeComparableHost(hostname: string): string {
+  return hostname.replace(/^www\./i, "").toLowerCase();
+}
+
+function shouldRedirectToCanonicalOrigin(
+  requestOrigin: string,
+  canonicalOrigin: string,
+): boolean {
+  try {
+    const requestUrl = new URL(requestOrigin);
+    const canonicalUrl = new URL(canonicalOrigin);
+    if (requestUrl.origin === canonicalUrl.origin) {
+      return false;
+    }
+    // avoid redirect loops when hosting forces www<->apex rewrites
+    if (
+      requestUrl.protocol === canonicalUrl.protocol &&
+      normalizeComparableHost(requestUrl.hostname) ===
+        normalizeComparableHost(canonicalUrl.hostname)
+    ) {
+      return false;
+    }
+    return true;
+  } catch {
+    return requestOrigin !== canonicalOrigin;
+  }
+}
+
 function getTransientCookieOptions() {
   const domain = getCustomerCookieDomain();
   return {
@@ -43,7 +71,10 @@ function getTransientCookieOptions() {
 
 export async function GET(request: NextRequest) {
   const canonicalOrigin = getCanonicalOriginFromRedirectUri();
-  if (canonicalOrigin && request.nextUrl.origin !== canonicalOrigin) {
+  if (
+    canonicalOrigin &&
+    shouldRedirectToCanonicalOrigin(request.nextUrl.origin, canonicalOrigin)
+  ) {
     const canonicalUrl = new URL(
       request.nextUrl.pathname + request.nextUrl.search,
       canonicalOrigin,
