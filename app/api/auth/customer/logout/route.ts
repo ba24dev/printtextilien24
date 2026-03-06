@@ -82,6 +82,18 @@ function safeGetShopifyLogoutUrl(): string {
   }
 }
 
+function getCanonicalLogoutRedirect(request: NextRequest): string {
+  const fallback = new URL("/account/login?logout=1", request.url).toString();
+  const configured = process.env.NEXT_PUBLIC_SHOPIFY_CUSTOMER_REDIRECT_URI;
+  if (!configured) return fallback;
+  try {
+    const origin = new URL(configured).origin;
+    return new URL("/account/login?logout=1", origin).toString();
+  } catch {
+    return fallback;
+  }
+}
+
 export function isUsableIdToken(raw: string | undefined, clientId?: string): raw is string {
   if (!raw) return false;
   const token = raw.trim();
@@ -108,7 +120,7 @@ export function isUsableIdToken(raw: string | undefined, clientId?: string): raw
 }
 
 export async function GET(request: NextRequest) {
-  const localRedirect = new URL("/account/login?logout=1", request.url).toString();
+  const localRedirect = getCanonicalLogoutRedirect(request);
   let target = localRedirect;
   let logoutTrace = "logout_completed:local_fallback";
   try {
@@ -122,7 +134,13 @@ export async function GET(request: NextRequest) {
       oidcConfig = null;
     }
     const providerLogoutUrl = oidcConfig?.end_session_endpoint || configuredLogoutUrl;
-    if (providerLogoutUrl && isUsableIdToken(rawIdToken, clientId)) {
+    if (!providerLogoutUrl) {
+      logoutTrace = "logout_completed:local_fallback_no_provider_url";
+    } else if (!isUsableIdToken(rawIdToken, clientId)) {
+      logoutTrace = clientId
+        ? "logout_completed:local_fallback_invalid_id_token"
+        : "logout_completed:local_fallback_missing_client_id";
+    } else {
       const logoutUrl = new URL(providerLogoutUrl);
       logoutUrl.searchParams.set("id_token_hint", rawIdToken);
       logoutUrl.searchParams.set("post_logout_redirect_uri", localRedirect);
