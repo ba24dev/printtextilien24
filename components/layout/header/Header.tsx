@@ -64,7 +64,7 @@ export default function Header() {
                   </DropdownMenu.Item>
                   <DropdownMenu.Item asChild>
                     <a
-                      href="/api/auth/customer/logout"
+                      href="/account/logout"
                       className="flex select-none items-center gap-3 rounded-lg px-3 py-2 text-red-300 hover:bg-primary-900/25 focus:outline-none"
                     >
                       <LogOut className="h-4 w-4" />
@@ -75,7 +75,7 @@ export default function Header() {
               </DropdownMenu.Root>
             ) : (
               <Link
-                href="/login"
+                href="/account/login"
                 className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
                 title={copy.auth.loginLabel}
                 aria-label={copy.auth.loginLabel}

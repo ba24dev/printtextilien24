@@ -9,9 +9,7 @@
 
 The system exposes a customer-facing login page at `/account/login`, which is
 exactly the URL Shopify will redirect customers to during headless checkout (the
-`checkout_url` query parameter is preserved). For convenience a second route
-`/login` is still available and is aliased to the same implementation, but the
-former URL is treated as the primary one to avoid unnecessary redirects.
+`checkout_url` query parameter is preserved).
 
 1. **OAuth Login Handler** (`/api/auth/customer/login`)
    - Generates PKCE verifier/challenge, state, nonce.
