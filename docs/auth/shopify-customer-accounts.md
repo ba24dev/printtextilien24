@@ -2,10 +2,11 @@
 
 ## Backend Steps
 
-> 🔐 **Scope note:** the Customer Account API insists on the
-> `customer-account-api:full` OAuth scope. It’s now the default used by the
-> login handler, and you should include it in `SHOPIFY_CUSTOMER_API_SCOPES` if
-> you override the list.
+> 🔐 **Scope note:** this project accepts both the newer
+> `customer-account-api:full` scope and granular customer scopes (for example
+> `customer_read_customers`, `customer_write_customers`, `customer_read_orders`).
+> `SHOPIFY_CUSTOMER_API_SCOPES` must exactly match what is enabled on the
+> Shopify Customer Account API client.
 
 The system exposes a customer-facing login page at `/account/login`, which is
 exactly the URL Shopify will redirect customers to during headless checkout (the
@@ -37,14 +38,16 @@ exactly the URL Shopify will redirect customers to during headless checkout (the
    - Rotates tokens and updates cookies.
 
 4. **Logout Handler** (`/api/auth/customer/logout`)
-   - Clears all customer auth cookies.
-   - Redirects to `/`.
+   - Canonical user-facing logout URL is `/account/logout`.
+   - Attempts provider end-session logout (`id_token_hint`) when possible.
+   - Always clears local customer auth cookies.
+   - Redirects to `/account/login?logout=1` (canonical post-logout page).
 
 5. **Customer API Helper** (`lib/shopify/customer/graphql.ts`)
    - Calls Shopify Customer Account API GraphQL endpoint with access token.
 
 6. **Typed GraphQL Queries** (`lib/shopify/customer/queries.ts`)
-   - `customer { id, email, firstName, lastName }`
+   - `customer { id, emailAddress { emailAddress }, firstName, lastName }`
    - `customer.orders(first: 10) { ... }`
 
 7. **Customer Data API** (`/api/customer/me`)
@@ -54,7 +57,7 @@ exactly the URL Shopify will redirect customers to during headless checkout (the
    - Returns `{ loggedIn, email }` based on access token cookie.
 
 9. **Middleware Guard** (`middleware.ts`)
-   - Redirects unauthenticated users from `/account` to login.
+   - Redirects unauthenticated users from `/account` to `/account/login`.
 
 10. **Unit Tests** (`tests/shopify-auth/`)
     - PKCE utils and state validation.
