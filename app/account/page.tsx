@@ -133,8 +133,8 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         ) : (
           <div className="text-sm text-red-500">{copy.account.profileUnavailable}</div>
         )}
-        <form action="/account/logout" method="post" className="inline">
-          <button type="submit" className="text-red-600 underline text-sm cursor-pointer">
+        <form action="/account/logout" method="post" className="inline-block mt-4">
+          <button type="submit" className="btn-primary small cursor-pointer">
             {copy.auth.logoutLabel}
           </button>
         </form>

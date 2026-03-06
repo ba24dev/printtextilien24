@@ -153,7 +153,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Clear all customer auth cookies
-  const response = NextResponse.redirect(target);
+  const response = NextResponse.redirect(target, { status: 303 });
   clearTokenCookieByObservedChunks(response, request, "shopify_customer_access_token");
   clearTokenCookieByObservedChunks(response, request, "shopify_customer_refresh_token");
   clearTokenCookieByObservedChunks(response, request, "shopify_customer_id_token");
