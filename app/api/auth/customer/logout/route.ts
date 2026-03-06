@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { getOidcConfiguration } from "@/lib/shopify/customer/discovery";
 import { clearCustomerDebugTrace, setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
-import { clearCustomerCookie, readCustomerCookie } from "@/lib/shopify/customer/session";
+import { readCustomerCookie } from "@/lib/shopify/customer/session";
 import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
 const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
+const MAX_TOKEN_COOKIE_CHUNKS = 12;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,6 +16,44 @@ type IdTokenPayload = {
   exp?: number;
   aud?: string | string[];
 };
+
+function clearedCookieOptions() {
+  const domain = getCustomerCookieDomain();
+  return {
+    httpOnly: false,
+    secure: true,
+    sameSite: "lax" as const,
+    maxAge: 0,
+    path: "/",
+    ...(domain ? { domain } : {}),
+  };
+}
+
+function clearCookieIfPresent(response: NextResponse, request: NextRequest, name: string): void {
+  if (!request.cookies.get(name)) return;
+  response.cookies.set(name, "", clearedCookieOptions());
+}
+
+function clearTokenCookieByObservedChunks(
+  response: NextResponse,
+  request: NextRequest,
+  name: string,
+): void {
+  clearCookieIfPresent(response, request, name);
+  const chunkCountName = `${name}_chunks`;
+  const chunkCountRaw = request.cookies.get(chunkCountName)?.value;
+  const parsedCount = chunkCountRaw ? Number.parseInt(chunkCountRaw, 10) : null;
+  const chunkCount =
+    parsedCount && Number.isInteger(parsedCount) && parsedCount > 0
+      ? Math.min(parsedCount, MAX_TOKEN_COOKIE_CHUNKS)
+      : MAX_TOKEN_COOKIE_CHUNKS;
+
+  clearCookieIfPresent(response, request, chunkCountName);
+  for (let index = 0; index < chunkCount; index += 1) {
+    const chunkName = `${name}_${index}`;
+    clearCookieIfPresent(response, request, chunkName);
+  }
+}
 
 function parseJwtPayload(token: string): IdTokenPayload | null {
   const parts = token.split(".");
@@ -96,13 +136,13 @@ export async function GET(request: NextRequest) {
 
   // Clear all customer auth cookies
   const response = NextResponse.redirect(target);
-  clearCustomerCookie(response, "shopify_customer_access_token");
-  clearCustomerCookie(response, "shopify_customer_refresh_token");
-  clearCustomerCookie(response, "shopify_customer_id_token");
-  clearCustomerCookie(response, "shopify_post_login_redirect");
-  clearCustomerCookie(response, "shopify_pkce_verifier");
-  clearCustomerCookie(response, "shopify_oauth_state");
-  clearCustomerCookie(response, "shopify_oauth_nonce");
+  clearTokenCookieByObservedChunks(response, request, "shopify_customer_access_token");
+  clearTokenCookieByObservedChunks(response, request, "shopify_customer_refresh_token");
+  clearTokenCookieByObservedChunks(response, request, "shopify_customer_id_token");
+  clearCookieIfPresent(response, request, "shopify_post_login_redirect");
+  clearCookieIfPresent(response, request, "shopify_pkce_verifier");
+  clearCookieIfPresent(response, request, "shopify_oauth_state");
+  clearCookieIfPresent(response, request, "shopify_oauth_nonce");
   clearCustomerDebugTrace(response);
   setCustomerDebugTrace(response, logoutTrace);
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
