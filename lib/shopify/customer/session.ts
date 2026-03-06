@@ -197,14 +197,19 @@ export function applyCustomerAuthCookies(response: NextResponse, tokenData: Toke
 
 async function fetchCustomerIdentity(accessToken: string): Promise<CustomerIdentity> {
   const data = await shopifyCustomerGraphQL<{
-    customer?: { id?: string; email?: string | null };
+    customer?: {
+      id?: string;
+      emailAddress?: { emailAddress?: string | null } | null;
+    };
   }>(
     accessToken,
     `
       query CustomerIdentity {
         customer {
           id
-          email
+          emailAddress {
+            emailAddress
+          }
         }
       }
     `,
@@ -214,7 +219,7 @@ async function fetchCustomerIdentity(accessToken: string): Promise<CustomerIdent
   }
   return {
     id: data.customer.id,
-    email: data.customer.email ?? null,
+    email: data.customer.emailAddress?.emailAddress ?? null,
   };
 }
 
@@ -295,14 +300,24 @@ export async function validateCustomerSession(
 }
 
 export async function fetchCustomerProfile(accessToken: string) {
-  return await shopifyCustomerGraphQL<{
+  const result = await shopifyCustomerGraphQL<{
     customer?: {
       id: string;
-      email: string | null;
+      emailAddress?: { emailAddress?: string | null } | null;
       firstName?: string | null;
       lastName?: string | null;
     };
   }>(accessToken, CUSTOMER_QUERY);
+
+  return {
+    ...result,
+    customer: result.customer
+      ? {
+          ...result.customer,
+          email: result.customer.emailAddress?.emailAddress ?? null,
+        }
+      : undefined,
+  };
 }
 
 export async function fetchCustomerOrders(accessToken: string) {

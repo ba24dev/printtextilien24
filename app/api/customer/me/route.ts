@@ -17,6 +17,17 @@ const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+function normalizeCustomerEmail(customer?: {
+  emailAddress?: { emailAddress?: string | null } | null;
+  [key: string]: unknown;
+}) {
+  if (!customer) return undefined;
+  return {
+    ...customer,
+    email: customer.emailAddress?.emailAddress ?? null,
+  };
+}
+
 export async function GET(request: NextRequest) {
   if (!isShopifyCustomerAuthV2Enabled()) {
     const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
@@ -31,7 +42,7 @@ export async function GET(request: NextRequest) {
       const customer = await shopifyCustomerGraphQL(token, CUSTOMER_QUERY);
       const orders = await shopifyCustomerGraphQL(token, CUSTOMER_ORDERS_QUERY);
       const response = NextResponse.json({
-        customer: customer.customer,
+        customer: normalizeCustomerEmail(customer.customer),
         orders: orders.customer.orders,
       });
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
@@ -72,7 +83,7 @@ export async function GET(request: NextRequest) {
     );
 
     const response = NextResponse.json({
-      customer: customer.customer,
+      customer: normalizeCustomerEmail(customer.customer),
       orders: orders.customer.orders,
     });
     if (validation.refreshedTokens) {
