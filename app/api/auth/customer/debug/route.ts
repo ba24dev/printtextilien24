@@ -88,14 +88,19 @@ async function probeCustomerIdentity(
 ): Promise<{ ok: true; customerId: string | null; email: string | null } | { ok: false; error: string }> {
   try {
     const data = await shopifyCustomerGraphQL<{
-      customer?: { id?: string | null; email?: string | null };
+      customer?: {
+        id?: string | null;
+        emailAddress?: { emailAddress?: string | null } | null;
+      };
     }>(
       accessToken,
       `
         query DebugCustomerIdentity {
           customer {
             id
-            email
+            emailAddress {
+              emailAddress
+            }
           }
         }
       `,
@@ -103,7 +108,7 @@ async function probeCustomerIdentity(
     return {
       ok: true,
       customerId: data.customer?.id ?? null,
-      email: data.customer?.email ?? null,
+      email: data.customer?.emailAddress?.emailAddress ?? null,
     };
   } catch (error) {
     return {
