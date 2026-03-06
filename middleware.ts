@@ -6,7 +6,7 @@ export async function middleware(request: NextRequest) {
     // NextResponse.redirect requires an absolute URL; use the incoming
     // request as base so the code behaves the same in tests and in
     // production.
-    const dest = new URL("/login", request.url);
+    const dest = new URL("/account/login", request.url);
     return NextResponse.redirect(dest.toString());
   }
   return NextResponse.next();
