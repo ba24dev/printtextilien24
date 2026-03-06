@@ -2,7 +2,9 @@ export const CUSTOMER_QUERY = `
   query Customer {
     customer {
       id
-      email
+      emailAddress {
+        emailAddress
+      }
       firstName
       lastName
     }
