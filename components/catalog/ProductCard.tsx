@@ -13,7 +13,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     <Link
       key={product.id}
       href={`/products/${product.handle}`}
-      className="group shrink-0 overflow-hidden rounded-3xl border border-primary-900/30 bg-primary-700 shadow-lg backdrop-blur transition hover:border-primary-500/60"
+      className="group shrink-0 overflow-hidden site-border-radius border border-primary-900/30 bg-primary-700 shadow-lg backdrop-blur transition hover:border-primary-500/60"
     >
       <div className="relative h-48 w-full bg-primary-900/20">
         {product.featuredImage?.url ? (
@@ -27,7 +27,7 @@ export default function ProductCard({ product }: ProductCardProps) {
         ) : (
           <Image
             src={`https://placehold.co/256x192.png?text=${encodeURIComponent(
-              copy.general.noImageLabel
+              copy.general.noImageLabel,
             )}`}
             alt={product.title}
             fill
@@ -37,7 +37,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         )}
       </div>
       <div className="flex flex-col gap-2 p-4">
-        <h3 className="text-sm font-semibold text-foreground line-clamp-1">{product.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground line-clamp-1">
+          {product.title}
+        </h3>
         <p className="text-xs text-foreground/60 line-clamp-2">
           {product.description ?? copy.catalog.productFallbackDescription}
         </p>

@@ -21,9 +21,9 @@ export default function ProductViewContent({
   const enableCustomization =
     process.env.NEXT_PUBLIC_ENABLE_CUSTOMIZATION === "true";
   const isClient = useSyncExternalStore(
-    () => () => { },
+    () => () => {},
     () => true,
-    () => false
+    () => false,
   );
   const requiresCustomization = enableCustomization && surfaces.length > 0;
   const variantId = selectedVariant?.id;
@@ -42,7 +42,7 @@ export default function ProductViewContent({
         <ProductBreadcrumbs product={product} />
         <div className="mt-12 grid gap-12 lg:grid-cols-3 lg:grid-rows-[auto_auto_1fr]">
           {requiresCustomization && isClient ? (
-            <div className="col-span-2 rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
+            <div className="col-span-2 site-border-radius border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
               <ProductCustomizationSection
                 key={storageKey}
                 surfaces={surfaces}
@@ -78,12 +78,12 @@ export default function ProductViewContent({
 function inferTemplateSizeKey(
   variant:
     | {
-      selectedOptions?: Array<
-        { name?: string | null; value?: string | null } | null | undefined
-      >;
-    }
+        selectedOptions?: Array<
+          { name?: string | null; value?: string | null } | null | undefined
+        >;
+      }
     | null
-    | undefined
+    | undefined,
 ): TemplateSizeKey | null {
   const options = variant?.selectedOptions;
   if (!Array.isArray(options)) return null;
