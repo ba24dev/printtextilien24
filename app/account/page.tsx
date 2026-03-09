@@ -77,6 +77,15 @@ function itemSummary(order: AccountOrder): string {
   return `${count} Artikel`;
 }
 
+function orderItems(order: AccountOrder): Array<{ title: string; quantity: number }> {
+  return (order.lineItems?.nodes ?? [])
+    .filter((item) => Boolean(item.title?.trim()) && (item.quantity ?? 0) > 0)
+    .map((item) => ({
+      title: item.title.trim(),
+      quantity: item.quantity,
+    }));
+}
+
 function readableCustomerId(id?: string): string | null {
   if (!id) return null;
   return id.includes("/") ? id.slice(id.lastIndexOf("/") + 1) : id;
@@ -307,6 +316,27 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                         {orderStatusLabel(node)}
                       </span>
                     </div>
+
+                    {orderItems(node).length ? (
+                      <div className="mt-3 rounded-lg border border-primary-900/30 bg-primary-900/10 p-3">
+                        <p className="text-xs uppercase tracking-wide text-primary-200/80">
+                          Artikel
+                        </p>
+                        <ul className="mt-2 space-y-1 text-sm text-primary-100">
+                          {orderItems(node).map((item, index) => (
+                            <li key={`${item.title}-${index}`} className="flex justify-between gap-3">
+                              <span className="truncate">{item.title}</span>
+                              <span className="shrink-0 text-primary-200/80">x{item.quantity}</span>
+                            </li>
+                          ))}
+                        </ul>
+                        {node.lineItems?.pageInfo?.hasNextPage ? (
+                          <p className="mt-2 text-xs text-primary-200/80">
+                            Weitere Artikel sind in der Bestellung enthalten.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : null}
 
                     <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
                       <div className="text-sm">

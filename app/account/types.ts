@@ -48,6 +48,9 @@ export type AccountOrder = {
       quantity: number;
       variantId?: string | null;
     }>;
+    pageInfo?: {
+      hasNextPage?: boolean;
+    } | null;
   };
 };
 
