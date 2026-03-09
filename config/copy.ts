@@ -55,6 +55,17 @@ export const copy = {
       increase: "Anzahl erhöhen",
       decrease: "Anzahl verringern",
     },
+    pageTitle: "Warenkorb",
+    resolverFromShopify:
+      "Dieser Link stammt aus Shopifys Erneut-kaufen-Funktion. In Ihrem Headless-Shop wird dieser Link nicht direkt als Shopify-Warenkorb importiert.",
+    resolverUseAccount:
+      "Nutzen Sie stattdessen Erneut kaufen im Kontobereich, damit die Artikel in Ihren lokalen Shop-Warenkorb übernommen werden.",
+    resolverCountryPrefix: "Land aus Link:",
+    resolverGoAccount: "Zum Konto",
+    resolverContinueShopping: "Weiter einkaufen",
+    resolverDrawerHint:
+      "Ihr Warenkorb wird in diesem Shop über das Warenkorb-Panel in der Kopfzeile verwaltet.",
+    resolverViewProducts: "Produkte ansehen",
   },
 
   product: {
@@ -85,7 +96,8 @@ export const copy = {
       featureBullets: [
         {
           title: "Schneller Versand",
-          description: "Wir sorgen für eine schnelle Lieferung Ihrer Bestellungen.",
+          description:
+            "Wir sorgen für eine schnelle Lieferung Ihrer Bestellungen.",
         },
         {
           title: "Kundenservice",
@@ -93,7 +105,8 @@ export const copy = {
         },
         {
           title: "Individuelle Gestaltung",
-          description: "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
+          description:
+            "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
         },
       ],
     },
@@ -162,7 +175,8 @@ export const copy = {
     logoutLabel: "Abmelden",
     signInTitle: "Anmelden",
     signInWithShopify: "Mit Shopify anmelden",
-    redirectHint: "Sie werden zu Shopify weitergeleitet, um Ihr Kundenkonto zu authentifizieren.",
+    redirectHint:
+      "Sie werden zu Shopify weitergeleitet, um Ihr Kundenkonto zu authentifizieren.",
     logoutNotice:
       "Sie wurden auf dieser Seite abgemeldet. Auf gemeinsam genutzten Geräten kann beim Anbieter weiterhin eine Sitzung bestehen. Klicken Sie unten, um sich explizit neu anzumelden.",
     checkoutUnavailable:
@@ -177,8 +191,10 @@ export const copy = {
     title: "Konto",
     loadErrorTitle: "Kontodaten konnten nicht geladen werden.",
     hostError: "Host konnte für die Kontodaten-Anfrage nicht ermittelt werden.",
-    apiError: (status: number) => `Konto-API Anfrage fehlgeschlagen (${status}).`,
-    profileFetchError: "Kundenprofil konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
+    apiError: (status: number) =>
+      `Konto-API Anfrage fehlgeschlagen (${status}).`,
+    profileFetchError:
+      "Kundenprofil konnte nicht geladen werden. Bitte versuchen Sie es erneut.",
     retry: "Erneut versuchen",
     checkoutUnavailable:
       "Ihre vorherige Checkout-Sitzung ist nicht mehr verfügbar. Bitte gehen Sie zurück zum Warenkorb und starten Sie den Checkout erneut.",
@@ -189,6 +205,78 @@ export const copy = {
     orderPrefix: "Bestellung",
     orderDateLabel: "Datum",
     orderTotalLabel: "Gesamt",
+    contactTitle: "Kontaktdaten",
+    addressesTitle: "Gespeicherte Adressen",
+    addressFallbackName: "Adresse",
+    addressEntriesLabel: (count: number) => `${count} Einträge`,
+    latestOrdersLabel: "Letzte 10 Bestellungen",
+    profileUpdated: "Kontaktdaten wurden gespeichert.",
+    addressUpdated: "Adresse wurde aktualisiert.",
+    customerFallbackName: "Kunde",
+    orderItemsUnavailable: "Keine Artikeldetails verfügbar",
+    orderItemsCount: (count: number) => `${count} Artikel`,
+    orderItemsLabel: "Artikel",
+    orderItemsMoreHint: "Weitere Artikel sind in der Bestellung enthalten.",
+    viewOrder: "Bestellung ansehen",
+    buyAgain: "Erneut kaufen",
+    buyAgainBusy: "Wird hinzugefügt…",
+    buyAgainNoReorderable:
+      "Diese Bestellung enthält keine wiederbestellbaren Artikel.",
+    buyAgainAddFailed: "Artikel konnten nicht in den Warenkorb gelegt werden.",
+    buyAgainProcessed: (orderName: string) => `${orderName} wurde verarbeitet.`,
+    buyAgainAdded: (orderName: string) =>
+      `${orderName} wurde dem Warenkorb hinzugefügt.`,
+    buyAgainSkippedSuffix: (count: number) =>
+      `${count} Artikel konnten nicht wiederbestellt werden.`,
+    buyAgainCartNotEmptyTitle: "Warenkorb nicht leer",
+    buyAgainCartNotEmptyText:
+      "Ihre Bestellung soll erneut hinzugefügt werden. Wie möchten Sie fortfahren?",
+    mergeCart: "Zusammenführen",
+    replaceCart: "Ersetzen",
+    cancel: "Abbrechen",
+    notProvided: "Nicht hinterlegt",
+    noEmailProvided: "Keine E-Mail hinterlegt",
+    customerNumberPrefix: "Kundennummer:",
+    emailPrefix: "E-Mail:",
+    editContact: "Kontaktdaten bearbeiten",
+    firstNamePlaceholder: "Vorname",
+    lastNamePlaceholder: "Nachname",
+    save: "Speichern",
+    defaultBadge: "Standard",
+    editAddress: "Adresse bearbeiten",
+    phonePrefix: "Tel:",
+    streetPlaceholder: "Straße und Hausnummer",
+    address2Placeholder: "Adresszusatz",
+    zipPlaceholder: "PLZ",
+    cityPlaceholder: "Stadt",
+    countryCodePlaceholder: "Land-Code (DE)",
+    phonePlaceholder: "Telefon",
+    setDefaultAddress: "Als Standardadresse setzen",
+    singleAddressMustStayDefault:
+      "Bei nur einer Adresse bleibt diese Standard.",
+    deleteAddress: "Löschen",
+    defaultAddressCannotBeDeleted:
+      "Standardadresse kann nicht gelöscht werden.",
+    deleteAddressTitle: "Adresse löschen",
+    deleteAddressText: "Diese Adresse wird dauerhaft entfernt.",
+    deleteAddressConfirm: "Löschen bestätigen",
+    deleteAddressCancelAria: "Löschen abbrechen",
+    addAddress: "Neue Adresse hinzufügen",
+    saveAddress: "Adresse speichern",
+    missingAddress: "Adresse fehlt.",
+    unknownError: "Unbekannter Fehler",
+    orderStatusLabels: {
+      AUTHORIZED: "Autorisiert",
+      EXPIRED: "Abgelaufen",
+      PAID: "Bezahlt",
+      PARTIALLY_PAID: "Teilweise bezahlt",
+      PARTIALLY_REFUNDED: "Teilweise erstattet",
+      PENDING: "Ausstehend",
+      REFUNDED: "Erstattet",
+      VOIDED: "Storniert",
+      CANCELLED: "Storniert",
+      FALLBACK: "Verarbeitet",
+    },
   },
 
   sitemap: {
@@ -208,12 +296,14 @@ export const copy = {
 
   contact: {
     heading: "Schreiben Sie uns",
-    description: "Wir freuen uns auf Ihre Nachricht. Bitte füllen Sie das Formular aus.",
+    description:
+      "Wir freuen uns auf Ihre Nachricht. Bitte füllen Sie das Formular aus.",
     nameLabel: "Name",
     emailLabel: "E-Mail",
     messageLabel: "Nachricht",
     success: "Ihre Nachricht wurde gesendet. Wir melden uns in Kürze.",
-    error: "Beim Senden Ihrer Nachricht ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
+    error:
+      "Beim Senden Ihrer Nachricht ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.",
   },
 
   notifications: {
@@ -233,7 +323,8 @@ export const copy = {
 
   customizer: {
     uploadLabel: "Datei auswählen",
-    uploadHelp: "Bildformate SVG, PNG, JPG oder GIF.\nMaximale Dateigröße: 5MB.",
+    uploadHelp:
+      "Bildformate SVG, PNG, JPG oder GIF.\nMaximale Dateigröße: 5MB.",
     scalingInfo: "Bilder werden automatisch auf ihre maximale Größe skaliert.",
     reset: "Zurücksetzen",
   },

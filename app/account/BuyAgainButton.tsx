@@ -1,5 +1,6 @@
 "use client";
 
+import { copy } from "@/config/copy";
 import { useCart } from "@shopify/hydrogen-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -77,7 +78,7 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
     if (!reorderableLines.length) {
       setToast({
         kind: "warning",
-        message: "Diese Bestellung enthält keine wiederbestellbaren Artikel.",
+        message: copy.account.buyAgainNoReorderable,
       });
       setModalOpen(false);
       return;
@@ -107,18 +108,18 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
       if (delta <= 0 && cartErrorRef.current) {
         setToast({
           kind: "error",
-          message: "Artikel konnten nicht in den Warenkorb gelegt werden.",
+          message: copy.account.buyAgainAddFailed,
         });
       } else {
         const baseMessage =
           delta <= 0
-            ? `${orderName} wurde verarbeitet.`
-            : `${orderName} wurde dem Warenkorb hinzugefügt.`;
+            ? copy.account.buyAgainProcessed(orderName)
+            : copy.account.buyAgainAdded(orderName);
 
         if (skippedCount > 0) {
           setToast({
             kind: "warning",
-            message: `${baseMessage} ${skippedCount} Artikel konnten nicht wiederbestellt werden.`,
+            message: `${baseMessage} ${copy.account.buyAgainSkippedSuffix(skippedCount)}`,
           });
         } else {
           setToast({
@@ -149,7 +150,7 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
         }}
         disabled={busy}
       >
-        {busy ? "Wird hinzugefügt…" : "Erneut kaufen"}
+        {busy ? copy.account.buyAgainBusy : copy.account.buyAgain}
       </button>
 
       {modalOpen ? (
@@ -161,11 +162,11 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
             }}
           />
           <div className="relative z-10 w-full max-w-md rounded-xl border border-primary-900/40 bg-background p-5 text-sm text-primary-100 shadow-2xl shadow-primary-900/50">
-            <h3 className="text-base font-semibold">Warenkorb nicht leer</h3>
+            <h3 className="text-base font-semibold">{copy.account.buyAgainCartNotEmptyTitle}</h3>
             <p className="mt-2 text-primary-200/90">
-              Ihre Bestellung <span className="font-medium">{orderName}</span>{" "}
-              soll erneut hinzugefügt werden. Wie möchten Sie fortfahren?
+              <span className="font-medium">{orderName}</span>
             </p>
+            <p className="mt-2 text-primary-200/90">{copy.account.buyAgainCartNotEmptyText}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <button
                 type="button"
@@ -173,7 +174,7 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
                 onClick={() => void runBuyAgain("merge")}
                 disabled={busy}
               >
-                Zusammenführen
+                {copy.account.mergeCart}
               </button>
               <button
                 type="button"
@@ -181,7 +182,7 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
                 onClick={() => void runBuyAgain("replace")}
                 disabled={busy}
               >
-                Ersetzen
+                {copy.account.replaceCart}
               </button>
               <button
                 type="button"
@@ -189,7 +190,7 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
                 onClick={() => setModalOpen(false)}
                 disabled={busy}
               >
-                Abbrechen
+                {copy.account.cancel}
               </button>
             </div>
           </div>

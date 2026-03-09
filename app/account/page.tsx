@@ -51,33 +51,28 @@ function formatMoney(amount: string, currencyCode: string): string {
 }
 
 function orderStatusLabel(order: AccountOrder): string {
-  if (order.cancelledAt) return "Storniert";
+  if (order.cancelledAt) return copy.account.orderStatusLabels.CANCELLED;
   if (order.financialStatus) {
-    const statusMap: Record<string, string> = {
-      AUTHORIZED: "Autorisiert",
-      EXPIRED: "Abgelaufen",
-      PAID: "Bezahlt",
-      PARTIALLY_PAID: "Teilweise bezahlt",
-      PARTIALLY_REFUNDED: "Teilweise erstattet",
-      PENDING: "Ausstehend",
-      REFUNDED: "Erstattet",
-      VOIDED: "Storniert",
-    };
-
-    return statusMap[order.financialStatus] ?? "Verarbeitet";
+    return (
+      copy.account.orderStatusLabels[
+        order.financialStatus as keyof typeof copy.account.orderStatusLabels
+      ] ?? copy.account.orderStatusLabels.FALLBACK
+    );
   }
-  return "Verarbeitet";
+  return copy.account.orderStatusLabels.FALLBACK;
 }
 
 function itemSummary(order: AccountOrder): string {
   const items = order.lineItems?.nodes ?? [];
-  if (!items.length) return "Keine Artikeldetails verfügbar";
+  if (!items.length) return copy.account.orderItemsUnavailable;
   const count = items.reduce((acc, item) => acc + (item.quantity ?? 0), 0);
-  if (!count) return "Keine Artikeldetails verfügbar";
-  return `${count} Artikel`;
+  if (!count) return copy.account.orderItemsUnavailable;
+  return copy.account.orderItemsCount(count);
 }
 
-function orderItems(order: AccountOrder): Array<{ title: string; quantity: number }> {
+function orderItems(
+  order: AccountOrder,
+): Array<{ title: string; quantity: number }> {
   return (order.lineItems?.nodes ?? [])
     .filter((item) => Boolean(item.title?.trim()) && (item.quantity ?? 0) > 0)
     .map((item) => ({
@@ -95,7 +90,7 @@ function customerName(customer?: AccountCustomer): string {
   if (!customer) return copy.account.profileUnavailable;
   const fallback =
     `${customer.firstName ?? ""} ${customer.lastName ?? ""}`.trim();
-  return fallback || "Kunde";
+  return fallback || copy.account.customerFallbackName;
 }
 
 function initialContactNames(customer?: AccountCustomer): {
@@ -218,7 +213,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
             {profileUpdated ? (
               <div className="w-1/3 text-center rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
-                Kontaktdaten wurden gespeichert.
+                {copy.account.profileUpdated}
               </div>
             ) : null}
 
@@ -230,7 +225,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
             {addressUpdated ? (
               <div className="w-1/3 text-center rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
-                Adresse wurde aktualisiert.
+                {copy.account.addressUpdated}
               </div>
             ) : null}
 
@@ -256,7 +251,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
             <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold">Kontaktdaten</h2>
+                <h2 className="text-2xl font-semibold">{copy.account.contactTitle}</h2>
               </div>
             </div>
             <div className=" grid grid-cols-2 gap-3">
@@ -271,9 +266,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
           <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
             <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-4">
-              <h2 className="text-2xl font-semibold">Gespeicherte Adressen</h2>
+              <h2 className="text-2xl font-semibold">{copy.account.addressesTitle}</h2>
               <span className="text-sm text-primary-200/80">
-                {addresses.length} Einträge
+                {copy.account.addressEntriesLabel(addresses.length)}
               </span>
             </div>
 
@@ -289,7 +284,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                 {copy.account.ordersTitle}
               </h2>
               <span className="text-sm text-primary-200/80">
-                Letzte 10 Bestellungen
+                {copy.account.latestOrdersLabel}
               </span>
             </div>
 
@@ -318,21 +313,26 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                     </div>
 
                     {orderItems(node).length ? (
-                      <div className="mt-3 rounded-lg border border-primary-900/30 bg-primary-900/10 p-3">
+                      <div className="mt-3 rounded-lg border border-primary-900/30 bg-primary-500/30 p-3">
                         <p className="text-xs uppercase tracking-wide text-primary-200/80">
-                          Artikel
+                          {copy.account.orderItemsLabel}
                         </p>
                         <ul className="mt-2 space-y-1 text-sm text-primary-100">
                           {orderItems(node).map((item, index) => (
-                            <li key={`${item.title}-${index}`} className="flex justify-between gap-3">
+                            <li
+                              key={`${item.title}-${index}`}
+                              className="flex justify-between gap-3"
+                            >
                               <span className="truncate">{item.title}</span>
-                              <span className="shrink-0 text-primary-200/80">x{item.quantity}</span>
+                              <span className="shrink-0 text-primary-200/80">
+                                x{item.quantity}
+                              </span>
                             </li>
                           ))}
                         </ul>
                         {node.lineItems?.pageInfo?.hasNextPage ? (
                           <p className="mt-2 text-xs text-primary-200/80">
-                            Weitere Artikel sind in der Bestellung enthalten.
+                            {copy.account.orderItemsMoreHint}
                           </p>
                         ) : null}
                       </div>
@@ -359,7 +359,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                             rel="noreferrer"
                             className="btn-outline small"
                           >
-                            Bestellung ansehen
+                            {copy.account.viewOrder}
                           </a>
                           <BuyAgainButton
                             orderName={node.name}

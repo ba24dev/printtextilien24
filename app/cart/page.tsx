@@ -1,3 +1,4 @@
+import { copy } from "@/config/copy";
 import Link from "next/link";
 
 type CartPageSearchParams = {
@@ -25,44 +26,35 @@ export default async function CartPage({ searchParams }: CartPageProps) {
   return (
     <main className="flex-1 bg-linear-to-b from-primary-900/40 via-primary-500/20 to-background">
       <section className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-6 py-40">
-        <h1 className="text-3xl font-semibold">Warenkorb</h1>
+        <h1 className="text-3xl font-semibold">{copy.cart.pageTitle}</h1>
 
         {fromShopifyBuyAgain ? (
           <div className="rounded-xl border border-primary-900/40 bg-primary-800/30 p-5 text-sm text-primary-100">
-            <p>
-              Dieser Link stammt aus Shopifys <strong>Erneut kaufen</strong>{" "}
-              Funktion. In Ihrem Headless-Shop wird dieser Link nicht direkt als
-              Shopify-Warenkorb importiert.
-            </p>
-            <p className="mt-3 text-primary-200/90">
-              Nutzen Sie stattdessen <strong>Erneut kaufen</strong> im
-              Kontobereich, damit die Artikel in Ihren lokalen Shop-Warenkorb
-              übernommen werden.
-            </p>
+            <p>{copy.cart.resolverFromShopify}</p>
+            <p className="mt-3 text-primary-200/90">{copy.cart.resolverUseAccount}</p>
             {country ? (
-              <p className="mt-3 text-primary-200/80">Land aus Link: {country}</p>
+              <p className="mt-3 text-primary-200/80">
+                {copy.cart.resolverCountryPrefix} {country}
+              </p>
             ) : null}
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/account" className="btn-primary small">
-                Zum Konto
+                {copy.cart.resolverGoAccount}
               </Link>
               <Link href="/products" className="btn-outline small">
-                Weiter einkaufen
+                {copy.cart.resolverContinueShopping}
               </Link>
             </div>
           </div>
         ) : (
           <div className="rounded-xl border border-primary-900/40 bg-primary-800/30 p-5 text-sm text-primary-100">
-            <p>
-              Ihr Warenkorb wird in diesem Shop über das Warenkorb-Panel in der
-              Kopfzeile verwaltet.
-            </p>
+            <p>{copy.cart.resolverDrawerHint}</p>
             <div className="mt-4 flex flex-wrap gap-2">
               <Link href="/products" className="btn-primary small">
-                Produkte ansehen
+                {copy.cart.resolverViewProducts}
               </Link>
               <Link href="/account" className="btn-outline small">
-                Zum Konto
+                {copy.cart.resolverGoAccount}
               </Link>
             </div>
           </div>

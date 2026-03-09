@@ -1,3 +1,4 @@
+import { copy } from "@/config/copy";
 import { shopifyCustomerGraphQL } from "@/lib/shopify/customer/graphql";
 import { NextRequest } from "next/server";
 
@@ -22,7 +23,9 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const addressId = String(formData.get("addressId") ?? "").trim();
   if (!addressId) {
-    const response = redirectToAccount(request, { address_error: "Adresse fehlt." });
+    const response = redirectToAccount(request, {
+      address_error: copy.account.missingAddress,
+    });
     session.withAuthCookies(response);
     return response;
   }
@@ -45,7 +48,8 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     const response = redirectToAccount(request, {
-      address_error: error instanceof Error ? error.message : "Unbekannter Fehler",
+      address_error:
+        error instanceof Error ? error.message : copy.account.unknownError,
     });
     session.withAuthCookies(response);
     return response;
