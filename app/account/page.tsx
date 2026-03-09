@@ -3,76 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { copy } from "@/config/copy";
 
-type AccountCustomer = {
-  id?: string;
-  displayName?: string | null;
-  email?: string | null;
-  phoneNumber?: { phoneNumber?: string | null } | null;
-  imageUrl?: string | null;
-  firstName?: string | null;
-  lastName?: string | null;
-  defaultAddress?: {
-    id?: string;
-    phoneNumber?: string | null;
-  } | null;
-  addresses?: {
-    nodes?: Array<{
-      id?: string;
-      firstName?: string | null;
-      lastName?: string | null;
-      address1?: string | null;
-      address2?: string | null;
-      city?: string | null;
-      zip?: string | null;
-      territoryCode?: string | null;
-      zoneCode?: string | null;
-      formatted?: string[] | null;
-      phoneNumber?: string | null;
-    }>;
-  } | null;
-};
-
-type AccountAddress = {
-  id?: string;
-  firstName?: string | null;
-  lastName?: string | null;
-  address1?: string | null;
-  address2?: string | null;
-  city?: string | null;
-  zip?: string | null;
-  territoryCode?: string | null;
-  zoneCode?: string | null;
-  formatted?: string[] | null;
-  phoneNumber?: string | null;
-};
-
-type AccountOrder = {
-  id: string;
-  name: string;
-  processedAt: string;
-  statusPageUrl?: string | null;
-  financialStatus?: string | null;
-  cancelledAt?: string | null;
-  cancelReason?: string | null;
-  totalPrice: {
-    amount: string;
-    currencyCode: string;
-  };
-  lineItems?: {
-    nodes?: Array<{
-      title: string;
-      quantity: number;
-    }>;
-  };
-};
-
-type AccountApiResponse = {
-  customer?: AccountCustomer;
-  orders?: {
-    edges?: Array<{ node: AccountOrder }>;
-  };
-  error?: string;
-};
+import { AccountAddress, AccountApiResponse, AccountCustomer, AccountOrder } from "./types";
 
 type AccountFetchResult =
   | { status: "authenticated"; data: AccountApiResponse }
@@ -81,6 +12,10 @@ type AccountFetchResult =
 
 type AccountPageSearchParams = {
   checkout_error?: string | string[];
+  profile_updated?: string | string[];
+  profile_error?: string | string[];
+  address_updated?: string | string[];
+  address_error?: string | string[];
 };
 
 type AccountPageProps = {
@@ -142,19 +77,6 @@ function customerName(customer?: AccountCustomer): string {
   if (customer.displayName?.trim()) return customer.displayName.trim();
   const fallback = `${customer.firstName ?? ""} ${customer.lastName ?? ""}`.trim();
   return fallback || "Kunde";
-}
-
-function resolveCustomerPhone(customer?: AccountCustomer): string | null {
-  const direct = customer?.phoneNumber?.phoneNumber?.trim();
-  if (direct) return direct;
-
-  const defaultAddressPhone = customer?.defaultAddress?.phoneNumber?.trim();
-  if (defaultAddressPhone) return defaultAddressPhone;
-
-  const firstAddressPhone = customer?.addresses?.nodes
-    ?.map((address) => address.phoneNumber?.trim())
-    .find((value) => Boolean(value));
-  return firstAddressPhone ?? null;
 }
 
 function addressDisplayName(address: AccountAddress): string {
@@ -228,6 +150,13 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const checkoutError =
     checkoutErrorValue === "1" ||
     (Array.isArray(checkoutErrorValue) && checkoutErrorValue.includes("1"));
+  const profileUpdated = resolvedSearchParams?.profile_updated === "1";
+  const addressUpdated = resolvedSearchParams?.address_updated === "1";
+  const profileErrorValue = resolvedSearchParams?.profile_error;
+  const addressErrorValue = resolvedSearchParams?.address_error;
+  const profileError = Array.isArray(profileErrorValue) ? profileErrorValue[0] : profileErrorValue;
+  const addressError = Array.isArray(addressErrorValue) ? addressErrorValue[0] : addressErrorValue;
+
   const result = await getCustomerData();
   if (result.status === "unauthenticated") {
     redirect(checkoutError ? "/account/login?checkout_error=1" : "/account/login");
@@ -249,7 +178,6 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const orders = result.data.orders;
   const addresses = customer?.addresses?.nodes ?? [];
   const customerId = readableCustomerId(customer?.id);
-  const customerPhone = resolveCustomerPhone(customer);
 
   return (
     <main className="flex-1 max-w-6xl mx-auto py-20 px-4 md:px-6">
@@ -257,11 +185,33 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         <p className="text-xs uppercase tracking-widest text-primary-200/80">Account</p>
         <h1 className="text-4xl font-bold mt-2">{copy.account.title}</h1>
       </div>
+
       {checkoutError ? (
         <div className="mb-6 rounded-xl border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
           {copy.account.checkoutUnavailable}
         </div>
       ) : null}
+      {profileUpdated ? (
+        <div className="mb-6 rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
+          Kontaktdaten wurden gespeichert.
+        </div>
+      ) : null}
+      {profileError ? (
+        <div className="mb-6 rounded-xl border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
+          {profileError}
+        </div>
+      ) : null}
+      {addressUpdated ? (
+        <div className="mb-6 rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
+          Adresse wurde aktualisiert.
+        </div>
+      ) : null}
+      {addressError ? (
+        <div className="mb-6 rounded-xl border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
+          {addressError}
+        </div>
+      ) : null}
+
       <section className="rounded-2xl border border-primary-900/30 bg-background/70 shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -276,23 +226,44 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             </button>
           </form>
         </div>
+
         <div className="mt-5 grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
             <p className="text-xs uppercase tracking-wide text-primary-200/80">E-Mail</p>
             <p className="mt-1 font-medium">{customer?.email ?? copy.account.noEmail}</p>
           </div>
           <div className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-primary-200/80">Telefon</p>
-            <p className="mt-1 font-medium">{customerPhone ?? "Nicht hinterlegt"}</p>
+            <p className="text-xs uppercase tracking-wide text-primary-200/80">Name</p>
+            <p className="mt-1 font-medium">{customerName(customer)}</p>
           </div>
         </div>
-        {customer ? (
-          <div className="mt-4 text-sm text-primary-200/90">
-            Verwalten Sie hier Ihre Kontodaten und behalten Sie Ihre Bestellungen im Blick.
-          </div>
-        ) : (
-          <div className="mt-4 text-sm text-red-400">{copy.account.profileUnavailable}</div>
-        )}
+
+        <details className="mt-5 rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
+          <summary className="cursor-pointer font-medium">Kontaktdaten bearbeiten</summary>
+          <form action="/api/customer/profile" method="post" className="mt-4 grid gap-3 md:grid-cols-3">
+            <input
+              name="displayName"
+              defaultValue={customer?.displayName ?? ""}
+              className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
+              placeholder="Anzeigename"
+            />
+            <input
+              name="firstName"
+              defaultValue={customer?.firstName ?? ""}
+              className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
+              placeholder="Vorname"
+            />
+            <input
+              name="lastName"
+              defaultValue={customer?.lastName ?? ""}
+              className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
+              placeholder="Nachname"
+            />
+            <div className="md:col-span-3">
+              <button type="submit" className="btn-primary small">Kontaktdaten speichern</button>
+            </div>
+          </form>
+        </details>
       </section>
 
       <section className="rounded-2xl border border-primary-900/30 bg-background/70 shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
@@ -304,7 +275,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <div className="grid gap-3 md:grid-cols-2">
             {addresses.map((address) => {
               const lines = normalizeAddressLines(address);
-              const isDefault = address.id && address.id === customer?.defaultAddress?.id;
+              const isDefault = Boolean(address.id && address.id === customer?.defaultAddress?.id);
               return (
                 <article
                   key={address.id ?? lines.join("|")}
@@ -326,6 +297,35 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                   {address.phoneNumber ? (
                     <p className="mt-2 text-sm text-primary-100">Tel: {address.phoneNumber}</p>
                   ) : null}
+
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm text-primary-100/90">Adresse bearbeiten</summary>
+                    <form action="/api/customer/address/update" method="post" className="mt-3 grid gap-2">
+                      <input type="hidden" name="addressId" value={address.id ?? ""} />
+                      <input name="firstName" defaultValue={address.firstName ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Vorname" />
+                      <input name="lastName" defaultValue={address.lastName ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Nachname" />
+                      <input name="address1" defaultValue={address.address1 ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Straße und Hausnummer" />
+                      <input name="address2" defaultValue={address.address2 ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Adresszusatz" />
+                      <div className="grid grid-cols-2 gap-2">
+                        <input name="zip" defaultValue={address.zip ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="PLZ" />
+                        <input name="city" defaultValue={address.city ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Stadt" />
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        <input name="territoryCode" defaultValue={address.territoryCode ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Land-Code (DE)" />
+                        <input name="zoneCode" defaultValue={address.zoneCode ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Region-Code" />
+                      </div>
+                      <input name="phoneNumber" defaultValue={address.phoneNumber ?? ""} className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Telefon" />
+                      <label className="flex items-center gap-2 text-sm">
+                        <input type="checkbox" name="defaultAddress" defaultChecked={isDefault} />
+                        Als Standardadresse setzen
+                      </label>
+                      <button type="submit" className="btn-primary small">Speichern</button>
+                    </form>
+                    <form action="/api/customer/address/delete" method="post" className="mt-2">
+                      <input type="hidden" name="addressId" value={address.id ?? ""} />
+                      <button type="submit" className="btn-outline small">Löschen</button>
+                    </form>
+                  </details>
                 </article>
               );
             })}
@@ -333,6 +333,30 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
         ) : (
           <p className="text-sm text-primary-200/80">Keine Adressen gespeichert.</p>
         )}
+
+        <details className="mt-4 rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
+          <summary className="cursor-pointer font-medium">Neue Adresse hinzufügen</summary>
+          <form action="/api/customer/address/create" method="post" className="mt-3 grid gap-2">
+            <input name="firstName" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Vorname" />
+            <input name="lastName" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Nachname" />
+            <input name="address1" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Straße und Hausnummer" />
+            <input name="address2" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Adresszusatz" />
+            <div className="grid grid-cols-2 gap-2">
+              <input name="zip" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="PLZ" />
+              <input name="city" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Stadt" />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <input name="territoryCode" defaultValue="DE" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Land-Code (DE)" />
+              <input name="zoneCode" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Region-Code" />
+            </div>
+            <input name="phoneNumber" className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm" placeholder="Telefon" />
+            <label className="flex items-center gap-2 text-sm">
+              <input type="checkbox" name="defaultAddress" />
+              Als Standardadresse setzen
+            </label>
+            <button type="submit" className="btn-primary small">Adresse speichern</button>
+          </form>
+        </details>
       </section>
 
       <section className="rounded-2xl border border-primary-900/30 bg-background/70 shadow-lg shadow-primary-900/15 p-6 md:p-8">
@@ -340,48 +364,48 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <h2 className="text-2xl font-semibold">{copy.account.ordersTitle}</h2>
           <span className="text-sm text-primary-200/80">Letzte 10 Bestellungen</span>
         </div>
-      {orders?.edges?.length ? (
-        <ul className="space-y-3">
-          {orders.edges.map(({ node }) => (
-            <li
-              key={node.id}
-              className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4 md:p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="font-semibold">{copy.account.orderPrefix} {node.name}</div>
-                  <div className="text-sm text-primary-200/80 mt-1">
-                    {copy.account.orderDateLabel}: {formatGermanDate(node.processedAt)} • {itemSummary(node)}
+        {orders?.edges?.length ? (
+          <ul className="space-y-3">
+            {orders.edges.map(({ node }) => (
+              <li
+                key={node.id}
+                className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4 md:p-5"
+              >
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <div className="font-semibold">{copy.account.orderPrefix} {node.name}</div>
+                    <div className="text-sm text-primary-200/80 mt-1">
+                      {copy.account.orderDateLabel}: {formatGermanDate(node.processedAt)} • {itemSummary(node)}
+                    </div>
                   </div>
-                </div>
-                <span className="rounded-full border border-primary-500/40 bg-primary-500/15 px-3 py-1 text-xs font-medium text-primary-100">
-                  {orderStatusLabel(node)}
-                </span>
-              </div>
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                <div className="text-sm">
-                  <span className="text-primary-200/80">{copy.account.orderTotalLabel}: </span>
-                  <span className="font-semibold">
-                    {formatMoney(node.totalPrice.amount, node.totalPrice.currencyCode)}
+                  <span className="rounded-full border border-primary-500/40 bg-primary-500/15 px-3 py-1 text-xs font-medium text-primary-100">
+                    {orderStatusLabel(node)}
                   </span>
                 </div>
-                {node.statusPageUrl ? (
-                  <a
-                    href={node.statusPageUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="btn-outline small"
-                  >
-                    Bestellung ansehen
-                  </a>
-                ) : null}
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <div className="text-sm text-primary-200/80">{copy.account.noOrders}</div>
-      )}
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <div className="text-sm">
+                    <span className="text-primary-200/80">{copy.account.orderTotalLabel}: </span>
+                    <span className="font-semibold">
+                      {formatMoney(node.totalPrice.amount, node.totalPrice.currencyCode)}
+                    </span>
+                  </div>
+                  {node.statusPageUrl ? (
+                    <a
+                      href={node.statusPageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="btn-outline small"
+                    >
+                      Bestellung ansehen
+                    </a>
+                  ) : null}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <div className="text-sm text-primary-200/80">{copy.account.noOrders}</div>
+        )}
       </section>
     </main>
   );
