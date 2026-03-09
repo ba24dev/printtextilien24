@@ -37,25 +37,30 @@ function shouldFallbackForSchemaError(error: unknown): boolean {
 }
 
 async function fetchCustomerBundle(accessToken: string) {
+  let customerData: any;
   try {
-    const customer = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY);
-    const orders = await shopifyCustomerGraphQL(accessToken, CUSTOMER_ORDERS_QUERY);
-    return {
-      customer: normalizeCustomerEmail(customer.customer),
-      orders: orders.customer.orders,
-    };
+    customerData = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY);
   } catch (error) {
     if (!shouldFallbackForSchemaError(error)) {
       throw error;
     }
-
-    const customer = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY_FALLBACK);
-    const orders = await shopifyCustomerGraphQL(accessToken, CUSTOMER_ORDERS_QUERY_FALLBACK);
-    return {
-      customer: normalizeCustomerEmail(customer.customer),
-      orders: orders.customer.orders,
-    };
+    customerData = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY_FALLBACK);
   }
+
+  let ordersData: any;
+  try {
+    ordersData = await shopifyCustomerGraphQL(accessToken, CUSTOMER_ORDERS_QUERY);
+  } catch (error) {
+    if (!shouldFallbackForSchemaError(error)) {
+      throw error;
+    }
+    ordersData = await shopifyCustomerGraphQL(accessToken, CUSTOMER_ORDERS_QUERY_FALLBACK);
+  }
+
+  return {
+    customer: normalizeCustomerEmail(customerData.customer),
+    orders: ordersData.customer.orders,
+  };
 }
 
 export async function GET(request: NextRequest) {
