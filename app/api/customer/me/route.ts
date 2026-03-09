@@ -1,7 +1,9 @@
 import { shopifyCustomerGraphQL } from "@/lib/shopify/customer/graphql";
 import { formatAccessToken } from "@/lib/shopify/auth/token";
 import {
+  CUSTOMER_ORDERS_QUERY_FALLBACK,
   CUSTOMER_ORDERS_QUERY,
+  CUSTOMER_QUERY_FALLBACK,
   CUSTOMER_QUERY,
 } from "@/lib/shopify/customer/queries";
 import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
@@ -28,6 +30,34 @@ function normalizeCustomerEmail(customer?: {
   };
 }
 
+function shouldFallbackForSchemaError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return message.includes("field") && message.includes("doesn't exist on type");
+}
+
+async function fetchCustomerBundle(accessToken: string) {
+  try {
+    const customer = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY);
+    const orders = await shopifyCustomerGraphQL(accessToken, CUSTOMER_ORDERS_QUERY);
+    return {
+      customer: normalizeCustomerEmail(customer.customer),
+      orders: orders.customer.orders,
+    };
+  } catch (error) {
+    if (!shouldFallbackForSchemaError(error)) {
+      throw error;
+    }
+
+    const customer = await shopifyCustomerGraphQL(accessToken, CUSTOMER_QUERY_FALLBACK);
+    const orders = await shopifyCustomerGraphQL(accessToken, CUSTOMER_ORDERS_QUERY_FALLBACK);
+    return {
+      customer: normalizeCustomerEmail(customer.customer),
+      orders: orders.customer.orders,
+    };
+  }
+}
+
 export async function GET(request: NextRequest) {
   if (!isShopifyCustomerAuthV2Enabled()) {
     const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
@@ -39,11 +69,10 @@ export async function GET(request: NextRequest) {
 
     try {
       const token = formatAccessToken(accessToken);
-      const customer = await shopifyCustomerGraphQL(token, CUSTOMER_QUERY);
-      const orders = await shopifyCustomerGraphQL(token, CUSTOMER_ORDERS_QUERY);
+      const data = await fetchCustomerBundle(token);
       const response = NextResponse.json({
-        customer: normalizeCustomerEmail(customer.customer),
-        orders: orders.customer.orders,
+        customer: data.customer,
+        orders: data.orders,
       });
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
@@ -76,15 +105,11 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    const customer = await shopifyCustomerGraphQL(validation.accessToken, CUSTOMER_QUERY);
-    const orders = await shopifyCustomerGraphQL(
-      validation.accessToken,
-      CUSTOMER_ORDERS_QUERY,
-    );
+    const data = await fetchCustomerBundle(validation.accessToken);
 
     const response = NextResponse.json({
-      customer: normalizeCustomerEmail(customer.customer),
-      orders: orders.customer.orders,
+      customer: data.customer,
+      orders: data.orders,
     });
     if (validation.refreshedTokens) {
       applyCustomerAuthCookies(response, validation.refreshedTokens);
