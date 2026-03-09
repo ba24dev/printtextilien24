@@ -26,9 +26,9 @@ function sleep(ms: number): Promise<void> {
 
 export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps) {
   const { lines: cartLines, linesAdd, linesRemove, error } = useCart();
-  const [confirming, setConfirming] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   const [busy, setBusy] = useState(false);
-  const [feedback, setFeedback] = useState<{
+  const [toast, setToast] = useState<{
     kind: "success" | "warning" | "error";
     message: string;
   } | null>(null);
@@ -43,6 +43,21 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
   useEffect(() => {
     cartErrorRef.current = error;
   }, [error]);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 4200);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
+
+  useEffect(() => {
+    if (!modalOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setModalOpen(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [modalOpen]);
 
   const reorderableLines = useMemo(
     () =>
@@ -60,17 +75,17 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
   const runBuyAgain = async (mode: "merge" | "replace") => {
     if (busy) return;
     if (!reorderableLines.length) {
-      setFeedback({
+      setToast({
         kind: "warning",
         message: "Diese Bestellung enthält keine wiederbestellbaren Artikel.",
       });
-      setConfirming(false);
+      setModalOpen(false);
       return;
     }
 
     setBusy(true);
-    setConfirming(false);
-    setFeedback(null);
+    setModalOpen(false);
+    setToast(null);
 
     const beforeQty = totalQuantity(cartLinesRef.current);
     const lineIdsToRemove = (cartLinesRef.current ?? [])
@@ -90,7 +105,7 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
       const delta = afterQty - beforeQty;
 
       if (delta <= 0 && cartErrorRef.current) {
-        setFeedback({
+        setToast({
           kind: "error",
           message: "Artikel konnten nicht in den Warenkorb gelegt werden.",
         });
@@ -101,12 +116,12 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
             : `${orderName} wurde dem Warenkorb hinzugefügt.`;
 
         if (skippedCount > 0) {
-          setFeedback({
+          setToast({
             kind: "warning",
             message: `${baseMessage} ${skippedCount} Artikel konnten nicht wiederbestellt werden.`,
           });
         } else {
-          setFeedback({
+          setToast({
             kind: "success",
             message: baseMessage,
           });
@@ -125,9 +140,9 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
         type="button"
         className="btn-outline small"
         onClick={() => {
-          setFeedback(null);
+          setToast(null);
           if (hasCartItems) {
-            setConfirming(true);
+            setModalOpen(true);
             return;
           }
           void runBuyAgain("merge");
@@ -137,50 +152,64 @@ export default function BuyAgainButton({ orderName, lines }: BuyAgainButtonProps
         {busy ? "Wird hinzugefügt…" : "Erneut kaufen"}
       </button>
 
-      {confirming ? (
-        <div className="rounded-lg border border-primary-900/40 bg-background p-3 text-xs text-primary-200/90">
-          <p className="mb-2">Warenkorb ist nicht leer. Wie möchten Sie fortfahren?</p>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              className="btn-primary small"
-              onClick={() => void runBuyAgain("merge")}
-              disabled={busy}
-            >
-              Zusammenführen
-            </button>
-            <button
-              type="button"
-              className="btn-outline small"
-              onClick={() => void runBuyAgain("replace")}
-              disabled={busy}
-            >
-              Ersetzen
-            </button>
-            <button
-              type="button"
-              className="btn-outline small"
-              onClick={() => setConfirming(false)}
-              disabled={busy}
-            >
-              Abbrechen
-            </button>
+      {modalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div
+            className="absolute inset-0 bg-black/65"
+            onClick={() => {
+              if (!busy) setModalOpen(false);
+            }}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-xl border border-primary-900/40 bg-background p-5 text-sm text-primary-100 shadow-2xl shadow-primary-900/50">
+            <h3 className="text-base font-semibold">Warenkorb nicht leer</h3>
+            <p className="mt-2 text-primary-200/90">
+              Ihre Bestellung <span className="font-medium">{orderName}</span>{" "}
+              soll erneut hinzugefügt werden. Wie möchten Sie fortfahren?
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className="btn-primary small"
+                onClick={() => void runBuyAgain("merge")}
+                disabled={busy}
+              >
+                Zusammenführen
+              </button>
+              <button
+                type="button"
+                className="btn-outline small"
+                onClick={() => void runBuyAgain("replace")}
+                disabled={busy}
+              >
+                Ersetzen
+              </button>
+              <button
+                type="button"
+                className="btn-outline small"
+                onClick={() => setModalOpen(false)}
+                disabled={busy}
+              >
+                Abbrechen
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
 
-      {feedback ? (
-        <p
-          className={`max-w-xs text-right text-xs ${
-            feedback.kind === "error"
-              ? "text-red-300"
-              : feedback.kind === "warning"
-                ? "text-yellow-200"
-                : "text-green-200"
-          }`}
-        >
-          {feedback.message}
-        </p>
+      {toast ? (
+        <div className="fixed right-6 top-20 z-[60] max-w-sm">
+          <div
+            className={`rounded-lg border px-4 py-3 text-sm shadow-xl ${
+              toast.kind === "error"
+                ? "border-red-500/50 bg-red-900/70 text-red-100"
+                : toast.kind === "warning"
+                  ? "border-yellow-500/50 bg-yellow-900/70 text-yellow-100"
+                  : "border-green-500/50 bg-green-900/70 text-green-100"
+            }`}
+          >
+            {toast.message}
+          </div>
+        </div>
       ) : null}
     </div>
   );
