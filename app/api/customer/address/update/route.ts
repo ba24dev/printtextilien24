@@ -1,11 +1,12 @@
+import { copy } from "@/config/copy";
 import { shopifyCustomerGraphQL } from "@/lib/shopify/customer/graphql";
 import { NextRequest } from "next/server";
 
 import { redirectToAccount, requireCustomerAccessToken } from "../../_auth";
 
 const ADDRESS_UPDATE_MUTATION = `
-  mutation AddressUpdate($id: ID!, $address: MailingAddressInput!, $defaultAddress: Boolean) {
-    customerAddressUpdate(id: $id, address: $address, defaultAddress: $defaultAddress) {
+  mutation AddressUpdate($addressId: ID!, $address: CustomerAddressInput!, $defaultAddress: Boolean) {
+    customerAddressUpdate(addressId: $addressId, address: $address, defaultAddress: $defaultAddress) {
       customerAddress {
         id
       }
@@ -38,7 +39,9 @@ export async function POST(request: NextRequest) {
   const formData = await request.formData();
   const addressId = String(formData.get("addressId") ?? "").trim();
   if (!addressId) {
-    const response = redirectToAccount(request, { address_error: "Adresse fehlt." });
+    const response = redirectToAccount(request, {
+      address_error: copy.account.missingAddress,
+    });
     session.withAuthCookies(response);
     return response;
   }
@@ -51,7 +54,7 @@ export async function POST(request: NextRequest) {
         userErrors?: Array<{ message?: string }>;
       };
     }>(session.accessToken, ADDRESS_UPDATE_MUTATION, {
-      id: addressId,
+      addressId,
       address: getAddressPayload(formData),
       defaultAddress,
     });
@@ -65,7 +68,8 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     const response = redirectToAccount(request, {
-      address_error: error instanceof Error ? error.message : "Unbekannter Fehler",
+      address_error:
+        error instanceof Error ? error.message : copy.account.unknownError,
     });
     session.withAuthCookies(response);
     return response;

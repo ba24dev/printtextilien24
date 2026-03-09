@@ -1,10 +1,11 @@
+import { copy } from "@/config/copy";
 import { shopifyCustomerGraphQL } from "@/lib/shopify/customer/graphql";
 import { NextRequest } from "next/server";
 
 import { redirectToAccount, requireCustomerAccessToken } from "../../_auth";
 
 const ADDRESS_CREATE_MUTATION = `
-  mutation AddressCreate($address: MailingAddressInput!, $defaultAddress: Boolean) {
+  mutation AddressCreate($address: CustomerAddressInput!, $defaultAddress: Boolean) {
     customerAddressCreate(address: $address, defaultAddress: $defaultAddress) {
       customerAddress {
         id
@@ -57,7 +58,8 @@ export async function POST(request: NextRequest) {
     return response;
   } catch (error) {
     const response = redirectToAccount(request, {
-      address_error: error instanceof Error ? error.message : "Unbekannter Fehler",
+      address_error:
+        error instanceof Error ? error.message : copy.account.unknownError,
     });
     session.withAuthCookies(response);
     return response;

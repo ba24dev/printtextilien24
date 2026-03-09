@@ -1,5 +1,6 @@
 "use client";
 
+import { copy } from "@/config/copy";
 import { PenLine, Plus } from "lucide-react";
 import { useState } from "react";
 
@@ -28,7 +29,7 @@ function formatAddressLines(address: AccountAddress): string[] {
 
 function displayName(address: AccountAddress): string {
   const name = `${address.firstName ?? ""} ${address.lastName ?? ""}`.trim();
-  return name || "Adresse";
+  return name || copy.account.addressFallbackName;
 }
 
 type AddressCardProps = {
@@ -51,7 +52,7 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
         <div className="flex items-center gap-2">
           {isDefault ? (
             <span className="rounded-full border border-primary-500/50 bg-primary-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary-100">
-              Standard
+              {copy.account.defaultBadge}
             </span>
           ) : null}
           {!editing ? (
@@ -59,8 +60,8 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
               type="button"
               onClick={() => setEditing(true)}
               className="rounded p-1 text-primary-100/80 hover:bg-primary-900/20 hover:text-primary-100"
-              aria-label="Adresse bearbeiten"
-              title="Adresse bearbeiten"
+              aria-label={copy.account.editAddress}
+              title={copy.account.editAddress}
             >
               <PenLine className="h-4 w-4" />
             </button>
@@ -77,7 +78,7 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
           </div>
           {address.phoneNumber ? (
             <p className="mt-2 text-sm text-primary-100">
-              Tel: {address.phoneNumber}
+              {copy.account.phonePrefix} {address.phoneNumber}
             </p>
           ) : null}
         </>
@@ -93,45 +94,45 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
               name="firstName"
               defaultValue={address.firstName ?? ""}
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Vorname"
+              placeholder={copy.account.firstNamePlaceholder}
             />
             <input
               name="lastName"
               defaultValue={address.lastName ?? ""}
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Nachname"
+              placeholder={copy.account.lastNamePlaceholder}
             />
             <input
               name="address1"
               defaultValue={address.address1 ?? ""}
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Straße und Hausnummer"
+              placeholder={copy.account.streetPlaceholder}
             />
             <input
               name="address2"
               defaultValue={address.address2 ?? ""}
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Adresszusatz"
+              placeholder={copy.account.address2Placeholder}
             />
             <div className="grid grid-cols-2 gap-2">
               <input
                 name="zip"
                 defaultValue={address.zip ?? ""}
                 className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-                placeholder="PLZ"
+                placeholder={copy.account.zipPlaceholder}
               />
               <input
                 name="city"
                 defaultValue={address.city ?? ""}
                 className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-                placeholder="Stadt"
+                placeholder={copy.account.cityPlaceholder}
               />
             </div>
             <input
               name="territoryCode"
               defaultValue={address.territoryCode ?? "DE"}
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Land-Code (DE)"
+              placeholder={copy.account.countryCodePlaceholder}
             />
             <input
               type="hidden"
@@ -142,7 +143,7 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
               name="phoneNumber"
               defaultValue={address.phoneNumber ?? ""}
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Telefon"
+              placeholder={copy.account.phonePlaceholder}
             />
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -151,16 +152,16 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
                 defaultChecked={isDefault}
                 disabled={lockDefault}
               />
-              Als Standardadresse setzen
+              {copy.account.setDefaultAddress}
             </label>
             {lockDefault ? (
               <p className="text-xs text-primary-200/80">
-                Bei nur einer Adresse bleibt diese Standard.
+                {copy.account.singleAddressMustStayDefault}
               </p>
             ) : null}
             <div className="flex items-center gap-2">
               <button type="submit" className="btn-primary small">
-                Speichern
+                {copy.account.save}
               </button>
               <button
                 type="button"
@@ -170,7 +171,7 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
                   setDeleteModalOpen(false);
                 }}
               >
-                Abbrechen
+                {copy.account.cancel}
               </button>
             </div>
           </form>
@@ -181,11 +182,11 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
                 className="small rounded-md border border-red-500/50 bg-red-900/30 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-800/40"
                 onClick={() => setDeleteModalOpen(true)}
               >
-                Löschen
+                {copy.account.deleteAddress}
               </button>
             ) : (
               <p className="text-xs text-primary-200/80">
-                Standardadresse kann nicht gelöscht werden.
+                {copy.account.defaultAddressCannotBeDeleted}
               </p>
             )}
           </div>
@@ -198,12 +199,12 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
             type="button"
             className="absolute inset-0 bg-black/65"
             onClick={() => setDeleteModalOpen(false)}
-            aria-label="Löschen abbrechen"
+            aria-label={copy.account.deleteAddressCancelAria}
           />
           <div className="relative z-10 w-full max-w-md rounded-xl border border-primary-900/40 bg-background p-5 text-sm text-primary-100 shadow-2xl shadow-primary-900/50">
-            <h3 className="text-base font-semibold">Adresse löschen</h3>
+            <h3 className="text-base font-semibold">{copy.account.deleteAddressTitle}</h3>
             <p className="mt-2 text-primary-200/90">
-              Diese Adresse wird dauerhaft entfernt.
+              {copy.account.deleteAddressText}
             </p>
             <div className="mt-4 flex flex-wrap gap-2">
               <form action="/api/customer/address/delete" method="post">
@@ -212,7 +213,7 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
                   type="submit"
                   className="small rounded-md border border-red-500/60 bg-red-900/40 px-3 py-2 text-sm font-medium text-red-200 transition hover:bg-red-800/50"
                 >
-                  Löschen bestätigen
+                  {copy.account.deleteAddressConfirm}
                 </button>
               </form>
               <button
@@ -220,7 +221,7 @@ function AddressCard({ address, isDefault, addressCount }: AddressCardProps) {
                 className="btn-outline small"
                 onClick={() => setDeleteModalOpen(false)}
               >
-                Abbrechen
+                {copy.account.cancel}
               </button>
             </div>
           </div>
@@ -244,7 +245,7 @@ function AddAddressCard() {
           onClick={() => setEditing(true)}
         >
           <Plus className="h-5 w-5" />
-          <span>Neue Adresse hinzufügen</span>
+          <span>{copy.account.addAddress}</span>
         </button>
       ) : (
         <form
@@ -255,60 +256,60 @@ function AddAddressCard() {
           <input
             name="firstName"
             className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-            placeholder="Vorname"
+            placeholder={copy.account.firstNamePlaceholder}
           />
           <input
             name="lastName"
             className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-            placeholder="Nachname"
+            placeholder={copy.account.lastNamePlaceholder}
           />
           <input
             name="address1"
             className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-            placeholder="Straße und Hausnummer"
+            placeholder={copy.account.streetPlaceholder}
           />
           <input
             name="address2"
             className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-            placeholder="Adresszusatz"
+            placeholder={copy.account.address2Placeholder}
           />
           <div className="grid grid-cols-2 gap-2">
             <input
               name="zip"
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="PLZ"
+              placeholder={copy.account.zipPlaceholder}
             />
             <input
               name="city"
               className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Stadt"
+              placeholder={copy.account.cityPlaceholder}
             />
           </div>
           <input
             name="territoryCode"
             defaultValue="DE"
             className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-            placeholder="Land-Code (DE)"
+            placeholder={copy.account.countryCodePlaceholder}
           />
           <input
             name="phoneNumber"
             className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-            placeholder="Telefon"
+            placeholder={copy.account.phonePlaceholder}
           />
           <label className="flex items-center gap-2 text-sm">
             <input type="checkbox" name="defaultAddress" />
-            Als Standardadresse setzen
+            {copy.account.setDefaultAddress}
           </label>
           <div className="flex items-center gap-2">
             <button type="submit" className="btn-primary small">
-              Adresse speichern
+              {copy.account.saveAddress}
             </button>
             <button
               type="button"
               className="btn-outline small"
               onClick={() => setEditing(false)}
             >
-              Abbrechen
+              {copy.account.cancel}
             </button>
           </div>
         </form>
