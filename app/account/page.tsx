@@ -18,9 +18,32 @@ type AccountCustomer = {
   addresses?: {
     nodes?: Array<{
       id?: string;
+      firstName?: string | null;
+      lastName?: string | null;
+      address1?: string | null;
+      address2?: string | null;
+      city?: string | null;
+      zip?: string | null;
+      territoryCode?: string | null;
+      zoneCode?: string | null;
+      formatted?: string[] | null;
       phoneNumber?: string | null;
     }>;
   } | null;
+};
+
+type AccountAddress = {
+  id?: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  address1?: string | null;
+  address2?: string | null;
+  city?: string | null;
+  zip?: string | null;
+  territoryCode?: string | null;
+  zoneCode?: string | null;
+  formatted?: string[] | null;
+  phoneNumber?: string | null;
 };
 
 type AccountOrder = {
@@ -134,6 +157,25 @@ function resolveCustomerPhone(customer?: AccountCustomer): string | null {
   return firstAddressPhone ?? null;
 }
 
+function addressDisplayName(address: AccountAddress): string {
+  const name = `${address.firstName ?? ""} ${address.lastName ?? ""}`.trim();
+  return name || "Adresse";
+}
+
+function normalizeAddressLines(address: AccountAddress): string[] {
+  const formatted = address.formatted?.filter(Boolean) ?? [];
+  if (formatted.length) return formatted;
+
+  const lines = [
+    `${address.firstName ?? ""} ${address.lastName ?? ""}`.trim(),
+    address.address1 ?? "",
+    address.address2 ?? "",
+    [address.zip ?? "", address.city ?? ""].filter(Boolean).join(" ").trim(),
+    [address.zoneCode ?? "", address.territoryCode ?? ""].filter(Boolean).join(", ").trim(),
+  ].filter(Boolean);
+  return lines;
+}
+
 async function getCustomerData(): Promise<AccountFetchResult> {
   const cookieHeader = (await cookies()).toString();
   if (!cookieHeader) return { status: "unauthenticated" };
@@ -205,6 +247,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
   const customer = result.data.customer;
   const orders = result.data.orders;
+  const addresses = customer?.addresses?.nodes ?? [];
   const customerId = readableCustomerId(customer?.id);
   const customerPhone = resolveCustomerPhone(customer);
 
@@ -249,6 +292,46 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </div>
         ) : (
           <div className="mt-4 text-sm text-red-400">{copy.account.profileUnavailable}</div>
+        )}
+      </section>
+
+      <section className="rounded-2xl border border-primary-900/30 bg-background/70 shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
+        <div className="flex items-center justify-between gap-4 mb-4">
+          <h2 className="text-2xl font-semibold">Gespeicherte Adressen</h2>
+          <span className="text-sm text-primary-200/80">{addresses.length} Einträge</span>
+        </div>
+        {addresses.length ? (
+          <div className="grid gap-3 md:grid-cols-2">
+            {addresses.map((address) => {
+              const lines = normalizeAddressLines(address);
+              const isDefault = address.id && address.id === customer?.defaultAddress?.id;
+              return (
+                <article
+                  key={address.id ?? lines.join("|")}
+                  className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-semibold">{addressDisplayName(address)}</h3>
+                    {isDefault ? (
+                      <span className="rounded-full border border-primary-500/50 bg-primary-500/15 px-2 py-0.5 text-[10px] uppercase tracking-wide text-primary-100">
+                        Standard
+                      </span>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 space-y-1 text-sm text-primary-200/90">
+                    {lines.map((line) => (
+                      <p key={line}>{line}</p>
+                    ))}
+                  </div>
+                  {address.phoneNumber ? (
+                    <p className="mt-2 text-sm text-primary-100">Tel: {address.phoneNumber}</p>
+                  ) : null}
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-sm text-primary-200/80">Keine Adressen gespeichert.</p>
         )}
       </section>
 
