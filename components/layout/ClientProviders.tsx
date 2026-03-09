@@ -25,9 +25,20 @@ if (!storeDomain || !storefrontToken || !storefrontApiVersion) {
   throw new Error(copy.errors.missingShopifyConfig);
 }
 
-const resolvedStoreDomain = storeDomain as string;
-const resolvedStorefrontToken = storefrontToken as string;
-const resolvedStorefrontApiVersion = storefrontApiVersion as string;
+function unquote(value: string): string {
+  const trimmed = value.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    return trimmed.slice(1, -1);
+  }
+  return trimmed;
+}
+
+const resolvedStoreDomain = unquote(storeDomain);
+const resolvedStorefrontToken = unquote(storefrontToken);
+const resolvedStorefrontApiVersion = unquote(storefrontApiVersion);
 
 export default function ClientProviders({
   children,

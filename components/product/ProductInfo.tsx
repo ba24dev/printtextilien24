@@ -22,9 +22,9 @@ export default function ProductInfo({
   const { product, selectedVariant } = useProduct();
 
   const isHydrated = useSyncExternalStore(
-    () => () => { },
+    () => () => {},
     () => true,
-    () => false
+    () => false,
   );
 
   if (!product) return null;
@@ -32,7 +32,8 @@ export default function ProductInfo({
   const enableCustomization =
     process.env.NEXT_PUBLIC_ENABLE_CUSTOMIZATION === "true";
   const hasPrintSurfaces = printSurfaces.length > 0;
-  const price = selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
+  const price =
+    selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
   const available = selectedVariant?.availableForSale ?? false;
   const hasCustomization = (customization?.attributes.length ?? 0) > 0;
   const attributes = customization?.attributes ?? [];
@@ -44,10 +45,12 @@ export default function ProductInfo({
     (!isHydrated || !hasCustomization);
 
   return (
-    <aside className="rounded-3xl border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
+    <aside className="site-border-radius border border-foreground/10 bg-background p-6 shadow-lg backdrop-blur lg:p-8">
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-semibold text-foreground">{product.title}</h1>
+          <h1 className="text-3xl font-semibold text-foreground">
+            {product.title}
+          </h1>
           {product.vendor ? (
             <p className="mt-2 text-sm text-foreground/60">
               {copy.product.byLabel} {product.vendor}
@@ -62,13 +65,12 @@ export default function ProductInfo({
 
         {enableCustomization && hasPrintSurfaces ? (
           <div className="mt-4">
-            <h3 className="text-sm font-medium text-foreground/70">{copy.product.printSurfacesTitle}</h3>
+            <h3 className="text-sm font-medium text-foreground/70">
+              {copy.product.printSurfacesTitle}
+            </h3>
             <ul className="mt-2 flex gap-3">
               {printSurfaces.map((s, idx) => (
-                <li
-                  key={idx}
-                  className="flex items-center gap-3"
-                >
+                <li key={idx} className="flex items-center gap-3">
                   {s.previewImageUrl ? (
                     // preview is external image url; keep it small
                     // eslint-disable-next-line @next/next/no-img-element
@@ -83,7 +85,9 @@ export default function ProductInfo({
                     </div>
                   )}
                   <div>
-                    <div className="text-sm font-medium text-foreground">{s.name}</div>
+                    <div className="text-sm font-medium text-foreground">
+                      {s.name}
+                    </div>
                     <div className="text-xs text-foreground/60">
                       {Math.round(s.widthPct)}% x {Math.round(s.heightPct)}%
                     </div>

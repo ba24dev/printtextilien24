@@ -14,7 +14,7 @@ export default function ProductDetails() {
     .slice(0, 6);
 
   return (
-    <div className="rounded-3xl border border-foreground/10 bg-background p-8 backdrop-blur">
+    <div className="site-border-radius border border-foreground/10 bg-background p-8 backdrop-blur">
       <section>
         <h2 className="text-sm font-semibold uppercase tracking-wide text-foreground/60">
           {copy.product.descriptionTitle}
@@ -45,18 +45,24 @@ export default function ProductDetails() {
         <dl className="mt-4 grid gap-4 text-sm text-foreground/70 sm:grid-cols-2">
           {product.productType ? (
             <div>
-              <dt className="font-semibold text-foreground/80">{copy.product.categoryLabel}</dt>
+              <dt className="font-semibold text-foreground/80">
+                {copy.product.categoryLabel}
+              </dt>
               <dd>{product.productType}</dd>
             </div>
           ) : null}
           {product.vendor ? (
             <div>
-              <dt className="font-semibold text-foreground/80">{copy.product.brandLabel}</dt>
+              <dt className="font-semibold text-foreground/80">
+                {copy.product.brandLabel}
+              </dt>
               <dd>{product.vendor}</dd>
             </div>
           ) : null}
           <div>
-            <dt className="font-semibold text-foreground/80">{copy.product.handleLabel} </dt>
+            <dt className="font-semibold text-foreground/80">
+              {copy.product.handleLabel}{" "}
+            </dt>
             <dd>{product.handle}</dd>
           </div>
         </dl>
