@@ -51,12 +51,15 @@ export const CUSTOMER_ORDERS_QUERY = `
               amount
               currencyCode
             }
-            lineItems(first: 5) {
+            lineItems(first: 10) {
               nodes {
                 id
                 title
                 quantity
                 variantId
+              }
+              pageInfo {
+                hasNextPage
               }
             }
           }
