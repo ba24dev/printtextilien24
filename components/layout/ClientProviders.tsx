@@ -7,8 +7,14 @@ import type {
 } from "@shopify/hydrogen-react/storefront-api-types";
 
 const storeDomain = process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL;
-const storefrontToken =
+const publicStorefrontToken =
   process.env.NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN;
+const privateStorefrontTokenForDev =
+  process.env.NEXT_PUBLIC_SHOPIFY_PRIVATE_STOREFRONT_API_TOKEN;
+const storefrontToken =
+  process.env.NODE_ENV === "production"
+    ? publicStorefrontToken
+    : privateStorefrontTokenForDev || publicStorefrontToken;
 const storefrontApiVersion =
   process.env.NEXT_PUBLIC_SHOPIFY_STOREFRONT_API_VERSION;
 
