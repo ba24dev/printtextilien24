@@ -4,12 +4,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import AddressesPanel from "./AddressesPanel";
+import BuyAgainButton from "./BuyAgainButton";
 import ContactDetailsPanel from "./ContactDetailsPanel";
-import {
-  AccountApiResponse,
-  AccountCustomer,
-  AccountOrder,
-} from "./types";
+import { AccountApiResponse, AccountCustomer, AccountOrder } from "./types";
 
 type AccountFetchResult =
   | { status: "authenticated"; data: AccountApiResponse }
@@ -56,11 +53,18 @@ function formatMoney(amount: string, currencyCode: string): string {
 function orderStatusLabel(order: AccountOrder): string {
   if (order.cancelledAt) return "Storniert";
   if (order.financialStatus) {
-    const mapped = order.financialStatus
-      .replaceAll("_", " ")
-      .toLowerCase()
-      .replace(/^\w/, (char) => char.toUpperCase());
-    return mapped;
+    const statusMap: Record<string, string> = {
+      AUTHORIZED: "Autorisiert",
+      EXPIRED: "Abgelaufen",
+      PAID: "Bezahlt",
+      PARTIALLY_PAID: "Teilweise bezahlt",
+      PARTIALLY_REFUNDED: "Teilweise erstattet",
+      PENDING: "Ausstehend",
+      REFUNDED: "Erstattet",
+      VOIDED: "Storniert",
+    };
+
+    return statusMap[order.financialStatus] ?? "Verarbeitet";
   }
   return "Verarbeitet";
 }
@@ -80,10 +84,18 @@ function readableCustomerId(id?: string): string | null {
 
 function customerName(customer?: AccountCustomer): string {
   if (!customer) return copy.account.profileUnavailable;
-  if (customer.displayName?.trim()) return customer.displayName.trim();
   const fallback =
     `${customer.firstName ?? ""} ${customer.lastName ?? ""}`.trim();
   return fallback || "Kunde";
+}
+
+function initialContactNames(customer?: AccountCustomer): {
+  firstName: string;
+  lastName: string;
+} {
+  const first = (customer?.firstName ?? "").trim();
+  const last = (customer?.lastName ?? "").trim();
+  return { firstName: first, lastName: last };
 }
 
 async function getCustomerData(): Promise<AccountFetchResult> {
@@ -179,15 +191,45 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const orders = result.data.orders;
   const addresses = customer?.addresses?.nodes ?? [];
   const customerId = readableCustomerId(customer?.id);
+  const contactNames = initialContactNames(customer);
 
   return (
     <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">
       <section className="bg-background/50 py-48 md:py-24">
-        <div className="mx-auto flex max-w-6xl flex-col gap-12 px-6 md:flex-col md:items-center">
-          <header className="space-y-4 flex justify-between mb-6">
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-6 md:items-center">
+          <header className="flex w-full items-center justify-between gap-4">
             <h1 className="text-2xl font-semibold leading-tight text-foreground sm:text-3xl md:text-4xl">
               {copy.account.title}
             </h1>
+            {checkoutError ? (
+              <div className="w-1/3 text-center rounded-xl border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
+                {copy.account.checkoutUnavailable}
+              </div>
+            ) : null}
+
+            {profileUpdated ? (
+              <div className="w-1/3 text-center rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
+                Kontaktdaten wurden gespeichert.
+              </div>
+            ) : null}
+
+            {profileError ? (
+              <div className="w-1/3 text-center rounded-xl border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
+                {profileError}
+              </div>
+            ) : null}
+
+            {addressUpdated ? (
+              <div className="w-1/3 text-center rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
+                Adresse wurde aktualisiert.
+              </div>
+            ) : null}
+
+            {addressError ? (
+              <div className="w-1/3 text-center rounded-xl border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
+                {addressError}
+              </div>
+            ) : null}
             <form
               action="/account/logout"
               method="post"
@@ -202,114 +244,85 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
             </form>
           </header>
 
-          {checkoutError ? (
-            <div className="mb-6 rounded-xl border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
-              {copy.account.checkoutUnavailable}
-            </div>
-          ) : null}
-          {profileUpdated ? (
-            <div className="mb-6 rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
-              Kontaktdaten wurden gespeichert.
-            </div>
-          ) : null}
-          {profileError ? (
-            <div className="mb-6 rounded-xl border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
-              {profileError}
-            </div>
-          ) : null}
-          {addressUpdated ? (
-            <div className="mb-6 rounded-xl border border-green-500/40 bg-green-900/20 p-3 text-sm text-green-100">
-              Adresse wurde aktualisiert.
-            </div>
-          ) : null}
-          {addressError ? (
-            <div className="mb-6 rounded-xl border border-red-500/40 bg-red-900/20 p-3 text-sm text-red-100">
-              {addressError}
-            </div>
-          ) : null}
-
-          <section className="w-full component-radius border border-primary-900/50 bg-background shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
-            <div className="flex flex-wrap items-start justify-between gap-4">
+          <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
+            <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold">
-                  {customerName(customer)}
-                </h2>
-                {customerId ? (
-                  <p className="text-sm text-primary-200/80 mt-1">
-                    Kundennummer: {customerId}
-                  </p>
-                ) : null}
+                <h2 className="text-2xl font-semibold">Kontaktdaten</h2>
               </div>
             </div>
-
-            <ContactDetailsPanel
-              initialName={customerName(customer)}
-              initialEmail={customer?.email ?? ""}
-            />
-          </section>
-
-          <section className="w-full component-radius border border-primary-900/50 bg-background shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-start justify-between gap-4">
-                <h2 className="text-2xl font-semibold">
-                  Gespeicherte Adressen
-                </h2>
-                <span className="text-sm text-primary-200/80">
-                  {addresses.length} Einträge
-                </span>
-              </div>
-              <AddressesPanel
-                addresses={addresses}
-                defaultAddressId={customer?.defaultAddress?.id}
+            <div className=" grid grid-cols-2 gap-3">
+              <ContactDetailsPanel
+                initialFirstName={contactNames.firstName}
+                initialLastName={contactNames.lastName}
+                customerId={customerId ?? undefined}
+                email={customer?.email ?? undefined}
               />
             </div>
           </section>
 
-          <section className="w-full component-radius border border-primary-900/50 bg-background shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
-            <div className="flex flex-wrap flex-col items-start justify-between gap-4">
-              <div>
-                <h2 className="text-2xl font-semibold">
-                  {copy.account.ordersTitle}
-                </h2>
-                <span className="text-sm text-primary-200/80">
-                  Letzte 10 Bestellungen
-                </span>
-              </div>
-              {orders?.edges?.length ? (
-                <ul className="space-y-3">
-                  {orders.edges.map(({ node }) => (
-                    <li
-                      key={node.id}
-                      className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4 md:p-5"
-                    >
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div>
-                          <div className="font-semibold">
-                            {copy.account.orderPrefix} {node.name}
-                          </div>
-                          <div className="text-sm text-primary-200/80 mt-1">
-                            {copy.account.orderDateLabel}:{" "}
-                            {formatGermanDate(node.processedAt)} •{" "}
-                            {itemSummary(node)}
-                          </div>
+          <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
+            <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-4">
+              <h2 className="text-2xl font-semibold">Gespeicherte Adressen</h2>
+              <span className="text-sm text-primary-200/80">
+                {addresses.length} Einträge
+              </span>
+            </div>
+
+            <AddressesPanel
+              addresses={addresses}
+              defaultAddressId={customer?.defaultAddress?.id}
+            />
+          </section>
+
+          <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
+            <div className="mb-6 flex flex-col items-start gap-2">
+              <h2 className="text-2xl font-semibold">
+                {copy.account.ordersTitle}
+              </h2>
+              <span className="text-sm text-primary-200/80">
+                Letzte 10 Bestellungen
+              </span>
+            </div>
+
+            {orders?.edges?.length ? (
+              <ul className="space-y-3">
+                {orders.edges.map(({ node }) => (
+                  <li
+                    key={node.id}
+                    className="rounded-xl border border-primary-900/30 bg-primary-800/30 p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <div className="font-semibold">
+                          {copy.account.orderPrefix} {node.name}
                         </div>
-                        <span className="rounded-full border border-primary-500/40 bg-primary-500/15 px-3 py-1 text-xs font-medium text-primary-100">
-                          {orderStatusLabel(node)}
+                        <div className="mt-1 text-sm text-primary-200/80">
+                          {copy.account.orderDateLabel}:{" "}
+                          {formatGermanDate(node.processedAt)} •{" "}
+                          {itemSummary(node)}
+                        </div>
+                      </div>
+
+                      <span className="rounded-full border border-primary-500/40 bg-primary-500/15 px-3 py-1 text-xs font-medium text-primary-100">
+                        {orderStatusLabel(node)}
+                      </span>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                      <div className="text-sm">
+                        <span className="text-primary-200/80">
+                          {copy.account.orderTotalLabel}:{" "}
+                        </span>
+                        <span className="font-semibold">
+                          {formatMoney(
+                            node.totalPrice.amount,
+                            node.totalPrice.currencyCode,
+                          )}
                         </span>
                       </div>
-                      <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
-                        <div className="text-sm">
-                          <span className="text-primary-200/80">
-                            {copy.account.orderTotalLabel}:{" "}
-                          </span>
-                          <span className="font-semibold">
-                            {formatMoney(
-                              node.totalPrice.amount,
-                              node.totalPrice.currencyCode,
-                            )}
-                          </span>
-                        </div>
-                        {node.statusPageUrl ? (
+
+                      {node.statusPageUrl ? (
+                        <div className="flex items-center gap-2">
                           <a
                             href={node.statusPageUrl}
                             target="_blank"
@@ -318,17 +331,26 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
                           >
                             Bestellung ansehen
                           </a>
-                        ) : null}
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <div className="text-sm text-primary-200/80">
-                  {copy.account.noOrders}
-                </div>
-              )}
-            </div>
+                          <BuyAgainButton
+                            orderName={node.name}
+                            lines={node.lineItems?.nodes ?? []}
+                          />
+                        </div>
+                      ) : (
+                        <BuyAgainButton
+                          orderName={node.name}
+                          lines={node.lineItems?.nodes ?? []}
+                        />
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-sm text-primary-200/80">
+                {copy.account.noOrders}
+              </div>
+            )}
           </section>
         </div>
       </section>

@@ -43,8 +43,10 @@ export type AccountOrder = {
   };
   lineItems?: {
     nodes?: Array<{
+      id?: string | null;
       title: string;
       quantity: number;
+      variantId?: string | null;
     }>;
   };
 };
