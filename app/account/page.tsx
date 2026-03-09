@@ -11,6 +11,16 @@ type AccountCustomer = {
   imageUrl?: string | null;
   firstName?: string | null;
   lastName?: string | null;
+  defaultAddress?: {
+    id?: string;
+    phoneNumber?: string | null;
+  } | null;
+  addresses?: {
+    nodes?: Array<{
+      id?: string;
+      phoneNumber?: string | null;
+    }>;
+  } | null;
 };
 
 type AccountOrder = {
@@ -111,6 +121,19 @@ function customerName(customer?: AccountCustomer): string {
   return fallback || "Kunde";
 }
 
+function resolveCustomerPhone(customer?: AccountCustomer): string | null {
+  const direct = customer?.phoneNumber?.phoneNumber?.trim();
+  if (direct) return direct;
+
+  const defaultAddressPhone = customer?.defaultAddress?.phoneNumber?.trim();
+  if (defaultAddressPhone) return defaultAddressPhone;
+
+  const firstAddressPhone = customer?.addresses?.nodes
+    ?.map((address) => address.phoneNumber?.trim())
+    .find((value) => Boolean(value));
+  return firstAddressPhone ?? null;
+}
+
 async function getCustomerData(): Promise<AccountFetchResult> {
   const cookieHeader = (await cookies()).toString();
   if (!cookieHeader) return { status: "unauthenticated" };
@@ -183,7 +206,7 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
   const customer = result.data.customer;
   const orders = result.data.orders;
   const customerId = readableCustomerId(customer?.id);
-  const customerPhone = customer?.phoneNumber?.phoneNumber ?? null;
+  const customerPhone = resolveCustomerPhone(customer);
 
   return (
     <main className="flex-1 max-w-6xl mx-auto py-20 px-4 md:px-6">
