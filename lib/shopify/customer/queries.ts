@@ -12,6 +12,24 @@ export const CUSTOMER_QUERY = `
       imageUrl
       firstName
       lastName
+      defaultAddress {
+        id
+      }
+      addresses(first: 10) {
+        nodes {
+          id
+          firstName
+          lastName
+          address1
+          address2
+          city
+          zip
+          territoryCode
+          zoneCode
+          phoneNumber
+          formatted
+        }
+      }
     }
   }
 `;
