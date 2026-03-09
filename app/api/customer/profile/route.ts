@@ -17,14 +17,43 @@ const CUSTOMER_UPDATE_MUTATION = `
   }
 `;
 
+function splitName(fullName: string): { firstName: string | null; lastName: string | null } {
+  const value = fullName.trim();
+  if (!value) return { firstName: null, lastName: null };
+  const parts = value.split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: null };
+  }
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
 export async function POST(request: NextRequest) {
   const session = await requireCustomerAccessToken(request);
   if (!session.ok) return session.response;
 
   const formData = await request.formData();
-  const firstName = String(formData.get("firstName") ?? "").trim();
-  const lastName = String(formData.get("lastName") ?? "").trim();
-  const displayName = String(formData.get("displayName") ?? "").trim();
+  const fullName = String(formData.get("fullName") ?? "").trim();
+  const email = String(formData.get("email") ?? "").trim();
+  const explicitFirstName = String(formData.get("firstName") ?? "").trim();
+  const explicitLastName = String(formData.get("lastName") ?? "").trim();
+  const explicitDisplayName = String(formData.get("displayName") ?? "").trim();
+
+  const fromFullName = splitName(fullName);
+  const firstName = explicitFirstName || fromFullName.firstName || "";
+  const lastName = explicitLastName || fromFullName.lastName || "";
+  const displayName = explicitDisplayName || fullName || "";
+
+  const customerInput: Record<string, unknown> = {
+    firstName: firstName || null,
+    lastName: lastName || null,
+    displayName: displayName || null,
+  };
+  if (email) {
+    customerInput.emailAddress = email;
+  }
 
   try {
     const result = await shopifyCustomerGraphQL<{
@@ -32,11 +61,7 @@ export async function POST(request: NextRequest) {
         userErrors?: Array<{ message?: string }>;
       };
     }>(session.accessToken, CUSTOMER_UPDATE_MUTATION, {
-      customer: {
-        firstName: firstName || null,
-        lastName: lastName || null,
-        displayName: displayName || null,
-      },
+      customer: customerInput,
     });
 
     const errorMessage = result.customerUpdate?.userErrors?.[0]?.message;
