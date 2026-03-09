@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { copy } from "@/config/copy";
 
 import { AccountAddress, AccountApiResponse, AccountCustomer, AccountOrder } from "./types";
+import ContactDetailsPanel from "./ContactDetailsPanel";
 
 type AccountFetchResult =
   | { status: "authenticated"; data: AccountApiResponse }
@@ -227,43 +228,10 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           </form>
         </div>
 
-        <div className="mt-5 grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-primary-200/80">E-Mail</p>
-            <p className="mt-1 font-medium">{customer?.email ?? copy.account.noEmail}</p>
-          </div>
-          <div className="rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
-            <p className="text-xs uppercase tracking-wide text-primary-200/80">Name</p>
-            <p className="mt-1 font-medium">{customerName(customer)}</p>
-          </div>
-        </div>
-
-        <details className="mt-5 rounded-xl border border-primary-900/30 bg-primary-900/10 p-4">
-          <summary className="cursor-pointer font-medium">Kontaktdaten bearbeiten</summary>
-          <form action="/api/customer/profile" method="post" className="mt-4 grid gap-3 md:grid-cols-3">
-            <input
-              name="displayName"
-              defaultValue={customer?.displayName ?? ""}
-              className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Anzeigename"
-            />
-            <input
-              name="firstName"
-              defaultValue={customer?.firstName ?? ""}
-              className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Vorname"
-            />
-            <input
-              name="lastName"
-              defaultValue={customer?.lastName ?? ""}
-              className="rounded-md border border-primary-900/50 bg-background px-3 py-2 text-sm"
-              placeholder="Nachname"
-            />
-            <div className="md:col-span-3">
-              <button type="submit" className="btn-primary small">Kontaktdaten speichern</button>
-            </div>
-          </form>
-        </details>
+        <ContactDetailsPanel
+          initialName={customerName(customer)}
+          initialEmail={customer?.email ?? ""}
+        />
       </section>
 
       <section className="rounded-2xl border border-primary-900/30 bg-background/70 shadow-lg shadow-primary-900/15 p-6 md:p-8 mb-8">
