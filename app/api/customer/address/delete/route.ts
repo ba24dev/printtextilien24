@@ -4,8 +4,8 @@ import { NextRequest } from "next/server";
 import { redirectToAccount, requireCustomerAccessToken } from "../../_auth";
 
 const ADDRESS_DELETE_MUTATION = `
-  mutation AddressDelete($id: ID!) {
-    customerAddressDelete(id: $id) {
+  mutation AddressDelete($addressId: ID!) {
+    customerAddressDelete(addressId: $addressId) {
       deletedAddressId
       userErrors {
         field
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
         userErrors?: Array<{ message?: string }>;
       };
     }>(session.accessToken, ADDRESS_DELETE_MUTATION, {
-      id: addressId,
+      addressId,
     });
 
     const errorMessage = result.customerAddressDelete?.userErrors?.[0]?.message;
