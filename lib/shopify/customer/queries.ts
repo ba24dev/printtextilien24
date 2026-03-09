@@ -53,8 +53,10 @@ export const CUSTOMER_ORDERS_QUERY = `
             }
             lineItems(first: 5) {
               nodes {
+                id
                 title
                 quantity
+                variantId
               }
             }
           }
