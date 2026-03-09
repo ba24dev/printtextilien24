@@ -10,7 +10,9 @@ interface FeaturedProductsProps {
   collection: CollectionSummary;
 }
 
-export default function FeaturedProducts({ collection }: FeaturedProductsProps) {
+export default function FeaturedProducts({
+  collection,
+}: FeaturedProductsProps) {
   return (
     <section className="py-16">
       <div className="mx-auto max-w-6xl px-6">
@@ -25,7 +27,7 @@ export default function FeaturedProducts({ collection }: FeaturedProductsProps) 
           {collection.products.map((product) => (
             <article
               key={product.id}
-              className="flex h-full flex-col overflow-hidden rounded-3xl border border-primary-900/40 bg-background shadow-lg dark:shadow-primary-900/30 shadow-primary-100/30"
+              className="flex h-full flex-col overflow-hidden site-border-radius border border-primary-900/40 bg-background shadow-lg dark:shadow-primary-900/30 shadow-primary-100/30"
             >
               <div className="relative h-48 w-full bg-primary-900/20">
                 {product.featuredImage?.url ? (
@@ -49,9 +51,12 @@ export default function FeaturedProducts({ collection }: FeaturedProductsProps) 
 
               <div className="flex flex-1 flex-col gap-4 p-6">
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">{product.title}</h3>
+                  <h3 className="text-lg font-semibold text-foreground">
+                    {product.title}
+                  </h3>
                   <p className="mt-2 text-sm text-foreground/60 line-clamp-2">
-                    {product.description ?? copy.catalog.productFallbackDescription}
+                    {product.description ??
+                      copy.catalog.productFallbackDescription}
                   </p>
                 </div>
 
@@ -73,10 +78,7 @@ export default function FeaturedProducts({ collection }: FeaturedProductsProps) 
         </div>
 
         <div className="mt-10 flex justify-center">
-          <Link
-            href="/products"
-            className="btn-outline small"
-          >
+          <Link href="/products" className="btn-outline small">
             {copy.marketing.featured.viewAll}
             <ArrowRight className="h-4 w-4" />
           </Link>

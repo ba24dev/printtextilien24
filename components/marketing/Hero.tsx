@@ -31,10 +31,7 @@ export default function Hero() {
           </header>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/products"
-              className="btn-primary"
-            >
+            <Link href="/products" className="btn-primary">
               {copy.marketing.hero.primaryCta}
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -48,10 +45,7 @@ export default function Hero() {
 
           <ul className="flex flex-col gap-3 text-sm text-foreground/70 sm:flex-row sm:items-center">
             {FEATURE_BULLETS.map(({ icon: Icon, title, description }) => (
-              <li
-                key={title}
-                className="flex flex-col gap-2"
-              >
+              <li key={title} className="flex flex-col gap-2">
                 <div className="flex gap-2 font-medium text-foreground">
                   <Icon className="h-5 w-5 text-primary-200" />
                   <p className="text-sm">{title}</p>
@@ -63,7 +57,7 @@ export default function Hero() {
         </div>
 
         <div className="flex-1">
-          <div className="relative overflow-hidden rounded-4xl border border-primary-900/50 bg-primary-900/20 shadow-lg shadow-primary-900/40">
+          <div className="relative overflow-hidden site-border-radius border border-primary-900/50 bg-primary-900/20 shadow-lg shadow-primary-900/40">
             <Image
               src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80"
               alt="Custom apparel showcase"

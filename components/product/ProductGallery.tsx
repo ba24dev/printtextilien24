@@ -18,20 +18,20 @@ export default function ProductGallery() {
     <div className="grid gap-4 lg:grid-cols-2 lg:grid-rows-2">
       <GalleryImage
         image={primary ?? fallback}
-        className="lg:row-span-2 rounded-3xl"
+        className="lg:row-span-2 site-border-radius"
         priority
       />
       <GalleryImage
         image={second ?? fallback}
-        className="aspect-3/2 rounded-3xl max-lg:hidden"
+        className="aspect-3/2 site-border-radius max-lg:hidden"
       />
       <GalleryImage
         image={third ?? fallback}
-        className="aspect-3/2 rounded-3xl max-lg:hidden"
+        className="aspect-3/2 site-border-radius max-lg:hidden"
       />
       <GalleryImage
         image={fourth ?? fallback}
-        className="lg:col-span-2 aspect-5/2 rounded-3xl"
+        className="lg:col-span-2 aspect-5/2 site-border-radius"
       />
     </div>
   );
@@ -47,7 +47,9 @@ function GalleryImage({ image, className, priority }: GalleryImageProps) {
   if (!image?.url) return null;
 
   return (
-    <div className={`relative overflow-hidden bg-surface/40 ${className ?? ""}`}>
+    <div
+      className={`relative overflow-hidden bg-surface/40 ${className ?? ""}`}
+    >
       <Image
         src={image.url}
         alt={image.altText ?? copy.catalog.productFallbackTitle}
