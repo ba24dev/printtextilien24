@@ -7,6 +7,10 @@ export async function middleware(request: NextRequest) {
     // request as base so the code behaves the same in tests and in
     // production.
     const dest = new URL("/account/login", request.url);
+    const returnTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+    if (returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+      dest.searchParams.set("return_to", returnTo);
+    }
     return NextResponse.redirect(dest.toString());
   }
   return NextResponse.next();

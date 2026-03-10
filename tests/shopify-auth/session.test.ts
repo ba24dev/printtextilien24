@@ -65,7 +65,9 @@ describe("session route", () => {
             data: {
               customer: {
                 id: "gid://shopify/Customer/1",
-                email: "hello@example.com",
+                emailAddress: {
+                  emailAddress: "hello@example.com",
+                },
               },
             },
           }),
@@ -114,7 +116,9 @@ describe("session route", () => {
             data: {
               customer: {
                 id: "gid://shopify/Customer/99",
-                email: "chunked@example.com",
+                emailAddress: {
+                  emailAddress: "chunked@example.com",
+                },
               },
             },
           }),
@@ -175,7 +179,9 @@ describe("session route", () => {
             data: {
               customer: {
                 id: "gid://shopify/Customer/2",
-                email: "refresh@example.com",
+                emailAddress: {
+                  emailAddress: "refresh@example.com",
+                },
               },
             },
           }),

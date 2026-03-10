@@ -3,9 +3,14 @@ import { NextRequest } from "next/server";
 import { describe, expect, it } from "vitest";
 
 // helper to fake a NextRequest-like object
-function makeRequest(cookies: Record<string, string | undefined>) {
+function makeRequest(url: string, cookies: Record<string, string | undefined>) {
+  const parsed = new URL(url);
   return {
-    url: "https://example.com/", // base needed for URL constructor
+    url,
+    nextUrl: {
+      pathname: parsed.pathname,
+      search: parsed.search,
+    },
     cookies: {
       get: (name: string) => ({ value: cookies[name] }) as any,
     },
@@ -13,16 +18,17 @@ function makeRequest(cookies: Record<string, string | undefined>) {
 }
 
 describe("authentication middleware", () => {
-  it("redirects to /login when no access token cookie is present", async () => {
-    const req = makeRequest({});
+  it("redirects to /account/login with return_to when no access token cookie is present", async () => {
+    const req = makeRequest("https://example.com/account?tab=orders", {});
     const res = await middleware(req);
-    // origin is added automatically, make sure path is correct
     const loc = res.headers.get("location") || "";
-    expect(loc.endsWith("/login")).toBe(true);
+    expect(loc).toBe("https://example.com/account/login?return_to=%2Faccount%3Ftab%3Dorders");
   });
 
   it("allows through when an access token exists", async () => {
-    const req = makeRequest({ shopify_customer_access_token: "abcd" });
+    const req = makeRequest("https://example.com/account", {
+      shopify_customer_access_token: "abcd",
+    });
     const res = await middleware(req);
     // NextResponse.next() returns the same object, no location header
     expect(res.headers.get("location")).toBe(null);
