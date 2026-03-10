@@ -1,5 +1,8 @@
 # Shopify Customer Accounts Integration
 
+> Canonical documentation now lives in `docs/shopify-headless/`.
+> Start with `docs/shopify-headless/README.md` and use this file as legacy context.
+
 ## Backend Steps
 
 > 🔐 **Scope note:** this project accepts both the newer
