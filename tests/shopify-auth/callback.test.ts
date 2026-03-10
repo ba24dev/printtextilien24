@@ -44,7 +44,9 @@ describe("callback route", () => {
       "expected",
       SCOPES,
     );
-    expect(res.headers.get("location")).toBe("https://example.com/login?reason=auth_session_expired");
+    expect(res.headers.get("location")).toBe(
+      "https://example.com/account/login?reason=auth_session_expired",
+    );
     expect(res.cookies.get("shopify_customer_debug_trace")?.value).toContain(
       "callback_redirect_auth_session_expired",
     );

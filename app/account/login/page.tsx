@@ -70,6 +70,44 @@ function getSafeCheckoutUrl(raw: string | null): string | null {
   }
 }
 
+export function getSafeReturnTo(raw: string | null): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (!value) return null;
+  if (!value.startsWith("/") || value.startsWith("//")) return null;
+  return value;
+}
+
+export function buildCustomerLoginHref({
+  checkoutUrl,
+  returnTo,
+}: {
+  checkoutUrl?: string | null;
+  returnTo?: string | null;
+}): string {
+  const safeCheckoutUrl = getSafeCheckoutUrl(checkoutUrl ?? null);
+  if (safeCheckoutUrl) {
+    return `/api/auth/customer/login?checkout_url=${encodeURIComponent(safeCheckoutUrl)}`;
+  }
+
+  const safeReturnTo = getSafeReturnTo(returnTo ?? null);
+  if (safeReturnTo) {
+    return `/api/auth/customer/login?return_to=${encodeURIComponent(safeReturnTo)}`;
+  }
+
+  return "/api/auth/customer/login";
+}
+
+export function shouldAutoStartShopifyLogin({
+  checkoutUrl,
+  hasBlockingNotice,
+}: {
+  checkoutUrl: string | null;
+  hasBlockingNotice: boolean;
+}): boolean {
+  return Boolean(checkoutUrl) && !hasBlockingNotice;
+}
+
 function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -86,36 +124,53 @@ function LoginClient() {
     () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
     [searchParams],
   );
-  const loginHref = checkoutUrl
-    ? `/api/auth/customer/login?checkout_url=${encodeURIComponent(checkoutUrl)}`
-    : "/api/auth/customer/login";
+  const returnTo = useMemo(
+    () => getSafeReturnTo(searchParams.get("return_to")),
+    [searchParams],
+  );
+  const loginHref = useMemo(
+    () => buildCustomerLoginHref({ checkoutUrl, returnTo }),
+    [checkoutUrl, returnTo],
+  );
+  const autoRedirectToShopify = shouldAutoStartShopifyLogin({
+    checkoutUrl,
+    hasBlockingNotice,
+  });
 
   // if already logged in, send straight to account/checkouts.
-  // otherwise start OAuth immediately unless we're intentionally showing
-  // a blocking notice (logout/error state).
+  // for checkout-origin sign-in, start OAuth immediately unless we're
+  // intentionally showing a blocking notice (logout/error state).
   useEffect(() => {
     if (hasBlockingNotice) return;
     fetch("/api/customer/session", { credentials: "include" })
       .then((res) => res.json())
       .then((sess) => {
         if (sess?.loggedIn) {
-          if (checkoutUrl) {
-            if (checkoutUrl.startsWith("http://") || checkoutUrl.startsWith("https://")) {
-              window.location.href = checkoutUrl;
-              return;
-            }
-            router.replace(checkoutUrl);
-          } else {
-            router.replace("/account");
+          const destination = checkoutUrl ?? returnTo ?? "/account";
+          if (destination.startsWith("http://") || destination.startsWith("https://")) {
+            window.location.href = destination;
+            return;
           }
+          router.replace(destination);
           return;
         }
-        window.location.replace(loginHref);
+        if (autoRedirectToShopify) {
+          window.location.replace(loginHref);
+        }
       })
       .catch(() => {
-        window.location.replace(loginHref);
+        if (autoRedirectToShopify) {
+          window.location.replace(loginHref);
+        }
       });
-  }, [checkoutUrl, hasBlockingNotice, loginHref, router]);
+  }, [
+    autoRedirectToShopify,
+    checkoutUrl,
+    hasBlockingNotice,
+    loginHref,
+    returnTo,
+    router,
+  ]);
 
   return (
     <main className="flex-1 max-w-xl mx-auto py-16 px-4 text-center">
@@ -140,8 +195,10 @@ function LoginClient() {
           {copy.auth.invalidCallback}
         </div>
       ) : null}
-      <p className="mb-6">{copy.auth.redirectHint}</p>
-      {!hasBlockingNotice ? (
+      <p className="mb-6">
+        {autoRedirectToShopify ? copy.auth.checkoutRedirectHint : copy.auth.redirectHint}
+      </p>
+      {autoRedirectToShopify ? (
         <p className="mb-4 text-sm text-gray-500">Weiterleitung zu Shopify...</p>
       ) : null}
       <a

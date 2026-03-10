@@ -176,7 +176,9 @@ export const copy = {
     signInTitle: "Anmelden",
     signInWithShopify: "Mit Shopify anmelden",
     redirectHint:
-      "Sie werden zu Shopify weitergeleitet, um Ihr Kundenkonto zu authentifizieren.",
+      "Klicken Sie auf Anmelden, um Ihr Kundenkonto bei Shopify zu authentifizieren.",
+    checkoutRedirectHint:
+      "Für diesen Checkout wird die Anmeldung jetzt automatisch bei Shopify gestartet.",
     logoutNotice:
       "Sie wurden auf dieser Seite abgemeldet. Auf gemeinsam genutzten Geräten kann beim Anbieter weiterhin eine Sitzung bestehen. Klicken Sie unten, um sich explizit neu anzumelden.",
     checkoutUnavailable:

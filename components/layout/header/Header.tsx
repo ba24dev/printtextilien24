@@ -6,20 +6,32 @@ import { useCart } from "@shopify/hydrogen-react";
 import { DropdownMenu } from "radix-ui";
 import { LogIn, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { Suspense, useMemo, useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import CartDrawer from "../../cart/CartDrawer";
 import Search from "../../catalog/search/Search";
 import ThemeSwitcher from "../ThemeSwitcher";
 import CartButton from "./CartButton";
 import HeaderNav from "./HeaderNav";
 
-export default function Header() {
+function HeaderContent() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { totalQuantity } = useCart();
   const session = useAuthSession();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const quantity = totalQuantity ?? 0;
   const isLoggedIn = Boolean(session?.loggedIn);
   const accountInitial = session?.email?.trim().charAt(0).toUpperCase() ?? "A";
+  const loginHref = useMemo(() => {
+    if (!pathname || pathname === "/account/login") return "/account/login";
+    const query = searchParams?.toString();
+    const returnTo = query ? `${pathname}?${query}` : pathname;
+    if (!returnTo.startsWith("/") || returnTo.startsWith("//")) {
+      return "/account/login";
+    }
+    return `/account/login?return_to=${encodeURIComponent(returnTo)}`;
+  }, [pathname, searchParams]);
 
   return (
     <>
@@ -76,7 +88,7 @@ export default function Header() {
               </DropdownMenu.Root>
             ) : (
               <Link
-                href="/account/login"
+                href={loginHref}
                 className="relative flex h-10 w-10 items-center justify-center rounded-full border border-primary-800/60 bg-primary-900/30 text-primary-100 transition hover:border-primary-600 cursor-pointer"
                 title={copy.auth.loginLabel}
                 aria-label={copy.auth.loginLabel}
@@ -98,5 +110,13 @@ export default function Header() {
         onCloseAction={() => setDrawerOpen(false)}
       />
     </>
+  );
+}
+
+export default function Header() {
+  return (
+    <Suspense fallback={null}>
+      <HeaderContent />
+    </Suspense>
   );
 }

@@ -65,6 +65,33 @@ export function sanitizePostLoginRedirect(
   return parsed.toString();
 }
 
+export function sanitizeReturnToRedirect(
+  raw: string | null,
+  requestUrl?: URL | string,
+): string | null {
+  if (!raw) return null;
+  const value = raw.trim();
+  if (!value) return null;
+
+  if (value.startsWith("/") && !value.startsWith("//")) {
+    return value;
+  }
+
+  const parsedRequestUrl = toRequestUrl(requestUrl);
+  if (!parsedRequestUrl) return null;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  if (parsed.origin !== parsedRequestUrl.origin) return null;
+  return `${parsed.pathname}${parsed.search}`;
+}
+
 export function resolvePostLoginRedirect(postLogin: string | undefined, requestUrl: string): string {
   const fallback = new URL("/account", requestUrl).toString();
   if (!postLogin) return fallback;
