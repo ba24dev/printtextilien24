@@ -21,6 +21,11 @@ type CustomerCookieOptions = {
 const TOKEN_COOKIE_CHUNK_SIZE = 1800;
 const MAX_TOKEN_COOKIE_CHUNKS = 12;
 const CHUNKED_COOKIE_SENTINEL = "__chunked__";
+const TOKEN_COOKIE_NAMES = new Set([
+  "shopify_customer_access_token",
+  "shopify_customer_refresh_token",
+  "shopify_customer_id_token",
+]);
 
 function customerCookieOptions(options?: CustomerCookieOptions) {
   const domain = getCustomerCookieDomain();
@@ -64,10 +69,16 @@ function clearCookie(response: NextResponse, name: string): void {
   response.cookies.set(name, "", customerCookieOptions({ httpOnly: false, maxAge: 0 }));
 }
 
-function clearTokenChunkCookies(response: NextResponse, name: string): void {
+function clearTokenChunkCookies(
+  response: NextResponse,
+  name: string,
+  options?: { clearChunks?: boolean },
+): void {
   clearCookie(response, chunkCountCookieName(name));
-  for (let index = 0; index < MAX_TOKEN_COOKIE_CHUNKS; index += 1) {
-    clearCookie(response, chunkCookieName(name, index));
+  if (options?.clearChunks) {
+    for (let index = 0; index < MAX_TOKEN_COOKIE_CHUNKS; index += 1) {
+      clearCookie(response, chunkCookieName(name, index));
+    }
   }
 }
 
@@ -80,6 +91,8 @@ function setTokenCookie(
   const serialized = serializeTokenCookieValue(tokenValue);
   if (serialized.length <= TOKEN_COOKIE_CHUNK_SIZE) {
     response.cookies.set(name, serialized, customerCookieOptions({ maxAge }));
+    // Clearing the chunk-count cookie is enough; stale chunk cookies are ignored
+    // as long as the primary cookie value is present and not chunked.
     clearTokenChunkCookies(response, name);
     return;
   }
@@ -100,9 +113,6 @@ function setTokenCookie(
     const end = start + TOKEN_COOKIE_CHUNK_SIZE;
     const chunk = serialized.slice(start, end);
     response.cookies.set(chunkCookieName(name, index), chunk, customerCookieOptions({ maxAge }));
-  }
-  for (let index = chunkCount; index < MAX_TOKEN_COOKIE_CHUNKS; index += 1) {
-    clearCookie(response, chunkCookieName(name, index));
   }
 }
 
@@ -134,7 +144,11 @@ export function readCustomerCookie(cookieStore: CookieStoreLike, name: string): 
 
 export function clearCustomerCookie(response: NextResponse, name: string): void {
   clearCookie(response, name);
-  clearTokenChunkCookies(response, name);
+  if (TOKEN_COOKIE_NAMES.has(name)) {
+    // During normal auth redirects, keep this lightweight to avoid oversized
+    // response headers. Clearing the count cookie invalidates chunked reads.
+    clearTokenChunkCookies(response, name);
+  }
 }
 
 export type CustomerIdentity = {
