@@ -62,4 +62,48 @@ describe("login route", () => {
       "https://12d54a-a9.myshopify.com/checkouts/cn/abc?locale=de-DE&logged_in=true",
     );
   });
+
+  it("stores post-login redirect cookie when return_to is a safe relative path", async () => {
+    const { GET } = await importLoginRoute();
+    const response = await GET(
+      makeRequest("https://example.com/api/auth/customer/login?return_to=%2Fproducts%3Fq%3Dshirt"),
+    );
+
+    expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe("/products?q=shirt");
+  });
+
+  it("does not store return_to when it points to an external host", async () => {
+    const { GET } = await importLoginRoute();
+    const response = await GET(
+      makeRequest(
+        "https://example.com/api/auth/customer/login?return_to=https%3A%2F%2Fevil.com%2Fsteal",
+      ),
+    );
+
+    expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe("");
+  });
+
+  it("prefers checkout_url over return_to when both are provided", async () => {
+    const { GET } = await importLoginRoute();
+    const response = await GET(
+      makeRequest(
+        "https://example.com/api/auth/customer/login?checkout_url=%2Fcheckout%2Fabc&return_to=%2Fproducts",
+      ),
+    );
+
+    expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe("/checkout/abc");
+  });
+
+  it("uses checkout fallback when checkout_url is invalid even if return_to is present", async () => {
+    const { GET } = await importLoginRoute();
+    const response = await GET(
+      makeRequest(
+        "https://example.com/api/auth/customer/login?checkout_url=https%3A%2F%2Fevil.com%2Fsteal&return_to=%2Fproducts",
+      ),
+    );
+
+    expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe(
+      "https://example.com/account?checkout_error=1",
+    );
+  });
 });
