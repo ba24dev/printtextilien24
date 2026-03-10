@@ -6,7 +6,7 @@ import { useCart } from "@shopify/hydrogen-react";
 import { DropdownMenu } from "radix-ui";
 import { LogIn, LogOut, UserRound } from "lucide-react";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { Suspense, useMemo, useState } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 import CartDrawer from "../../cart/CartDrawer";
 import Search from "../../catalog/search/Search";
@@ -14,7 +14,7 @@ import ThemeSwitcher from "../ThemeSwitcher";
 import CartButton from "./CartButton";
 import HeaderNav from "./HeaderNav";
 
-export default function Header() {
+function HeaderContent() {
   const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const { totalQuantity } = useCart();
   const session = useAuthSession();
@@ -110,5 +110,13 @@ export default function Header() {
         onCloseAction={() => setDrawerOpen(false)}
       />
     </>
+  );
+}
+
+export default function Header() {
+  return (
+    <Suspense fallback={null}>
+      <HeaderContent />
+    </Suspense>
   );
 }
