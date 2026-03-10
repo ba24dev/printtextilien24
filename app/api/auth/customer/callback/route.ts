@@ -44,6 +44,10 @@ function redirectToLogin(requestUrl: string, reason: string): NextResponse {
   return response;
 }
 
+function tokenLength(token: unknown): number {
+  return typeof token === "string" ? token.length : 0;
+}
+
 export async function GET(request: NextRequest) {
   console.debug("callback handler invoked");
   try {
@@ -110,7 +114,36 @@ export async function GET(request: NextRequest) {
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
-    const tokenData = await tokenRes.json();
+    const tokenContentType = tokenRes.headers.get("content-type") ?? "";
+    const tokenBodyText = await tokenRes.text();
+    let tokenData: Record<string, unknown>;
+    try {
+      tokenData = JSON.parse(tokenBodyText) as Record<string, unknown>;
+    } catch (error) {
+      console.error("Shopify token exchange returned non-JSON body", {
+        status: tokenRes.status,
+        contentType: tokenContentType,
+        bodyPreview: tokenBodyText.slice(0, 400),
+        parseError: error instanceof Error ? error.message : String(error),
+      });
+      const response = NextResponse.json(
+        {
+          error: "Token exchange returned invalid response",
+          details: `Expected JSON but got ${tokenContentType || "unknown content type"}`,
+        },
+        { status: 400 },
+      );
+      setCustomerDebugTrace(response, "callback_token_exchange_invalid_json");
+      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+      return response;
+    }
+    console.debug("token exchange payload meta", {
+      contentType: tokenContentType,
+      scope: typeof tokenData.scope === "string" ? tokenData.scope : undefined,
+      hasAccessToken: Boolean(tokenData.access_token),
+      hasRefreshToken: Boolean(tokenData.refresh_token),
+      hasIdToken: Boolean(tokenData.id_token),
+    });
     if (!tokenData?.access_token) {
       const response = NextResponse.json(
         { error: "Missing access token from Shopify" },
@@ -120,6 +153,13 @@ export async function GET(request: NextRequest) {
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
+    const normalizedTokenData = {
+      access_token: String(tokenData.access_token),
+      refresh_token:
+        typeof tokenData.refresh_token === "string" ? tokenData.refresh_token : undefined,
+      expires_in: typeof tokenData.expires_in === "number" ? tokenData.expires_in : undefined,
+      id_token: typeof tokenData.id_token === "string" ? tokenData.id_token : undefined,
+    };
     // tokenData: { access_token, refresh_token, expires_in, id_token, ... }
 
     // determine where we should send the user after login; default to
@@ -129,8 +169,18 @@ export async function GET(request: NextRequest) {
     const redirectTarget = resolvePostLoginRedirect(postLogin, request.url);
 
     const response = NextResponse.redirect(redirectTarget);
-    applyCustomerAuthCookies(response, tokenData);
-    if (!tokenData.id_token) {
+    try {
+      applyCustomerAuthCookies(response, normalizedTokenData);
+    } catch (error) {
+      console.error("Failed to persist customer auth cookies", {
+        error: error instanceof Error ? error.message : String(error),
+        accessTokenLength: tokenLength(normalizedTokenData.access_token),
+        refreshTokenLength: tokenLength(normalizedTokenData.refresh_token),
+        idTokenLength: tokenLength(normalizedTokenData.id_token),
+      });
+      return redirectToLogin(request.url, "auth_cookie_write_failed");
+    }
+    if (!normalizedTokenData.id_token) {
       clearCustomerCookie(response, "shopify_customer_id_token");
     }
     // Clear PKCE and state cookies
