@@ -1,4 +1,9 @@
-import { buildAccountLoginRedirect } from "@/app/account/login/page";
+import {
+  buildAccountLoginRedirect,
+  buildCustomerLoginHref,
+  getSafeReturnTo,
+  shouldAutoStartShopifyLogin,
+} from "@/app/account/login/page";
 import { describe, expect, it } from "vitest";
 
 describe("account login redirect", () => {
@@ -14,5 +19,52 @@ describe("account login redirect", () => {
 
   it("preserves multi-value query parameters", () => {
     expect(buildAccountLoginRedirect({ foo: ["a", "b"] })).toBe("/account/login?foo=a&foo=b");
+  });
+});
+
+describe("account login helpers", () => {
+  it("builds login href with return_to when checkout_url is absent", () => {
+    expect(buildCustomerLoginHref({ returnTo: "/products?q=hoodie" })).toBe(
+      "/api/auth/customer/login?return_to=%2Fproducts%3Fq%3Dhoodie",
+    );
+  });
+
+  it("prefers checkout_url over return_to in login href", () => {
+    expect(
+      buildCustomerLoginHref({
+        checkoutUrl: "/checkouts/cn/123",
+        returnTo: "/products",
+      }),
+    ).toBe("/api/auth/customer/login?checkout_url=%2Fcheckouts%2Fcn%2F123");
+  });
+
+  it("accepts safe return_to path", () => {
+    expect(getSafeReturnTo("/products?color=blue")).toBe("/products?color=blue");
+  });
+
+  it("rejects unsafe return_to path", () => {
+    expect(getSafeReturnTo("https://evil.com")).toBe(null);
+    expect(getSafeReturnTo("//evil.com")).toBe(null);
+  });
+
+  it("auto-starts Shopify login only for checkout intent without blocking notice", () => {
+    expect(
+      shouldAutoStartShopifyLogin({
+        checkoutUrl: "/checkouts/cn/123",
+        hasBlockingNotice: false,
+      }),
+    ).toBe(true);
+    expect(
+      shouldAutoStartShopifyLogin({
+        checkoutUrl: "/checkouts/cn/123",
+        hasBlockingNotice: true,
+      }),
+    ).toBe(false);
+    expect(
+      shouldAutoStartShopifyLogin({
+        checkoutUrl: null,
+        hasBlockingNotice: false,
+      }),
+    ).toBe(false);
   });
 });

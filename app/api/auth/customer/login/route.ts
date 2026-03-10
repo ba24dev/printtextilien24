@@ -3,6 +3,7 @@ import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scope
 import {
   getCheckoutUnavailableRedirect,
   sanitizePostLoginRedirect,
+  sanitizeReturnToRedirect,
 } from "@/lib/shopify/customer/redirects";
 import { getShopifyAuthUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
@@ -135,9 +136,13 @@ export async function GET(request: NextRequest) {
     console.info("normalized scopes to", normalizeScopes(SCOPES), "from", SCOPES);
   }
   const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
-  const postLoginRedirect = sanitizePostLoginRedirect(checkoutUrl, request.nextUrl);
-  const fallbackRedirect = checkoutUrl ? getCheckoutUnavailableRedirect(request.nextUrl) : null;
-  const redirectToStore = postLoginRedirect ?? fallbackRedirect;
+  const returnTo = request.nextUrl.searchParams.get("return_to");
+  const hasCheckoutIntent = Boolean(checkoutUrl && checkoutUrl.trim() !== "");
+  const checkoutRedirect = sanitizePostLoginRedirect(checkoutUrl, request.nextUrl);
+  const returnToRedirect = sanitizeReturnToRedirect(returnTo, request.nextUrl);
+  const redirectToStore = hasCheckoutIntent
+    ? checkoutRedirect ?? getCheckoutUnavailableRedirect(request.nextUrl)
+    : returnToRedirect;
 
   const response = NextResponse.redirect(authUrl);
   const transientCookieOptions = getTransientCookieOptions();
