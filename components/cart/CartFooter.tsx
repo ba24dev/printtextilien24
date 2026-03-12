@@ -20,7 +20,7 @@ export default function CartFooter() {
   const targetCheckout = useMemo(() => buildCheckoutUrl(checkoutUrl), [checkoutUrl]);
 
   return (
-    <footer className="border-t px-6 py-4 border-primary-500">
+    <footer className="border-t px-6 py-4 border-primary-500 mb-8">
       <div className="flex items-center justify-between text-sm">
         <span>{copy.cart.subtotal}</span>
         <CartCost amountType="subtotal" />

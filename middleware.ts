@@ -3,14 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 export async function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("shopify_customer_access_token")?.value;
   if (!accessToken) {
-    // NextResponse.redirect requires an absolute URL; use the incoming
-    // request as base so the code behaves the same in tests and in
-    // production.
     const dest = new URL("/account/login", request.url);
     const returnTo = `${request.nextUrl.pathname}${request.nextUrl.search}`;
-    if (returnTo.startsWith("/") && !returnTo.startsWith("//")) {
+
+    // Sanitize the return_to parameter
+    if (returnTo.startsWith("/") && !returnTo.startsWith("//") && !returnTo.startsWith("/checkouts")) {
       dest.searchParams.set("return_to", returnTo);
     }
+
     return NextResponse.redirect(dest.toString());
   }
   return NextResponse.next();
