@@ -5,6 +5,7 @@ export function useAuthSession() {
     loggedIn: boolean;
     email?: string | null;
     customerId?: string;
+    tags?: string[];
   } | null>(null);
 
   useEffect(() => {

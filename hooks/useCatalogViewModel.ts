@@ -19,8 +19,8 @@ export function useCatalogViewModel(collections: CollectionSummary[]) {
   );
 
   const collectionFromQuery = useMemo(
-    () => getCollectionHandleFromQuery(searchParams, collectionMap),
-    [searchParams, collectionMap]
+    () => getCollectionHandleFromQuery(searchParams),
+    [searchParams]
   );
 
   const [activeCollection, setActiveCollection] = useState<string>(collectionFromQuery);

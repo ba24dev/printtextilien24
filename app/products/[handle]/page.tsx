@@ -1,5 +1,8 @@
 import ProductView from "@/components/product/ProductView";
+import { isCollectionTitleAllowedForCustomer, toNormalizedTagSet } from "@/lib/catalog/access";
+import { resolveCustomerTagsFromCookieStore } from "@/lib/shopify/customer/access";
 import { fetchProductWithPrintConfig } from "@/lib/shopify/product";
+import { cookies } from "next/headers";
 import { notFound } from "next/navigation";
 
 interface ProductPageProps {
@@ -32,6 +35,26 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const result = await fetchProductWithPrintConfig(handle);
   if (!result) {
     notFound();
+  }
+
+  const cookieStore = await cookies();
+  const customerTags = await resolveCustomerTagsFromCookieStore(cookieStore);
+  const normalizedTags = toNormalizedTagSet(customerTags);
+
+  const productWithFilteredCollections = result.product as {
+    collections?: {
+      nodes?: Array<{
+        title?: string | null;
+      } | null>;
+    };
+  };
+
+  if (Array.isArray(productWithFilteredCollections.collections?.nodes)) {
+    productWithFilteredCollections.collections.nodes =
+      productWithFilteredCollections.collections.nodes.filter((collectionNode) => {
+        if (!collectionNode?.title) return false;
+        return isCollectionTitleAllowedForCustomer(collectionNode.title, normalizedTags);
+      });
   }
 
   return (

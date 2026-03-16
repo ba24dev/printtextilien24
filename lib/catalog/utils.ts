@@ -16,12 +16,11 @@ export const SORT_OPTIONS: SortOption[] = [
 ];
 
 export function getCollectionHandleFromQuery(
-  searchParams: ReadonlyURLSearchParams,
-  collectionMap: Map<string, unknown>
+  searchParams: ReadonlyURLSearchParams
 ) {
-  const handle = searchParams.get("collection");
+  const handle = searchParams.get("collection")?.trim();
   if (!handle) return "all";
-  return collectionMap.has(handle) ? handle : "all";
+  return handle;
 }
 
 export function dedupeProducts(collections: { products: ProductSummary[] }[]) {

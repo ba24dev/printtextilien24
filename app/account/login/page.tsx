@@ -44,6 +44,12 @@ function getSafeCheckoutUrl(raw: string | null): string | null {
   if (!value) return null;
 
   if (value.startsWith("/") && !value.startsWith("//")) {
+    if (value.startsWith("/checkouts/")) {
+      if (!STOREFRONT_HOST) return null;
+      const checkoutUrl = new URL(value, `https://${STOREFRONT_HOST}`);
+      checkoutUrl.searchParams.set("logged_in", "true");
+      return checkoutUrl.toString();
+    }
     return value;
   }
 
