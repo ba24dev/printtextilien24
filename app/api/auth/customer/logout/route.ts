@@ -8,6 +8,7 @@ import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/
 
 const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
 const MAX_TOKEN_COOKIE_CHUNKS = 12;
+const RECENT_LOGOUT_COOKIE = "shopify_recent_logout";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -24,6 +25,18 @@ function clearedCookieOptions() {
     secure: true,
     sameSite: "lax" as const,
     maxAge: 0,
+    path: "/",
+    ...(domain ? { domain } : {}),
+  };
+}
+
+function recentLogoutCookieOptions() {
+  const domain = getCustomerCookieDomain();
+  return {
+    httpOnly: false,
+    secure: true,
+    sameSite: "lax" as const,
+    maxAge: 60 * 5,
     path: "/",
     ...(domain ? { domain } : {}),
   };
@@ -161,6 +174,7 @@ export async function GET(request: NextRequest) {
   clearCookieIfPresent(response, request, "shopify_pkce_verifier");
   clearCookieIfPresent(response, request, "shopify_oauth_state");
   clearCookieIfPresent(response, request, "shopify_oauth_nonce");
+  response.cookies.set(RECENT_LOGOUT_COOKIE, "1", recentLogoutCookieOptions());
   clearCustomerDebugTrace(response);
   setCustomerDebugTrace(response, logoutTrace);
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
