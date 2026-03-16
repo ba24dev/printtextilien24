@@ -1,44 +1,44 @@
-"use client";
-
-import { copy } from "@/config/copy";
 import FeaturedProducts from "@/components/marketing/FeaturedProducts";
 import Hero from "@/components/marketing/Hero";
 import ProductCarousel from "@/components/marketing/ProductCarousel";
+import { isProductVisibleForCustomerByCollections } from "@/lib/catalog/access";
 import { fetchCollectionByHandle } from "@/lib/shopify/collection";
 import { CollectionSummary } from "@/lib/shopify/types";
-import { useEffect, useState } from "react";
+import { resolveCustomerTagsFromCookieStore } from "@/lib/shopify/customer/access";
+import { cookies } from "next/headers";
 
 const FEATURED_COLLECTION_HANDLE = "hidden-homepage-featured-items";
 const CAROUSEL_COLLECTION_HANDLE = "hidden-homepage-carousel";
 
-export default function HomePage() {
-  const [featuredCollection, setFeaturedCollection] = useState<CollectionSummary | null>(null);
-  const [carouselCollection, setCarouselCollection] = useState<CollectionSummary | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+function filterHomeCollectionByAccess(
+  collection: CollectionSummary | null,
+  customerTags: string[]
+): CollectionSummary | null {
+  if (!collection) return null;
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [featuredData, carouselData] = await Promise.all([
-          fetchCollectionByHandle(FEATURED_COLLECTION_HANDLE),
-          fetchCollectionByHandle(CAROUSEL_COLLECTION_HANDLE),
-        ]);
+  const visibleProducts = collection.products.filter((product) =>
+    isProductVisibleForCustomerByCollections(product.collections, customerTags)
+  );
 
-        setFeaturedCollection(featuredData);
-        setCarouselCollection(carouselData);
-      } catch (error) {
-        console.error("Error fetching collections:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    // fire-and-forget; lint rule requires explicit void when ignoring promise
-    void fetchData();
-  }, []);
+  if (visibleProducts.length === 0) return null;
 
-  if (loading) {
-    return <div className="px-6 py-12 text-sm text-foreground/70">{copy.home.loading}</div>;
-  }
+  return {
+    ...collection,
+    products: visibleProducts,
+  };
+}
+
+export default async function HomePage() {
+  const cookieStore = await cookies();
+  const customerTags = await resolveCustomerTagsFromCookieStore(cookieStore);
+
+  const [featuredData, carouselData] = await Promise.all([
+    fetchCollectionByHandle(FEATURED_COLLECTION_HANDLE),
+    fetchCollectionByHandle(CAROUSEL_COLLECTION_HANDLE),
+  ]);
+
+  const featuredCollection = filterHomeCollectionByAccess(featuredData, customerTags);
+  const carouselCollection = filterHomeCollectionByAccess(carouselData, customerTags);
 
   return (
     <main className="bg-linear-to-b from-primary-900/50 via-primary-500/25 to-background">

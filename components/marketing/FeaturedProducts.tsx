@@ -1,3 +1,5 @@
+"use client";
+
 import { copy } from "@/config/copy";
 import { CollectionSummary } from "@/lib/shopify/types";
 import { Money } from "@shopify/hydrogen-react";
