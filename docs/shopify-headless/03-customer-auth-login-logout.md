@@ -63,7 +63,7 @@ This is the canonical auth implementation for this repository.
 
 ## Guarding Protected Area
 
-- `middleware.ts` protects `/account` and redirects unauthenticated requests to `/account/login` with `return_to`.
+- `proxy.ts` protects `/account` and redirects unauthenticated requests to `/account/login` with `return_to`.
 
 ## Source Anchors in Repo
 
@@ -74,5 +74,5 @@ This is the canonical auth implementation for this repository.
 - `app/api/auth/customer/logout/route.ts`
 - `lib/shopify/customer/session.ts`
 - `lib/shopify/customer/graphql.ts`
-- `middleware.ts`
+- `proxy.ts`
 

@@ -17,6 +17,7 @@ This guide is for future maintainers of this project who need concrete, implemen
 5. [04-customer-account-data.md](./04-customer-account-data.md)
 6. [05-checkout-and-edge-cases.md](./05-checkout-and-edge-cases.md)
 7. [06-troubleshooting.md](./06-troubleshooting.md)
+8. [07-collection-visibility-access-control.md](./07-collection-visibility-access-control.md)
 
 ## System Boundaries
 
