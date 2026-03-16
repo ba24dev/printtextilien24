@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 import { copy } from "@/config/copy";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+
+const RECENT_LOGOUT_COOKIE = "shopify_recent_logout";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -106,19 +108,30 @@ export function buildCustomerLoginHref({
 
 export function shouldAutoStartShopifyLogin({
   checkoutUrl,
-  hasBlockingNotice,
+  suppressAutoRedirect,
 }: {
   checkoutUrl: string | null;
-  hasBlockingNotice: boolean;
+  suppressAutoRedirect: boolean;
 }): boolean {
-  return Boolean(checkoutUrl) && !hasBlockingNotice;
+  return Boolean(checkoutUrl) && !suppressAutoRedirect;
+}
+
+function hasRecentLogoutCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie.split(";").some((entry) => entry.trim() === `${RECENT_LOGOUT_COOKIE}=1`);
 }
 
 function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [recentLogout, setRecentLogout] = useState(false);
+
+  useEffect(() => {
+    setRecentLogout(hasRecentLogoutCookie());
+  }, []);
+
   const reason = searchParams.get("reason");
-  const logoutNotice = searchParams.get("logout") === "1";
+  const logoutNotice = searchParams.get("logout") === "1" || recentLogout;
   const checkoutUnavailable =
     reason === "checkout_unavailable" ||
     searchParams.get("checkout_error") === "1";
@@ -138,9 +151,10 @@ function LoginClient() {
     () => buildCustomerLoginHref({ checkoutUrl, returnTo }),
     [checkoutUrl, returnTo],
   );
+  const suppressAutoRedirect = hasBlockingNotice || recentLogout;
   const autoRedirectToShopify = shouldAutoStartShopifyLogin({
     checkoutUrl,
-    hasBlockingNotice,
+    suppressAutoRedirect,
   });
 
   // if already logged in, send straight to account/checkouts.
@@ -174,6 +188,7 @@ function LoginClient() {
     checkoutUrl,
     hasBlockingNotice,
     loginHref,
+    recentLogout,
     returnTo,
     router,
   ]);
