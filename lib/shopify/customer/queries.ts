@@ -12,6 +12,7 @@ export const CUSTOMER_QUERY = `
       imageUrl
       firstName
       lastName
+      tags
       defaultAddress {
         id
       }
@@ -98,6 +99,23 @@ export const CUSTOMER_ORDERS_QUERY_FALLBACK = `
           }
         }
       }
+    }
+  }
+`;
+
+export const CUSTOMER_TAGS_QUERY = `
+  query CustomerTags {
+    customer {
+      id
+      tags
+    }
+  }
+`;
+
+export const CUSTOMER_TAGS_QUERY_FALLBACK = `
+  query CustomerTagsFallback {
+    customer {
+      id
     }
   }
 `;

@@ -10,6 +10,7 @@ const searchProductSchema = {
   title: "string",
   tagsText: "string",
   collectionsText: "string",
+  collectionsRaw: "string",
   vendorText: "string",
   priceAmount: "number",
   priceCurrency: "string",
@@ -24,6 +25,7 @@ interface SearchProductDocument {
   title: string;
   tagsText: string;
   collectionsText: string;
+  collectionsRaw: string;
   vendorText: string;
   priceAmount: number;
   priceCurrency: CurrencyCode;
@@ -50,6 +52,7 @@ async function buildIndex(): Promise<Orama<SearchProductSchema>> {
         title: product.title,
         tagsText: (product.tags ?? []).join(" "),
         collectionsText: (product.collections ?? []).join(" "),
+        collectionsRaw: (product.collections ?? []).join("\u001f"),
         vendorText: product.vendor ?? "",
         priceAmount: Number(product.price?.amount ?? 0),
         priceCurrency: (product.price?.currencyCode ?? "EUR") as CurrencyCode,
@@ -89,6 +92,9 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
     handle: document.handle,
     title: document.title,
     imageUrl: document.imageUrl,
+    collections: document.collectionsRaw
+      ? document.collectionsRaw.split("\u001f").filter((value) => value.length > 0)
+      : [],
     price: {
       amount: document.priceAmount.toFixed(2),
       currencyCode: document.priceCurrency,

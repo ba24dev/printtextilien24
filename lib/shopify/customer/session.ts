@@ -1,6 +1,10 @@
 import { formatAccessToken } from "@/lib/shopify/auth/token";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
-import { CUSTOMER_QUERY } from "@/lib/shopify/customer/queries";
+import {
+  CUSTOMER_QUERY,
+  CUSTOMER_TAGS_QUERY,
+  CUSTOMER_TAGS_QUERY_FALLBACK,
+} from "@/lib/shopify/customer/queries";
 import { getShopifyClientId, getShopifyTokenUrl } from "@/lib/shopify/customer/urls";
 import { NextResponse } from "next/server";
 
@@ -39,7 +43,7 @@ function customerCookieOptions(options?: CustomerCookieOptions) {
   };
 }
 
-type CookieStoreLike = {
+export type CookieStoreLike = {
   get(name: string): { value: string } | undefined;
 };
 
@@ -332,6 +336,34 @@ export async function fetchCustomerProfile(accessToken: string) {
         }
       : undefined,
   };
+}
+
+function shouldFallbackForCustomerTags(error: unknown): boolean {
+  if (!(error instanceof Error)) return false;
+  const message = error.message.toLowerCase();
+  return (
+    (message.includes("field") && message.includes("doesn't exist on type")) ||
+    message.includes("access denied")
+  );
+}
+
+export async function fetchCustomerTags(accessToken: string): Promise<string[]> {
+  try {
+    const data = await shopifyCustomerGraphQL<{
+      customer?: {
+        tags?: string[];
+      };
+    }>(accessToken, CUSTOMER_TAGS_QUERY);
+
+    return Array.isArray(data.customer?.tags) ? data.customer.tags : [];
+  } catch (error) {
+    if (!shouldFallbackForCustomerTags(error)) {
+      throw error;
+    }
+
+    await shopifyCustomerGraphQL(accessToken, CUSTOMER_TAGS_QUERY_FALLBACK);
+    return [];
+  }
 }
 
 export async function fetchCustomerOrders(accessToken: string) {

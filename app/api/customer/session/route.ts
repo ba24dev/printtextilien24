@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
   applyCustomerAuthCookies,
+  fetchCustomerTags,
   readCustomerCookie,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
@@ -37,10 +38,13 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
+  const tags = await fetchCustomerTags(validation.accessToken).catch(() => [] as string[]);
+
   const response = NextResponse.json({
     loggedIn: true,
     customerId: validation.customer.id,
     email: validation.customer.email,
+    tags,
   });
   if (validation.refreshedTokens) {
     applyCustomerAuthCookies(response, validation.refreshedTokens);

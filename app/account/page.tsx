@@ -1,4 +1,4 @@
-import { copy } from "@/config/copy";
+git import { copy } from "@/config/copy";
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";

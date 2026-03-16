@@ -29,7 +29,8 @@ export function sanitizePostLoginRedirect(
   const storefrontUrl = storefrontOrigin ? new URL(storefrontOrigin) : null;
 
   if (value.startsWith("/") && !value.startsWith("//")) {
-    if (value.startsWith("/checkouts/") && storefrontUrl) {
+    if (value.startsWith("/checkouts/")) {
+      if (!storefrontUrl) return null;
       const checkoutUrl = new URL(value, storefrontUrl);
       checkoutUrl.searchParams.set("logged_in", "true");
       return checkoutUrl.toString();
