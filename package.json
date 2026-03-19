@@ -4,6 +4,9 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:ngrok": "./scripts/use-ngrok-env.sh && next dev",
+    "env:ngrok:on": "./scripts/use-ngrok-env.sh",
+    "env:ngrok:off": "./scripts/clear-ngrok-env.sh",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -16,6 +19,7 @@
     "@supabase/supabase-js": "^2.81.0",
     "@tailwindcss/postcss": "^4.1.17",
     "@tailwindcss/typography": "^0.5.19",
+    "@upstash/redis": "^1.37.0",
     "browser-or-node": "^3.0.0",
     "clsx": "^2.1.1",
     "graphql": "^16.12.0",

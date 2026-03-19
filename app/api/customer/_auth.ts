@@ -1,6 +1,7 @@
 import {
-  applyCustomerAuthCookies,
-  readCustomerCookie,
+  applyCustomerAuthSession,
+  isRecentLogoutActive,
+  resolveCustomerAuthTokens,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
 import { NextRequest, NextResponse } from "next/server";
@@ -11,16 +12,18 @@ export async function requireCustomerAccessToken(request: NextRequest): Promise<
   | {
       ok: true;
       accessToken: string;
-      withAuthCookies: (response: NextResponse) => void;
+      withAuthCookies: (response: NextResponse) => Promise<void>;
     }
   | {
       ok: false;
       response: NextResponse;
     }
 > {
-  const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
-  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
-  const validation = await validateCustomerSession(accessToken, refreshToken);
+  const tokens = await resolveCustomerAuthTokens(request.cookies);
+  const allowRefresh = !isRecentLogoutActive(request.cookies);
+  const validation = await validateCustomerSession(tokens.accessToken, tokens.refreshToken, {
+    allowRefresh,
+  });
   if (!validation.authenticated) {
     const loginUrl = new URL("/account/login", request.url);
     loginUrl.searchParams.set("reason", "auth_session_expired");
@@ -32,9 +35,11 @@ export async function requireCustomerAccessToken(request: NextRequest): Promise<
   return {
     ok: true,
     accessToken: validation.accessToken,
-    withAuthCookies: (response: NextResponse) => {
+    withAuthCookies: async (response: NextResponse) => {
       if (validation.refreshedTokens) {
-        applyCustomerAuthCookies(response, validation.refreshedTokens);
+        await applyCustomerAuthSession(response, validation.refreshedTokens, {
+          existingSessionId: tokens.sessionId,
+        });
       }
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     },

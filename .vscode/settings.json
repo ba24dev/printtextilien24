@@ -2,6 +2,8 @@
   "typescript.tsdk": "node_modules\\typescript\\lib",
   "chat.tools.terminal.autoApprove": {
     "git add": true,
-    "git commit": true
+    "git commit": true,
+    "pnpm": true,
+    "test": true
   }
 }

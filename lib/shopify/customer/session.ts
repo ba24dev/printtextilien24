@@ -1,10 +1,17 @@
 import { formatAccessToken } from "@/lib/shopify/auth/token";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
+import { isShopifyCustomerSessionStoreKvEnabled } from "@/lib/shopify/customer/feature";
 import {
   CUSTOMER_QUERY,
   CUSTOMER_TAGS_QUERY,
   CUSTOMER_TAGS_QUERY_FALLBACK,
 } from "@/lib/shopify/customer/queries";
+import {
+  customerSessionTtlSeconds,
+  deleteCustomerSessionRecord,
+  readCustomerSessionRecord,
+  writeCustomerSessionRecord,
+} from "@/lib/shopify/customer/session-store";
 import { getShopifyClientId, getShopifyTokenUrl } from "@/lib/shopify/customer/urls";
 import { NextResponse } from "next/server";
 
@@ -25,6 +32,12 @@ type CustomerCookieOptions = {
 const TOKEN_COOKIE_CHUNK_SIZE = 1800;
 const MAX_TOKEN_COOKIE_CHUNKS = 12;
 const CHUNKED_COOKIE_SENTINEL = "__chunked__";
+const AUTH_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30;
+const RECENT_LOGOUT_COOKIE_MAX_AGE_SECONDS = 60 * 10;
+
+export const CUSTOMER_SESSION_COOKIE_NAME = "shopify_customer_session_id";
+export const CUSTOMER_RECENT_LOGOUT_COOKIE_NAME = "shopify_recent_logout";
+export const CUSTOMER_RECENT_LOGOUT_SERVER_COOKIE_NAME = "shopify_recent_logout_server";
 const TOKEN_COOKIE_NAMES = new Set([
   "shopify_customer_access_token",
   "shopify_customer_refresh_token",
@@ -45,6 +58,13 @@ function customerCookieOptions(options?: CustomerCookieOptions) {
 
 export type CookieStoreLike = {
   get(name: string): { value: string } | undefined;
+};
+
+export type CustomerAuthTokens = {
+  accessToken?: string;
+  refreshToken?: string;
+  idToken?: string;
+  sessionId?: string;
 };
 
 function serializeTokenCookieValue(value: string): string {
@@ -71,6 +91,10 @@ function chunkCookieName(name: string, index: number): string {
 
 function clearCookie(response: NextResponse, name: string): void {
   response.cookies.set(name, "", customerCookieOptions({ httpOnly: false, maxAge: 0 }));
+}
+
+function clearHttpOnlyCookie(response: NextResponse, name: string): void {
+  response.cookies.set(name, "", customerCookieOptions({ httpOnly: true, maxAge: 0 }));
 }
 
 function clearTokenChunkCookies(
@@ -155,6 +179,49 @@ export function clearCustomerCookie(response: NextResponse, name: string): void 
   }
 }
 
+function setCustomerSessionCookie(response: NextResponse, sessionId: string): void {
+  response.cookies.set(
+    CUSTOMER_SESSION_COOKIE_NAME,
+    sessionId,
+    customerCookieOptions({ httpOnly: true, maxAge: AUTH_SESSION_MAX_AGE_SECONDS }),
+  );
+}
+
+function clearCustomerSessionCookie(response: NextResponse): void {
+  clearHttpOnlyCookie(response, CUSTOMER_SESSION_COOKIE_NAME);
+}
+
+export function setRecentLogoutCookies(response: NextResponse): void {
+  response.cookies.set(
+    CUSTOMER_RECENT_LOGOUT_COOKIE_NAME,
+    "1",
+    customerCookieOptions({
+      httpOnly: false,
+      maxAge: RECENT_LOGOUT_COOKIE_MAX_AGE_SECONDS,
+    }),
+  );
+  response.cookies.set(
+    CUSTOMER_RECENT_LOGOUT_SERVER_COOKIE_NAME,
+    "1",
+    customerCookieOptions({
+      httpOnly: true,
+      maxAge: RECENT_LOGOUT_COOKIE_MAX_AGE_SECONDS,
+    }),
+  );
+}
+
+export function clearRecentLogoutCookies(response: NextResponse): void {
+  clearCookie(response, CUSTOMER_RECENT_LOGOUT_COOKIE_NAME);
+  clearHttpOnlyCookie(response, CUSTOMER_RECENT_LOGOUT_SERVER_COOKIE_NAME);
+}
+
+export function isRecentLogoutActive(cookieStore: CookieStoreLike): boolean {
+  return (
+    cookieStore.get(CUSTOMER_RECENT_LOGOUT_SERVER_COOKIE_NAME)?.value === "1" ||
+    cookieStore.get(CUSTOMER_RECENT_LOGOUT_COOKIE_NAME)?.value === "1"
+  );
+}
+
 export type CustomerIdentity = {
   id: string;
   email: string | null;
@@ -169,7 +236,12 @@ type SessionValidationResult =
     }
   | {
       authenticated: false;
-      reason: "missing_access" | "invalid_access" | "refresh_failed" | "provider_unavailable";
+      reason:
+        | "missing_access"
+        | "invalid_access"
+        | "refresh_failed"
+        | "provider_unavailable"
+        | "recent_logout";
     };
 
 function isProviderUnavailableError(error: unknown): boolean {
@@ -195,6 +267,7 @@ export function clearCustomerAuthCookies(response: NextResponse): void {
   clearCustomerCookie(response, "shopify_customer_refresh_token");
   clearCustomerCookie(response, "shopify_customer_id_token");
   clearCustomerCookie(response, "shopify_post_login_redirect");
+  clearCustomerSessionCookie(response);
 }
 
 export function applyCustomerAuthCookies(response: NextResponse, tokenData: TokenResponse): void {
@@ -210,6 +283,129 @@ export function applyCustomerAuthCookies(response: NextResponse, tokenData: Toke
   }
   if (tokenData.id_token) {
     setTokenCookie(response, "shopify_customer_id_token", tokenData.id_token, accessTokenMaxAge);
+  }
+}
+
+function fallbackCustomerAuthTokens(cookieStore: CookieStoreLike): CustomerAuthTokens {
+  return {
+    accessToken: readCustomerCookie(cookieStore, "shopify_customer_access_token"),
+    refreshToken: readCustomerCookie(cookieStore, "shopify_customer_refresh_token"),
+    idToken: readCustomerCookie(cookieStore, "shopify_customer_id_token"),
+  };
+}
+
+export async function resolveCustomerAuthTokens(
+  cookieStore: CookieStoreLike,
+): Promise<CustomerAuthTokens> {
+  if (!isShopifyCustomerSessionStoreKvEnabled()) {
+    return fallbackCustomerAuthTokens(cookieStore);
+  }
+
+  const sessionId = cookieStore.get(CUSTOMER_SESSION_COOKIE_NAME)?.value;
+  if (!sessionId) return {};
+
+  try {
+    const session = await readCustomerSessionRecord(sessionId);
+    if (!session) {
+      return { sessionId };
+    }
+    return {
+      accessToken: session.accessToken,
+      refreshToken: session.refreshToken,
+      idToken: session.idToken,
+      sessionId,
+    };
+  } catch {
+    return { sessionId };
+  }
+}
+
+export async function resolveCustomerIdToken(cookieStore: CookieStoreLike): Promise<string | undefined> {
+  const tokens = await resolveCustomerAuthTokens(cookieStore);
+  return tokens.idToken;
+}
+
+export async function applyCustomerAuthSession(
+  response: NextResponse,
+  tokenData: TokenResponse,
+  options?: { existingSessionId?: string },
+): Promise<void> {
+  if (!isShopifyCustomerSessionStoreKvEnabled()) {
+    applyCustomerAuthCookies(response, tokenData);
+    return;
+  }
+
+  const existingSessionId = options?.existingSessionId;
+  const sessionId = existingSessionId || crypto.randomUUID();
+  let existingRefreshToken: string | undefined;
+  let existingIdToken: string | undefined;
+
+  if (existingSessionId) {
+    try {
+      const previous = await readCustomerSessionRecord(existingSessionId);
+      existingRefreshToken = previous?.refreshToken;
+      existingIdToken = previous?.idToken;
+    } catch {
+      // Best effort read; continue with new token payload.
+    }
+  }
+
+  const refreshToken = tokenData.refresh_token ?? existingRefreshToken;
+  const idToken = tokenData.id_token ?? existingIdToken;
+  const ttlSeconds = customerSessionTtlSeconds(tokenData.expires_in ?? AUTH_SESSION_MAX_AGE_SECONDS);
+
+  await writeCustomerSessionRecord(
+    sessionId,
+    {
+      accessToken: tokenData.access_token,
+      refreshToken,
+      idToken,
+      expiresAt: tokenData.expires_in
+        ? Math.floor(Date.now() / 1000) + Math.max(60, Math.floor(tokenData.expires_in))
+        : undefined,
+    },
+    ttlSeconds,
+  );
+
+  setCustomerSessionCookie(response, sessionId);
+  clearCustomerCookie(response, "shopify_customer_access_token");
+  clearCustomerCookie(response, "shopify_customer_refresh_token");
+  clearCustomerCookie(response, "shopify_customer_id_token");
+}
+
+export async function clearCustomerAuthSession(
+  response: NextResponse,
+  cookieStore?: CookieStoreLike,
+): Promise<void> {
+  if (isShopifyCustomerSessionStoreKvEnabled()) {
+    const sessionId = cookieStore?.get(CUSTOMER_SESSION_COOKIE_NAME)?.value;
+    if (sessionId) {
+      try {
+        await deleteCustomerSessionRecord(sessionId);
+      } catch {
+        // Cookie is still cleared below, even if delete fails.
+      }
+    }
+  }
+  if (!cookieStore) {
+    clearCustomerAuthCookies(response);
+    return;
+  }
+
+  if (cookieStore.get("shopify_customer_access_token")) {
+    clearCustomerCookie(response, "shopify_customer_access_token");
+  }
+  if (cookieStore.get("shopify_customer_refresh_token")) {
+    clearCustomerCookie(response, "shopify_customer_refresh_token");
+  }
+  if (cookieStore.get("shopify_customer_id_token")) {
+    clearCustomerCookie(response, "shopify_customer_id_token");
+  }
+  if (cookieStore.get("shopify_post_login_redirect")) {
+    clearCustomerCookie(response, "shopify_post_login_redirect");
+  }
+  if (cookieStore.get(CUSTOMER_SESSION_COOKIE_NAME)) {
+    clearCustomerSessionCookie(response);
   }
 }
 
@@ -274,6 +470,7 @@ export async function refreshCustomerTokens(refreshToken: string): Promise<Token
 export async function validateCustomerSession(
   accessToken?: string,
   refreshToken?: string,
+  options?: { allowRefresh?: boolean },
 ): Promise<SessionValidationResult> {
   if (!accessToken && !refreshToken) {
     return { authenticated: false, reason: "missing_access" };
@@ -294,6 +491,10 @@ export async function validateCustomerSession(
 
   if (!refreshToken) {
     return { authenticated: false, reason: "invalid_access" };
+  }
+
+  if (options?.allowRefresh === false) {
+    return { authenticated: false, reason: "recent_logout" };
   }
 
   const refreshed = await refreshCustomerTokens(refreshToken);

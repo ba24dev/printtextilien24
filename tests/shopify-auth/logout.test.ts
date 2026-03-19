@@ -83,6 +83,7 @@ describe("logout route", () => {
       "https://printtextilien24.de/account/login?logout=1",
     );
     expect(res.cookies.get("shopify_recent_logout")?.value).toBe("1");
+    expect(res.cookies.get("shopify_recent_logout_server")?.value).toBe("1");
     expect(res.cookies.get("shopify_customer_access_token")).toBeUndefined();
     expect(res.cookies.get("shopify_customer_refresh_token")).toBeUndefined();
     expect(res.cookies.get("shopify_customer_id_token")?.value).toBe("");
