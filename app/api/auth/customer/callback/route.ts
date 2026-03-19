@@ -185,7 +185,12 @@ export async function GET(request: NextRequest) {
     // /account but allow a previously stored destination (e.g. a
     // checkout_url from Shopify) to override.
     const postLogin = request.cookies.get("shopify_post_login_redirect")?.value;
-    const redirectTarget = resolvePostLoginRedirect(postLogin, request.url);
+    const recentLogout =
+      request.cookies.get("shopify_recent_logout")?.value === "1" ||
+      request.cookies.get("shopify_recent_logout_server")?.value === "1";
+    const redirectTarget = recentLogout
+      ? new URL("/account", request.url).toString()
+      : resolvePostLoginRedirect(postLogin, request.url);
 
     const response = NextResponse.redirect(redirectTarget);
     try {
