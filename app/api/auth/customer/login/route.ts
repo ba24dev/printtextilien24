@@ -126,7 +126,11 @@ export async function GET(request: NextRequest) {
   }
   const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
   const returnTo = request.nextUrl.searchParams.get("return_to");
+  const hasRecentLogout =
+    request.cookies.get("shopify_recent_logout")?.value === "1" ||
+    request.cookies.get("shopify_recent_logout_server")?.value === "1";
   const hasCheckoutIntent = Boolean(checkoutUrl && checkoutUrl.trim() !== "");
+
   const checkoutRedirect = sanitizePostLoginRedirect(checkoutUrl, request.nextUrl);
   const returnToRedirect = sanitizeReturnToRedirect(returnTo, request.nextUrl);
   const redirectToStore = hasCheckoutIntent
@@ -138,7 +142,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set("shopify_pkce_verifier", verifier, transientCookieOptions);
   response.cookies.set("shopify_oauth_state", state, transientCookieOptions);
   response.cookies.set("shopify_oauth_nonce", nonce, transientCookieOptions);
-  if (redirectToStore) {
+  if (!hasRecentLogout && redirectToStore) {
     response.cookies.set("shopify_post_login_redirect", redirectToStore, transientCookieOptions);
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");

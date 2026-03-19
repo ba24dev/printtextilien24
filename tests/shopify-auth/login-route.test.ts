@@ -1,8 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-function makeRequest(url: string) {
+function makeRequest(url: string, cookies?: Record<string, string | undefined>) {
   return {
     nextUrl: new URL(url),
+    cookies: {
+      get: (name: string) => ({ value: cookies?.[name] }) as any,
+    },
   } as any;
 }
 
@@ -105,5 +108,16 @@ describe("login route", () => {
     expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe(
       "https://example.com/account?checkout_error=1",
     );
+  });
+
+  it("does not store checkout redirect when recent logout is active", async () => {
+    const { GET } = await importLoginRoute();
+    const response = await GET(
+      makeRequest(
+        "https://example.com/api/auth/customer/login?checkout_url=%2Fcheckout%2Fabc",
+        { shopify_recent_logout: "1" },
+      ),
+    );
+    expect(response.cookies.get("shopify_post_login_redirect")?.value).toBe("");
   });
 });
