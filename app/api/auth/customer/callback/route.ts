@@ -1,5 +1,9 @@
 import { SCOPES } from "@/lib/shopify/auth/scopes";
-import { applyCustomerAuthCookies, clearCustomerCookie } from "@/lib/shopify/customer/session";
+import {
+  applyCustomerAuthSession,
+  clearCustomerCookie,
+  clearRecentLogoutCookies,
+} from "@/lib/shopify/customer/session";
 import { setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -114,26 +118,41 @@ export async function GET(request: NextRequest) {
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
-    const tokenContentType = tokenRes.headers.get("content-type") ?? "";
-    const tokenBodyText = await tokenRes.text();
+    const tokenContentType = tokenRes.headers?.get?.("content-type") ?? "";
     let tokenData: Record<string, unknown>;
-    try {
-      tokenData = JSON.parse(tokenBodyText) as Record<string, unknown>;
-    } catch (error) {
-      console.error("Shopify token exchange returned non-JSON body", {
-        status: tokenRes.status,
-        contentType: tokenContentType,
-        bodyPreview: tokenBodyText.slice(0, 400),
-        parseError: error instanceof Error ? error.message : String(error),
-      });
+    if (typeof tokenRes.text === "function") {
+      const tokenBodyText = await tokenRes.text();
+      try {
+        tokenData = JSON.parse(tokenBodyText) as Record<string, unknown>;
+      } catch (error) {
+        console.error("Shopify token exchange returned non-JSON body", {
+          status: tokenRes.status,
+          contentType: tokenContentType,
+          bodyPreview: tokenBodyText.slice(0, 400),
+          parseError: error instanceof Error ? error.message : String(error),
+        });
+        const response = NextResponse.json(
+          {
+            error: "Token exchange returned invalid response",
+            details: `Expected JSON but got ${tokenContentType || "unknown content type"}`,
+          },
+          { status: 400 },
+        );
+        setCustomerDebugTrace(response, "callback_token_exchange_invalid_json");
+        response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
+        return response;
+      }
+    } else if (typeof tokenRes.json === "function") {
+      tokenData = (await tokenRes.json()) as Record<string, unknown>;
+    } else {
       const response = NextResponse.json(
         {
           error: "Token exchange returned invalid response",
-          details: `Expected JSON but got ${tokenContentType || "unknown content type"}`,
+          details: "Token endpoint response body is not readable",
         },
         { status: 400 },
       );
-      setCustomerDebugTrace(response, "callback_token_exchange_invalid_json");
+      setCustomerDebugTrace(response, "callback_token_exchange_invalid_body");
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
@@ -170,7 +189,9 @@ export async function GET(request: NextRequest) {
 
     const response = NextResponse.redirect(redirectTarget);
     try {
-      applyCustomerAuthCookies(response, normalizedTokenData);
+      await applyCustomerAuthSession(response, normalizedTokenData, {
+        existingSessionId: request.cookies.get("shopify_customer_session_id")?.value,
+      });
     } catch (error) {
       console.error("Failed to persist customer auth cookies", {
         error: error instanceof Error ? error.message : String(error),
@@ -183,6 +204,7 @@ export async function GET(request: NextRequest) {
     if (!normalizedTokenData.id_token) {
       clearCustomerCookie(response, "shopify_customer_id_token");
     }
+    clearRecentLogoutCookies(response);
     // Clear PKCE and state cookies
     clearOAuthTransientCookies(response);
     // and clear our custom destination cookie so it won't stick around

@@ -5,3 +5,10 @@ export function isShopifyCustomerAuthV2Enabled(): boolean {
   if (!raw) return true;
   return TRUE_VALUES.has(raw.trim().toLowerCase());
 }
+
+export function isShopifyCustomerSessionStoreKvEnabled(): boolean {
+  const raw = process.env.SHOPIFY_SESSION_STORE;
+  if (!raw) return false;
+  const value = raw.trim().toLowerCase();
+  return value === "redis" || value === "kv";
+}
