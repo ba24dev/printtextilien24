@@ -21,12 +21,23 @@ function getRedisClient(): Redis | null {
     return redisClient;
   }
 
-  if (!process.env.UPSTASH_REDIS_REST_URL || !process.env.UPSTASH_REDIS_REST_TOKEN) {
+  // Support both legacy Upstash env names and Vercel KV names.
+  const restUrl =
+    process.env.UPSTASH_REDIS_REST_URL ||
+    process.env.KV_REST_API_URL ||
+    process.env.REDIS_URL ||
+    process.env.KV_URL;
+  const restToken =
+    process.env.UPSTASH_REDIS_REST_TOKEN ||
+    process.env.KV_REST_API_TOKEN ||
+    process.env.KV_REST_API_READ_ONLY_TOKEN;
+
+  if (!restUrl || !restToken) {
     redisClient = null;
     return redisClient;
   }
 
-  redisClient = Redis.fromEnv();
+  redisClient = new Redis({ url: restUrl, token: restToken });
   return redisClient;
 }
 
@@ -57,7 +68,9 @@ export async function writeCustomerSessionRecord(
 ): Promise<void> {
   const redis = getRedisClient();
   if (!redis) {
-    throw new Error("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set");
+    throw new Error(
+      "Redis session store unavailable. Set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN or KV_REST_API_URL + KV_REST_API_TOKEN (or REDIS_URL).",
+    );
   }
 
   const key = sessionKey(sessionId);
