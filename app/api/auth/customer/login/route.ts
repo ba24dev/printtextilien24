@@ -71,20 +71,9 @@ function getTransientCookieOptions() {
 }
 
 export async function GET(request: NextRequest) {
-  const canonicalOrigin = getCanonicalOriginFromRedirectUri();
-  if (
-    canonicalOrigin &&
-    shouldRedirectToCanonicalOrigin(request.nextUrl.origin, canonicalOrigin)
-  ) {
-    const canonicalUrl = new URL(
-      request.nextUrl.pathname + request.nextUrl.search,
-      canonicalOrigin,
-    );
-    const response = NextResponse.redirect(canonicalUrl.toString());
-    setCustomerDebugTrace(response, "login_canonical_redirect");
-    response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
-    return response;
-  }
+  // Don’t canonicalize the API login URL; old canonicalization can loop under
+  // reverse proxies / ngrok if Next’s request origin and callback origin differ.
+  // We still use the redirect URI directly when exchanging auth code.
 
   // warn if the scopes string is blank – this is a common misconfiguration
   if (!SCOPES || SCOPES.trim() === "") {
