@@ -59,12 +59,14 @@ function shouldRedirectToCanonicalOrigin(
 }
 
 function getTransientCookieOptions() {
+  const domain = getCustomerCookieDomain();
   return {
     httpOnly: true,
     secure: true,
     sameSite: "lax" as const,
     maxAge: 300,
     path: "/",
+    ...(domain ? { domain } : {}),
   };
 }
 
