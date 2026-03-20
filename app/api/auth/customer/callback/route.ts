@@ -188,9 +188,20 @@ export async function GET(request: NextRequest) {
     const recentLogout =
       request.cookies.get("shopify_recent_logout")?.value === "1" ||
       request.cookies.get("shopify_recent_logout_server")?.value === "1";
+
+      console.info("[customer-callback] redirect-decision", {
+  url: request.url,
+  postLogin: request.cookies.get("shopify_post_login_redirect")?.value ?? null,
+  recentLogoutCookie: request.cookies.get("shopify_recent_logout")?.value ?? null,
+  recentLogoutServerCookie: request.cookies.get("shopify_recent_logout_server")?.value ?? null,
+});
     const redirectTarget = recentLogout
       ? new URL("/account", request.url).toString()
       : resolvePostLoginRedirect(postLogin, request.url);
+
+    console.info("[customer-callback] final-target", {
+  redirectTarget,
+});
 
     const response = NextResponse.redirect(redirectTarget);
     try {
