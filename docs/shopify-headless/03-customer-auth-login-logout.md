@@ -14,65 +14,90 @@ This is the canonical auth implementation for this repository.
 ## End-to-End Login Sequence
 
 1. User lands on `/account/login`.
-2. Page computes safe intent from `checkout_url` or `return_to` query params.
-3. Page calls `/api/customer/session`.
-4. If already logged in, user is sent to account or intended destination.
-5. If checkout intent exists and no blocking notice is active, OAuth starts automatically via `/api/auth/customer/login`.
-6. Login route generates PKCE verifier/challenge, `state`, and `nonce`.
-7. Transient cookies are set (`shopify_pkce_verifier`, `shopify_oauth_state`, `shopify_oauth_nonce`).
-8. User is redirected to Shopify authorize endpoint.
-9. Shopify redirects to callback with `code` and `state`.
-10. Callback validates params and `state` cookie.
-11. Callback exchanges code for tokens with form-encoded POST.
-12. Tokens are stored in secure cookies, transient cookies are cleared, and user is redirected to resolved destination.
+2. Page computes a safe post-login intent from `checkout_url` or `return_to`.
+3. Page checks session state through the customer session endpoint.
+4. If already authenticated, user is redirected to the account area or intended destination.
+5. If checkout intent exists and no recent logout / blocking notice is active, OAuth can start automatically.
+6. Login route generates PKCE verifier/challenge plus `state` and `nonce`.
+7. User is redirected to Shopify’s authorize endpoint.
+8. Shopify redirects back to the callback with `code` and `state`.
+9. Callback validates the OAuth response and exchanges the code for tokens.
+10. Tokens are normalized and stored server-side.
+11. A session is created in Redis / KV.
+12. Browser receives only a small HttpOnly cookie: `shopify_customer_session_id`.
 
 ## Redirect and Intent Handling
 
 ### Checkout intent
 
-- Login route accepts `checkout_url`.
+- Login accepts `checkout_url`.
 - Redirect target is sanitized.
-- `/checkouts/...` paths are normalized to storefront host and `logged_in=true` is added.
-- Unsafe external URLs are rejected and replaced with checkout-unavailable fallback.
+- `/checkouts/...` paths are normalized onto the storefront origin.
+- `logged_in=true` is appended.
+- Unsafe external URLs are rejected.
+- Invalid targets fall back to `/account?checkout_error=1`.
 
 ### Return-to intent
 
-- `return_to` is accepted only when safe relative path or same-origin URL.
+- `return_to` must be:
+  - a safe relative path, or
+  - a same-origin URL
+- Unsafe values are discarded.
 
-## Token and Cookie Model
+## Token and Session Storage Model
 
-- Access, refresh, and id token are stored in secure cookie storage.
-- Large token values are chunked in `lib/shopify/customer/session.ts`.
-- Token format is normalized by `formatAccessToken()`.
-- Customer API auth headers are retried across safe variants to survive provider format inconsistencies.
+- Tokens are stored server-side in Redis / KV.
+- Browser stores only `shopify_customer_session_id` (HttpOnly, secure).
+- Session key format:
+  - `shopify:customer:session:{sessionId}`
+- Session contains:
+  - accessToken
+  - refreshToken
+  - idToken
+  - expiresAt (optional)
+  - updatedAt
+- TTL:
+  - based on token expiry if available
+  - fallback: 30 days
+
+## Session Resolution
+
+1. Read session ID from cookie
+2. Load session from Redis
+3. Extract tokens
 
 ## Session Validation
 
-- `/api/customer/session` uses strict validation (`SHOPIFY_CUSTOMER_AUTH_V2=true` default).
-- Access token is validated by probing customer identity.
-- On expired/invalid access token, refresh token fallback is attempted.
-- If provider is temporarily unavailable, response can degrade gracefully.
+- Access token is validated against Shopify customer API
+- If invalid:
+  - refresh token fallback is attempted
+- If provider unavailable:
+  - validation degrades gracefully
+
+## Refresh Model
+
+- Uses refresh token from Redis session
+- Exchanges token with Shopify
+- Updates existing session
+- Cookie remains unchanged unless session is recreated
 
 ## Logout Model
 
-- `/account/logout` delegates to `/api/auth/customer/logout`.
-- Logout route attempts provider end-session redirect when id token + config are valid.
-- Local auth cookies are always cleared.
-- On provider failure/unavailability, route falls back to local redirect (`/account/login?logout=1`).
-- Cleanup is bounded to observed cookie chunks to avoid oversized response headers.
+- Deletes Redis session
+- Clears session cookie
+- Optionally triggers provider logout
+- Falls back to `/account/login?logout=1`
+- Prevents immediate silent re-login via short-lived flags
 
 ## Guarding Protected Area
 
-- `proxy.ts` protects `/account` and redirects unauthenticated requests to `/account/login` with `return_to`.
+- `/account` routes are protected via proxy/middleware
+- Unauthenticated users are redirected to login with `return_to`
+- Auth is determined via:
+  - session cookie
+  - successful Redis session resolution
 
-## Source Anchors in Repo
+## Notes
 
-- `app/account/login/page.tsx`
-- `app/api/auth/customer/login/route.ts`
-- `app/api/auth/customer/callback/route.ts`
-- `app/api/auth/customer/refresh/route.ts`
-- `app/api/auth/customer/logout/route.ts`
-- `lib/shopify/customer/session.ts`
-- `lib/shopify/customer/graphql.ts`
-- `proxy.ts`
-
+- Legacy chunked-cookie token storage still exists as fallback
+- Redis session storage is the canonical model

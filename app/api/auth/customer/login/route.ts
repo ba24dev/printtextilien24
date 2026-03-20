@@ -97,22 +97,10 @@ export async function GET(request: NextRequest) {
     `${SHOPIFY_AUTH_URL}?` +
     new URLSearchParams({
       client_id: SHOPIFY_CLIENT_ID,
-      // if SCOPES is accidentally empty or contains invalid entries
-      // Shopify will immediately render an error page rather than
-      // redirecting back; keeping this construction explicit makes it
-      // easier to log/inspect during development.
-      //
-      // note: public Headless clients don’t show `openid` or `email` in
-      // the permissions UI, so requesting them here will produce the
-      // "invalid scope" error.  Only ask for scopes which you’ve enabled
-      // in the Shopify admin.
       scope: normalizeScopes(SCOPES),
       redirect_uri: REDIRECT_URI,
       response_type: "code",
-      // shared devices: always force explicit credential entry instead of
-      // silently reusing an existing Shopify SSO session.
       prompt: "login",
-      // force a fresh authentication event (OIDC); complements prompt=login.
       max_age: "0",
       state,
       nonce,
@@ -124,30 +112,51 @@ export async function GET(request: NextRequest) {
   if (SCOPES !== normalizeScopes(SCOPES)) {
     console.info("normalized scopes to", normalizeScopes(SCOPES), "from", SCOPES);
   }
+
   const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
   const returnTo = request.nextUrl.searchParams.get("return_to");
+  const logoutParam = request.nextUrl.searchParams.get("logout") === "1";
+
   const hasRecentLogout =
     request.cookies.get("shopify_recent_logout")?.value === "1" ||
     request.cookies.get("shopify_recent_logout_server")?.value === "1";
+
+  const isLogoutContext = logoutParam || hasRecentLogout;
+
   const hasCheckoutIntent = Boolean(checkoutUrl && checkoutUrl.trim() !== "");
 
-  const checkoutRedirect = sanitizePostLoginRedirect(checkoutUrl, request.nextUrl);
-  const returnToRedirect = sanitizeReturnToRedirect(returnTo, request.nextUrl);
+  // Only keep checkout / return targets for true login flows.
+  // If the user just logged out from checkout, Shopify may still send
+  // checkout_url back to us. Re-storing it here recreates the redirect loop.
+  const checkoutRedirect =
+    !isLogoutContext && hasCheckoutIntent
+      ? sanitizePostLoginRedirect(checkoutUrl, request.nextUrl)
+      : null;
+
+  const returnToRedirect =
+    !isLogoutContext ? sanitizeReturnToRedirect(returnTo, request.nextUrl) : null;
+
   const redirectToStore = hasCheckoutIntent
-    ? checkoutRedirect ?? getCheckoutUnavailableRedirect(request.nextUrl)
+    ? checkoutRedirect ?? (!isLogoutContext ? getCheckoutUnavailableRedirect(request.nextUrl) : null)
     : returnToRedirect;
 
   const response = NextResponse.redirect(authUrl);
   const transientCookieOptions = getTransientCookieOptions();
+
   response.cookies.set("shopify_pkce_verifier", verifier, transientCookieOptions);
   response.cookies.set("shopify_oauth_state", state, transientCookieOptions);
   response.cookies.set("shopify_oauth_nonce", nonce, transientCookieOptions);
-  if (!hasRecentLogout && redirectToStore) {
+
+  if (!isLogoutContext && redirectToStore) {
     response.cookies.set("shopify_post_login_redirect", redirectToStore, transientCookieOptions);
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");
   }
-  setCustomerDebugTrace(response, "login_oauth_started");
+
+  setCustomerDebugTrace(
+    response,
+    isLogoutContext ? "login_oauth_started_after_logout" : "login_oauth_started",
+  );
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }
