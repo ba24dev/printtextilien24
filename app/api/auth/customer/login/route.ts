@@ -1,11 +1,18 @@
 import { generatePKCE, randomState } from "@/lib/shopify/auth/pkce";
-import { normalizeScopes, SCOPES, unknownScopes } from "@/lib/shopify/auth/scopes";
+import {
+  normalizeScopes,
+  SCOPES,
+  unknownScopes,
+} from "@/lib/shopify/auth/scopes";
 import {
   getCheckoutUnavailableRedirect,
   sanitizePostLoginRedirect,
   sanitizeReturnToRedirect,
 } from "@/lib/shopify/customer/redirects";
-import { getShopifyAuthUrl, getShopifyClientId } from "@/lib/shopify/customer/urls";
+import {
+  getShopifyAuthUrl,
+  getShopifyClientId,
+} from "@/lib/shopify/customer/urls";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { NextRequest, NextResponse } from "next/server";
@@ -77,14 +84,21 @@ export async function GET(request: NextRequest) {
 
   // warn if the scopes string is blank – this is a common misconfiguration
   if (!SCOPES || SCOPES.trim() === "") {
-    console.warn("SHOPIFY_CUSTOMER_API_SCOPES is empty; authorization URL will fail");
+    console.warn(
+      "SHOPIFY_CUSTOMER_API_SCOPES is empty; authorization URL will fail",
+    );
   }
   if (SCOPES.includes(",")) {
-    console.warn("SHOPIFY_CUSTOMER_API_SCOPES contains commas; they will be converted to spaces");
+    console.warn(
+      "SHOPIFY_CUSTOMER_API_SCOPES contains commas; they will be converted to spaces",
+    );
   }
   const bad = unknownScopes(SCOPES);
   if (bad.length) {
-    console.warn("SHOPIFY_CUSTOMER_API_SCOPES contains unknown/unexpected scopes:", bad);
+    console.warn(
+      "SHOPIFY_CUSTOMER_API_SCOPES contains unknown/unexpected scopes:",
+      bad,
+    );
   }
 
   // Generate PKCE verifier/challenge
@@ -110,7 +124,12 @@ export async function GET(request: NextRequest) {
 
   console.info("redirecting user to Shopify auth URL", authUrl);
   if (SCOPES !== normalizeScopes(SCOPES)) {
-    console.info("normalized scopes to", normalizeScopes(SCOPES), "from", SCOPES);
+    console.info(
+      "normalized scopes to",
+      normalizeScopes(SCOPES),
+      "from",
+      SCOPES,
+    );
   }
 
   const checkoutUrl = request.nextUrl.searchParams.get("checkout_url");
@@ -121,7 +140,22 @@ export async function GET(request: NextRequest) {
     request.cookies.get("shopify_recent_logout")?.value === "1" ||
     request.cookies.get("shopify_recent_logout_server")?.value === "1";
 
-  const isLogoutContext = logoutParam || hasRecentLogout;
+  // Use the actual cookie that proves your local customer session still exists.
+  // Based on your description, this is likely "session_id".
+  const hasLocalSession = Boolean(request.cookies.get("session_id")?.value);
+
+  // Suspicious case:
+  // Shopify sends us back to /account/login?checkout_url=...
+  // but we still have a local session cookie.
+  // That should not be treated like a normal checkout-login start.
+  const suspiciousCheckoutLogoutReturn =
+    Boolean(checkoutUrl && checkoutUrl.trim() !== "") &&
+    hasLocalSession &&
+    !logoutParam &&
+    !hasRecentLogout;
+
+  const isLogoutContext =
+    logoutParam || hasRecentLogout || suspiciousCheckoutLogoutReturn;
 
   const hasCheckoutIntent = Boolean(checkoutUrl && checkoutUrl.trim() !== "");
 
@@ -133,29 +167,43 @@ export async function GET(request: NextRequest) {
       ? sanitizePostLoginRedirect(checkoutUrl, request.nextUrl)
       : null;
 
-  const returnToRedirect =
-    !isLogoutContext ? sanitizeReturnToRedirect(returnTo, request.nextUrl) : null;
+  const returnToRedirect = !isLogoutContext
+    ? sanitizeReturnToRedirect(returnTo, request.nextUrl)
+    : null;
 
   const redirectToStore = hasCheckoutIntent
-    ? checkoutRedirect ?? (!isLogoutContext ? getCheckoutUnavailableRedirect(request.nextUrl) : null)
+    ? (checkoutRedirect ??
+      (!isLogoutContext
+        ? getCheckoutUnavailableRedirect(request.nextUrl)
+        : null))
     : returnToRedirect;
 
   const response = NextResponse.redirect(authUrl);
   const transientCookieOptions = getTransientCookieOptions();
 
-  response.cookies.set("shopify_pkce_verifier", verifier, transientCookieOptions);
+  response.cookies.set(
+    "shopify_pkce_verifier",
+    verifier,
+    transientCookieOptions,
+  );
   response.cookies.set("shopify_oauth_state", state, transientCookieOptions);
   response.cookies.set("shopify_oauth_nonce", nonce, transientCookieOptions);
 
   if (!isLogoutContext && redirectToStore) {
-    response.cookies.set("shopify_post_login_redirect", redirectToStore, transientCookieOptions);
+    response.cookies.set(
+      "shopify_post_login_redirect",
+      redirectToStore,
+      transientCookieOptions,
+    );
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");
   }
 
   setCustomerDebugTrace(
     response,
-    isLogoutContext ? "login_oauth_started_after_logout" : "login_oauth_started",
+    isLogoutContext
+      ? "login_oauth_started_after_logout"
+      : "login_oauth_started",
   );
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
