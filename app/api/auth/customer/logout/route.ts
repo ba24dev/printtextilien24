@@ -104,14 +104,6 @@ export function isUsableIdToken(raw: string | undefined, clientId?: string): raw
 export async function GET(request: NextRequest) {
   const localRedirect = getCanonicalLogoutRedirect(request);
   
-console.info("[customer-logout] start", {
-  url: request.url,
-  cookieNames: request.cookies.getAll().map((c) => c.name),
-  postLoginRedirect: request.cookies.get("shopify_post_login_redirect")?.value ?? null,
-  recentLogout: request.cookies.get("shopify_recent_logout")?.value ?? null,
-  recentLogoutServer: request.cookies.get("shopify_recent_logout_server")?.value ?? null,
-});
-
   let target = localRedirect;
   let logoutTrace = "logout_completed:local_fallback";
   try {
@@ -154,13 +146,5 @@ console.info("[customer-logout] start", {
   clearCustomerDebugTrace(response);
   setCustomerDebugTrace(response, logoutTrace);
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
-
-  console.info("[customer-logout] start", {
-  url: request.url,
-  cookieNames: request.cookies.getAll().map((c) => c.name),
-  postLoginRedirect: request.cookies.get("shopify_post_login_redirect")?.value ?? null,
-  recentLogout: request.cookies.get("shopify_recent_logout")?.value ?? null,
-  recentLogoutServer: request.cookies.get("shopify_recent_logout_server")?.value ?? null,
-});
   return response;
 }

@@ -1,9 +1,5 @@
 import { SCOPES } from "@/lib/shopify/auth/scopes";
-import {
-  applyCustomerAuthSession,
-  clearCustomerCookie,
-  clearRecentLogoutCookies,
-} from "@/lib/shopify/customer/session";
+import { applyCustomerAuthSession, clearCustomerCookie } from "@/lib/shopify/customer/session";
 import { setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -185,23 +181,7 @@ export async function GET(request: NextRequest) {
     // /account but allow a previously stored destination (e.g. a
     // checkout_url from Shopify) to override.
     const postLogin = request.cookies.get("shopify_post_login_redirect")?.value;
-    const recentLogout =
-      request.cookies.get("shopify_recent_logout")?.value === "1" ||
-      request.cookies.get("shopify_recent_logout_server")?.value === "1";
-
-      console.info("[customer-callback] redirect-decision", {
-  url: request.url,
-  postLogin: request.cookies.get("shopify_post_login_redirect")?.value ?? null,
-  recentLogoutCookie: request.cookies.get("shopify_recent_logout")?.value ?? null,
-  recentLogoutServerCookie: request.cookies.get("shopify_recent_logout_server")?.value ?? null,
-});
-    const redirectTarget = recentLogout
-      ? new URL("/account", request.url).toString()
-      : resolvePostLoginRedirect(postLogin, request.url);
-
-    console.info("[customer-callback] final-target", {
-  redirectTarget,
-});
+    const redirectTarget = resolvePostLoginRedirect(postLogin, request.url);
 
     const response = NextResponse.redirect(redirectTarget);
     try {
@@ -220,7 +200,6 @@ export async function GET(request: NextRequest) {
     if (!normalizedTokenData.id_token) {
       clearCustomerCookie(response, "shopify_customer_id_token");
     }
-    clearRecentLogoutCookies(response);
     // Clear PKCE and state cookies
     clearOAuthTransientCookies(response);
     // and clear our custom destination cookie so it won't stick around

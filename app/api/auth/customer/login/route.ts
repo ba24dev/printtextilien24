@@ -59,14 +59,12 @@ function shouldRedirectToCanonicalOrigin(
 }
 
 function getTransientCookieOptions() {
-  const domain = getCustomerCookieDomain();
   return {
     httpOnly: true,
     secure: true,
     sameSite: "lax" as const,
     maxAge: 300,
     path: "/",
-    ...(domain ? { domain } : {}),
   };
 }
 
@@ -139,19 +137,7 @@ export async function GET(request: NextRequest) {
   const redirectToStore = hasCheckoutIntent
     ? checkoutRedirect ?? (!isLogoutContext ? getCheckoutUnavailableRedirect(request.nextUrl) : null)
     : returnToRedirect;
-
-    console.info("[customer-login] start", {
-  url: request.nextUrl.toString(),
-  checkoutUrl,
-  returnTo,
-  logoutParam,
-  hasRecentLogout,
-  hasCheckoutIntent,
-  checkoutRedirect,
-  returnToRedirect,
-  redirectToStore,
-  cookies: request.cookies.getAll().map((c) => c.name),
-});
+    
 
   const response = NextResponse.redirect(authUrl);
   const transientCookieOptions = getTransientCookieOptions();
@@ -165,12 +151,6 @@ export async function GET(request: NextRequest) {
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");
   }
-
-  console.info("[customer-login] redirect-cookie-decision", {
-  isLogoutContext,
-  redirectToStore,
-  action: !isLogoutContext && redirectToStore ? "set_post_login_redirect" : "clear_post_login_redirect",
-});
 
   setCustomerDebugTrace(
     response,
