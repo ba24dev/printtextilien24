@@ -66,7 +66,12 @@ export async function GET(request: NextRequest) {
     const { code, state, scope } = parsed.data;
     console.debug("received code,state,scope", { code, state, scope });
     if (scope && scope !== SCOPES) {
-      console.warn("Shopify returned a different scope than requested:", scope, "expected", SCOPES);
+      console.warn(
+        "Shopify returned a different scope than requested:",
+        scope,
+        "expected",
+        SCOPES,
+      );
     }
 
     // Validate state matches cookie
@@ -109,12 +114,20 @@ export async function GET(request: NextRequest) {
     });
     if (!tokenRes.ok) {
       const bodyText = await tokenRes.text();
-      console.error("Shopify token exchange error", tokenRes.status, bodyText, bodyPayload);
+      console.error(
+        "Shopify token exchange error",
+        tokenRes.status,
+        bodyText,
+        bodyPayload,
+      );
       const response = NextResponse.json(
         { error: "Token exchange failed", details: bodyText },
         { status: 400 },
       );
-      setCustomerDebugTrace(response, `callback_token_exchange_failed_${tokenRes.status}`);
+      setCustomerDebugTrace(
+        response,
+        `callback_token_exchange_failed_${tokenRes.status}`,
+      );
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
@@ -175,9 +188,15 @@ export async function GET(request: NextRequest) {
     const normalizedTokenData = {
       access_token: String(tokenData.access_token),
       refresh_token:
-        typeof tokenData.refresh_token === "string" ? tokenData.refresh_token : undefined,
-      expires_in: typeof tokenData.expires_in === "number" ? tokenData.expires_in : undefined,
-      id_token: typeof tokenData.id_token === "string" ? tokenData.id_token : undefined,
+        typeof tokenData.refresh_token === "string"
+          ? tokenData.refresh_token
+          : undefined,
+      expires_in:
+        typeof tokenData.expires_in === "number"
+          ? tokenData.expires_in
+          : undefined,
+      id_token:
+        typeof tokenData.id_token === "string" ? tokenData.id_token : undefined,
     };
     // tokenData: { access_token, refresh_token, expires_in, id_token, ... }
 
@@ -189,13 +208,14 @@ export async function GET(request: NextRequest) {
       request.cookies.get("shopify_recent_logout")?.value === "1" ||
       request.cookies.get("shopify_recent_logout_server")?.value === "1";
     const redirectTarget = recentLogout
-      ? new URL("/account", request.url).toString()
+      ? new URL("/account/login?logout=1", request.url).toString()
       : resolvePostLoginRedirect(postLogin, request.url);
 
     const response = NextResponse.redirect(redirectTarget);
     try {
       await applyCustomerAuthSession(response, normalizedTokenData, {
-        existingSessionId: request.cookies.get("shopify_customer_session_id")?.value,
+        existingSessionId: request.cookies.get("shopify_customer_session_id")
+          ?.value,
       });
     } catch (error) {
       console.error("Failed to persist customer auth cookies", {
@@ -221,7 +241,10 @@ export async function GET(request: NextRequest) {
     return response;
   } catch (err) {
     console.error("callback handler unexpected error", err);
-    const response = NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    const response = NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
     setCustomerDebugTrace(response, "callback_unexpected_error");
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
