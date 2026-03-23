@@ -144,9 +144,10 @@ function LoginClient() {
     checkoutUnavailable ||
     authInvalidCallback ||
     authSessionExpired;
+  const rawCheckoutUrl = searchParams.get("checkout_url");
   const checkoutUrl = useMemo(
-    () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
-    [searchParams],
+    () => getSafeCheckoutUrl(rawCheckoutUrl),
+    [rawCheckoutUrl],
   );
   const returnTo = useMemo(
     () => getSafeReturnTo(searchParams.get("return_to")),
@@ -154,12 +155,12 @@ function LoginClient() {
   );
 
   const isCheckoutLoginFlow =
-    typeof checkoutUrl === "string" &&
-    checkoutUrl.includes("logged_in=true");
+    typeof rawCheckoutUrl === "string" &&
+    rawCheckoutUrl.includes("logged_in=true");
 
   const cameFromShopifyCheckoutLogout =
-    typeof checkoutUrl === "string" &&
-    !checkoutUrl.includes("logged_in=true") &&
+    typeof rawCheckoutUrl === "string" &&
+    !rawCheckoutUrl.includes("logged_in=true") &&
     !hasBlockingNotice &&
     !recentLogout;
 
