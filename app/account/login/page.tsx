@@ -183,6 +183,7 @@ function LoginClient() {
     fetch("/api/customer/session", { credentials: "include" })
       .then((res) => res.json())
       .then((sess) => {
+        console.log("customer session", sess);
         if (sess?.loggedIn) {
           if (isCheckoutLoginFlow && checkoutUrl) {
             router.replace(checkoutUrl);
