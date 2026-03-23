@@ -1,5 +1,5 @@
 import { SCOPES } from "@/lib/shopify/auth/scopes";
-import { applyCustomerAuthSession, clearCustomerCookie } from "@/lib/shopify/customer/session";
+import { applyCustomerAuthSession, clearCustomerCookie, clearRecentLogoutCookies } from "@/lib/shopify/customer/session";
 import { setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
@@ -206,6 +206,8 @@ export async function GET(request: NextRequest) {
     if (postLogin) {
       clearCustomerCookie(response, "shopify_post_login_redirect");
     }
+
+    clearRecentLogoutCookies(response);
     setCustomerDebugTrace(response, "callback_success_cookies_set");
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;

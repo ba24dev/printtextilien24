@@ -118,7 +118,9 @@ export function shouldAutoStartShopifyLogin({
 
 function hasRecentLogoutCookie(): boolean {
   if (typeof document === "undefined") return false;
-  return document.cookie.split(";").some((entry) => entry.trim() === `${RECENT_LOGOUT_COOKIE}=1`);
+  return document.cookie
+    .split(";")
+    .some((entry) => entry.trim() === `${RECENT_LOGOUT_COOKIE}=1`);
 }
 
 function LoginClient() {
@@ -138,7 +140,10 @@ function LoginClient() {
   const authSessionExpired = reason === "auth_session_expired";
   const authInvalidCallback = reason === "auth_invalid_callback";
   const hasBlockingNotice =
-    logoutNotice || checkoutUnavailable || authInvalidCallback || authSessionExpired;
+    logoutNotice ||
+    checkoutUnavailable ||
+    authInvalidCallback ||
+    authSessionExpired;
   const checkoutUrl = useMemo(
     () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
     [searchParams],
@@ -152,10 +157,11 @@ function LoginClient() {
     [checkoutUrl, returnTo],
   );
   const suppressAutoRedirect = hasBlockingNotice || recentLogout;
-  const autoRedirectToShopify = shouldAutoStartShopifyLogin({
-    checkoutUrl,
-    suppressAutoRedirect,
-  });
+  const autoRedirectToShopify = false;
+  // shouldAutoStartShopifyLogin({
+  //   checkoutUrl,
+  //   suppressAutoRedirect,
+  // });
 
   // if already logged in, send straight to account/checkouts.
   // for checkout-origin sign-in, start OAuth immediately unless we're
@@ -167,7 +173,10 @@ function LoginClient() {
       .then((sess) => {
         if (sess?.loggedIn) {
           const destination = checkoutUrl ?? returnTo ?? "/account";
-          if (destination.startsWith("http://") || destination.startsWith("https://")) {
+          if (
+            destination.startsWith("http://") ||
+            destination.startsWith("https://")
+          ) {
             window.location.href = destination;
             return;
           }
@@ -217,10 +226,14 @@ function LoginClient() {
         </div>
       ) : null}
       <p className="mb-6">
-        {autoRedirectToShopify ? copy.auth.checkoutRedirectHint : copy.auth.redirectHint}
+        {autoRedirectToShopify
+          ? copy.auth.checkoutRedirectHint
+          : copy.auth.redirectHint}
       </p>
       {autoRedirectToShopify ? (
-        <p className="mb-4 text-sm text-gray-500">Weiterleitung zu Shopify...</p>
+        <p className="mb-4 text-sm text-gray-500">
+          Weiterleitung zu Shopify...
+        </p>
       ) : null}
       <a
         href={loginHref}
