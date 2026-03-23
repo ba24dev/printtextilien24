@@ -40,6 +40,7 @@ function redirectToLogin(requestUrl: string, reason: string): NextResponse {
   setCustomerDebugTrace(response, `callback_redirect_${reason}`);
   clearOAuthTransientCookies(response);
   clearCustomerCookie(response, "shopify_post_login_redirect");
+  clearRecentLogoutCookies(response);
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
   return response;
 }
