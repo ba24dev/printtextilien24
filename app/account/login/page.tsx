@@ -182,14 +182,13 @@ function LoginClient() {
     fetch("/api/customer/session", { credentials: "include" })
       .then((res) => res.json())
       .then((sess) => {
+        if (cameFromShopifyCheckoutLogout) {
+          return;
+        }
+
         if (sess?.loggedIn) {
           if (isCheckoutLoginFlow && checkoutUrl) {
             router.replace(checkoutUrl);
-            return;
-          }
-
-          if (cameFromShopifyCheckoutLogout) {
-            router.replace("/account/login?logout=1");
             return;
           }
 
@@ -222,6 +221,12 @@ function LoginClient() {
       {logoutNotice ? (
         <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
           {copy.auth.logoutNotice}
+        </div>
+      ) : null}
+      {cameFromShopifyCheckoutLogout ? (
+        <div className="mb-4 rounded border border-yellow-500/40 bg-yellow-900/20 p-3 text-sm text-yellow-100">
+          You have been signed out from checkout. Please sign in again to
+          continue.
         </div>
       ) : null}
       {checkoutUnavailable ? (
