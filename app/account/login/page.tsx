@@ -144,10 +144,9 @@ function LoginClient() {
     checkoutUnavailable ||
     authInvalidCallback ||
     authSessionExpired;
-  const rawCheckoutUrl = searchParams.get("checkout_url");
   const checkoutUrl = useMemo(
-    () => getSafeCheckoutUrl(rawCheckoutUrl),
-    [rawCheckoutUrl],
+    () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
+    [searchParams],
   );
   const returnTo = useMemo(
     () => getSafeReturnTo(searchParams.get("return_to")),
@@ -155,12 +154,11 @@ function LoginClient() {
   );
 
   const isCheckoutLoginFlow =
-    typeof rawCheckoutUrl === "string" &&
-    rawCheckoutUrl.includes("logged_in=true");
+    typeof checkoutUrl === "string" && checkoutUrl.includes("logged_in=true");
 
   const cameFromShopifyCheckoutLogout =
-    typeof rawCheckoutUrl === "string" &&
-    !rawCheckoutUrl.includes("logged_in=true") &&
+    typeof checkoutUrl === "string" &&
+    !checkoutUrl.includes("logged_in=true") &&
     !hasBlockingNotice &&
     !recentLogout;
 
@@ -187,6 +185,11 @@ function LoginClient() {
         if (sess?.loggedIn) {
           if (isCheckoutLoginFlow && checkoutUrl) {
             router.replace(checkoutUrl);
+            return;
+          }
+
+          if (cameFromShopifyCheckoutLogout) {
+            router.replace("/account/login?logout=1");
             return;
           }
 
