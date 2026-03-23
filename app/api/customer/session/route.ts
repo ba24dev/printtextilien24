@@ -24,24 +24,31 @@ export async function GET(request: NextRequest) {
     return response;
   }
 
-  const validation = await validateCustomerSession(tokens.accessToken, tokens.refreshToken, {
-    allowRefresh,
-  });
+  const validation = await validateCustomerSession(
+    tokens.accessToken,
+    tokens.refreshToken,
+    {
+      allowRefresh,
+    },
+  );
   if (!validation.authenticated) {
-    if (validation.reason === "provider_unavailable" && tokens.accessToken) {
-      const response = NextResponse.json({ loggedIn: true, degraded: true });
-      response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
-      return response;
-    }
     const response = NextResponse.json({
       loggedIn: false,
       reason: validation.reason,
     });
+
+    response.cookies.delete("session_id");
+    response.cookies.delete("customer_access_token");
+    response.cookies.delete("customer_refresh_token");
+    // response.cookies.delete("recent_logout");
+
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;
   }
 
-  const tags = await fetchCustomerTags(validation.accessToken).catch(() => [] as string[]);
+  const tags = await fetchCustomerTags(validation.accessToken).catch(
+    () => [] as string[],
+  );
 
   const response = NextResponse.json({
     loggedIn: true,
