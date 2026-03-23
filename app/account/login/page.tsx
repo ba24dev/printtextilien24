@@ -152,16 +152,28 @@ function LoginClient() {
     () => getSafeReturnTo(searchParams.get("return_to")),
     [searchParams],
   );
+
+  const isCheckoutLoginFlow =
+    typeof checkoutUrl === "string" &&
+    checkoutUrl.includes("logged_in=true");
+
+  const cameFromShopifyCheckoutLogout =
+    typeof checkoutUrl === "string" &&
+    !checkoutUrl.includes("logged_in=true") &&
+    !hasBlockingNotice &&
+    !recentLogout;
+
   const loginHref = useMemo(
     () => buildCustomerLoginHref({ checkoutUrl, returnTo }),
     [checkoutUrl, returnTo],
   );
-  const suppressAutoRedirect = hasBlockingNotice || recentLogout;
-  const autoRedirectToShopify = false;
-  // shouldAutoStartShopifyLogin({
-  //   checkoutUrl,
-  //   suppressAutoRedirect,
-  // });
+  const suppressAutoRedirect =
+    hasBlockingNotice || cameFromShopifyCheckoutLogout;
+
+  const autoRedirectToShopify = shouldAutoStartShopifyLogin({
+    checkoutUrl,
+    suppressAutoRedirect,
+  });
 
   // if already logged in, send straight to account/checkouts.
   // for checkout-origin sign-in, start OAuth immediately unless we're
@@ -172,17 +184,15 @@ function LoginClient() {
       .then((res) => res.json())
       .then((sess) => {
         if (sess?.loggedIn) {
-          const destination = checkoutUrl ?? returnTo ?? "/account";
-          if (
-            destination.startsWith("http://") ||
-            destination.startsWith("https://")
-          ) {
-            window.location.href = destination;
+          if (isCheckoutLoginFlow && checkoutUrl) {
+            router.replace(checkoutUrl);
             return;
           }
-          router.replace(destination);
+
+          router.replace(returnTo ?? "/account");
           return;
         }
+
         if (autoRedirectToShopify) {
           window.location.replace(loginHref);
         }

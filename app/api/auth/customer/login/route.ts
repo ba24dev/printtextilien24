@@ -125,21 +125,15 @@ export async function GET(request: NextRequest) {
 
   const hasCheckoutIntent = Boolean(checkoutUrl && checkoutUrl.trim() !== "");
 
-  // Only keep checkout / return targets for true login flows.
-  // If the user just logged out from checkout, Shopify may still send
-  // checkout_url back to us. Re-storing it here recreates the redirect loop.
-  const checkoutRedirect =
-    !isLogoutContext && hasCheckoutIntent
-      ? sanitizePostLoginRedirect(checkoutUrl, request.nextUrl)
-      : null;
+  const checkoutRedirect = hasCheckoutIntent
+    ? sanitizePostLoginRedirect(checkoutUrl, request.nextUrl)
+    : null;
 
-  const returnToRedirect =
-    !isLogoutContext ? sanitizeReturnToRedirect(returnTo, request.nextUrl) : null;
+  const returnToRedirect = sanitizeReturnToRedirect(returnTo, request.nextUrl);
 
   const redirectToStore = hasCheckoutIntent
-    ? checkoutRedirect ?? (!isLogoutContext ? getCheckoutUnavailableRedirect(request.nextUrl) : null)
+    ? checkoutRedirect ?? getCheckoutUnavailableRedirect(request.nextUrl)
     : returnToRedirect;
-    
 
   const response = NextResponse.redirect(authUrl);
   const transientCookieOptions = getTransientCookieOptions();
@@ -148,7 +142,7 @@ export async function GET(request: NextRequest) {
   response.cookies.set("shopify_oauth_state", state, transientCookieOptions);
   response.cookies.set("shopify_oauth_nonce", nonce, transientCookieOptions);
 
-  if (!isLogoutContext && redirectToStore) {
+  if (redirectToStore) {
     response.cookies.set("shopify_post_login_redirect", redirectToStore, transientCookieOptions);
   } else {
     clearCustomerCookie(response, "shopify_post_login_redirect");
