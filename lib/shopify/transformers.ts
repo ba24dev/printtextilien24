@@ -40,6 +40,7 @@ function mapProductSummaryEdge(edge: ProductSummaryEdge): ProductSummary {
     id: edge.node.id,
     handle: edge.node.handle,
     title: edge.node.title,
+    collections: edge.node.collections?.nodes?.map((collection) => collection.title) ?? [],
     priceRange: {
       minVariantPrice: {
         amount: edge.node.priceRange.minVariantPrice.amount,

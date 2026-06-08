@@ -3,11 +3,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCustomerCookieDomain } from "@/lib/shopify/customer/cookies";
 import { getOidcConfiguration } from "@/lib/shopify/customer/discovery";
 import { clearCustomerDebugTrace, setCustomerDebugTrace } from "@/lib/shopify/customer/debug-cookie";
-import { readCustomerCookie } from "@/lib/shopify/customer/session";
+import {
+  clearCustomerAuthSession,
+  resolveCustomerIdToken,
+  setRecentLogoutCookies,
+} from "@/lib/shopify/customer/session";
 import { getShopifyClientId, getShopifyLogoutUrl } from "@/lib/shopify/customer/urls";
 
 const NO_STORE_CACHE_CONTROL = "no-store, no-cache, max-age=0, must-revalidate";
-const MAX_TOKEN_COOKIE_CHUNKS = 12;
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -32,27 +35,6 @@ function clearedCookieOptions() {
 function clearCookieIfPresent(response: NextResponse, request: NextRequest, name: string): void {
   if (!request.cookies.get(name)) return;
   response.cookies.set(name, "", clearedCookieOptions());
-}
-
-function clearTokenCookieByObservedChunks(
-  response: NextResponse,
-  request: NextRequest,
-  name: string,
-): void {
-  clearCookieIfPresent(response, request, name);
-  const chunkCountName = `${name}_chunks`;
-  const chunkCountRaw = request.cookies.get(chunkCountName)?.value;
-  const parsedCount = chunkCountRaw ? Number.parseInt(chunkCountRaw, 10) : null;
-  const chunkCount =
-    parsedCount && Number.isInteger(parsedCount) && parsedCount > 0
-      ? Math.min(parsedCount, MAX_TOKEN_COOKIE_CHUNKS)
-      : MAX_TOKEN_COOKIE_CHUNKS;
-
-  clearCookieIfPresent(response, request, chunkCountName);
-  for (let index = 0; index < chunkCount; index += 1) {
-    const chunkName = `${name}_${index}`;
-    clearCookieIfPresent(response, request, chunkName);
-  }
 }
 
 function parseJwtPayload(token: string): IdTokenPayload | null {
@@ -121,12 +103,13 @@ export function isUsableIdToken(raw: string | undefined, clientId?: string): raw
 
 export async function GET(request: NextRequest) {
   const localRedirect = getCanonicalLogoutRedirect(request);
+  
   let target = localRedirect;
   let logoutTrace = "logout_completed:local_fallback";
   try {
     const clientId = safeGetShopifyClientId();
     const configuredLogoutUrl = safeGetShopifyLogoutUrl();
-    const rawIdToken = readCustomerCookie(request.cookies, "shopify_customer_id_token");
+    const rawIdToken = await resolveCustomerIdToken(request.cookies);
     let oidcConfig: Awaited<ReturnType<typeof getOidcConfiguration>> = null;
     try {
       oidcConfig = await getOidcConfiguration();
@@ -154,13 +137,12 @@ export async function GET(request: NextRequest) {
 
   // Clear all customer auth cookies
   const response = NextResponse.redirect(target, { status: 303 });
-  clearTokenCookieByObservedChunks(response, request, "shopify_customer_access_token");
-  clearTokenCookieByObservedChunks(response, request, "shopify_customer_refresh_token");
-  clearTokenCookieByObservedChunks(response, request, "shopify_customer_id_token");
+  await clearCustomerAuthSession(response, request.cookies);
   clearCookieIfPresent(response, request, "shopify_post_login_redirect");
   clearCookieIfPresent(response, request, "shopify_pkce_verifier");
   clearCookieIfPresent(response, request, "shopify_oauth_state");
   clearCookieIfPresent(response, request, "shopify_oauth_nonce");
+  setRecentLogoutCookies(response);
   clearCustomerDebugTrace(response);
   setCustomerDebugTrace(response, logoutTrace);
   response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);

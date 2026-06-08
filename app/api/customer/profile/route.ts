@@ -45,14 +45,14 @@ export async function POST(request: NextRequest) {
       request,
       errorMessage ? { profile_error: errorMessage } : { profile_updated: "1" },
     );
-    session.withAuthCookies(response);
+    await session.withAuthCookies(response);
     return response;
   } catch (error) {
     const response = redirectToAccount(request, {
       profile_error:
         error instanceof Error ? error.message : copy.account.unknownError,
     });
-    session.withAuthCookies(response);
+    await session.withAuthCookies(response);
     return response;
   }
 }

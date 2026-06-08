@@ -1,8 +1,28 @@
 import { copy } from "@/config/copy";
+import { isCollectionTitleAllowedForCustomer, toNormalizedTagSet } from "@/lib/catalog/access";
+import { resolveCustomerTagsFromCookieStore } from "@/lib/shopify/customer/access";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { FooterColumn } from "./FooterColumn";
 
-export default function Footer() {
+function filterFooterShopLinks(
+  links: { label: string; href: string }[],
+  customerTags: string[]
+): { label: string; href: string }[] {
+  const normalizedTags = toNormalizedTagSet(customerTags);
+
+  return links.filter((link) => {
+    const isCollectionLink = link.href.startsWith("/collections/");
+    if (!isCollectionLink) return true;
+    return isCollectionTitleAllowedForCustomer(link.label, normalizedTags);
+  });
+}
+
+export default async function Footer() {
+  const cookieStore = await cookies();
+  const customerTags = await resolveCustomerTagsFromCookieStore(cookieStore);
+  const shopLinks = filterFooterShopLinks(copy.footer.columnLinks.shop, customerTags);
+
   return (
     <footer className="bg-background/50 pt-16 text-foreground">
       <div className="mx-auto max-w-6xl px-6">
@@ -18,7 +38,7 @@ export default function Footer() {
 
           <FooterColumn
             heading={copy.footer.columnTitles.shop}
-            links={copy.footer.columnLinks.shop}
+            links={shopLinks}
           />
           <FooterColumn
             heading={copy.footer.columnTitles.company}

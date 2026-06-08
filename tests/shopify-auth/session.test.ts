@@ -82,6 +82,7 @@ describe("session route", () => {
       loggedIn: true,
       customerId: "gid://shopify/Customer/1",
       email: "hello@example.com",
+      tags: [],
     });
     expect(fetchSpy).toHaveBeenCalled();
     fetchSpy.mockRestore();
@@ -138,6 +139,7 @@ describe("session route", () => {
       loggedIn: true,
       customerId: "gid://shopify/Customer/99",
       email: "chunked@example.com",
+      tags: [],
     });
     fetchSpy.mockRestore();
   });
@@ -199,6 +201,7 @@ describe("session route", () => {
       loggedIn: true,
       customerId: "gid://shopify/Customer/2",
       email: "refresh@example.com",
+      tags: [],
     });
     expect(res.cookies.get("shopify_customer_access_token")?.value).toBe("uri:shcat_new-token");
     expect(res.cookies.get("shopify_customer_refresh_token")?.value).toBe("uri:new-refresh");
@@ -270,6 +273,41 @@ describe("session route", () => {
     await expect(res.json()).resolves.toEqual({ loggedIn: false, reason: "refresh_failed" });
     expect(res.cookies.get("shopify_customer_access_token")).toBeUndefined();
     expect(res.cookies.get("shopify_customer_refresh_token")).toBeUndefined();
+    fetchSpy.mockRestore();
+  });
+
+  it("requires reauthentication during recent logout window", async () => {
+    const fetchSpy = vi
+      .spyOn(global, "fetch" as any)
+      .mockImplementation(async (...args: unknown[]) => {
+        const url = String(args[0]);
+        const method = String((args[1] as any)?.method || "GET");
+        if (url.endsWith("/.well-known/customer-account-api")) {
+          return {
+            ok: true,
+            json: async () => ({
+              graphql_api: "https://12d54a-a9.myshopify.com/account/customer/api/latest/graphql.json",
+            }),
+          } as any;
+        }
+        if (url.endsWith("/oauth/token") && method === "POST") {
+          throw new Error("refresh should not run during recent logout window");
+        }
+        return {
+          ok: true,
+          json: async () => ({ errors: [{ message: "Invalid token" }] }),
+        } as any;
+      });
+
+    const { GET } = await importSessionRoute();
+    const req = makeRequest({
+      shopify_customer_access_token: "token-123",
+      shopify_customer_refresh_token: "refresh-123",
+      shopify_recent_logout_server: "1",
+    });
+    const res = await GET(req);
+
+    await expect(res.json()).resolves.toEqual({ loggedIn: false, reason: "recent_logout" });
     fetchSpy.mockRestore();
   });
 });

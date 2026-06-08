@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 import { copy } from "@/config/copy";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+
+const RECENT_LOGOUT_COOKIE = "shopify_recent_logout";
 
 type SearchParams = Record<string, string | string[] | undefined>;
 
@@ -106,26 +108,42 @@ export function buildCustomerLoginHref({
 
 export function shouldAutoStartShopifyLogin({
   checkoutUrl,
-  hasBlockingNotice,
+  suppressAutoRedirect,
 }: {
   checkoutUrl: string | null;
-  hasBlockingNotice: boolean;
+  suppressAutoRedirect: boolean;
 }): boolean {
-  return Boolean(checkoutUrl) && !hasBlockingNotice;
+  return Boolean(checkoutUrl) && !suppressAutoRedirect;
+}
+
+function hasRecentLogoutCookie(): boolean {
+  if (typeof document === "undefined") return false;
+  return document.cookie
+    .split(";")
+    .some((entry) => entry.trim() === `${RECENT_LOGOUT_COOKIE}=1`);
 }
 
 function LoginClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [recentLogout, setRecentLogout] = useState(false);
+
+  useEffect(() => {
+    setRecentLogout(hasRecentLogoutCookie());
+  }, []);
+
   const reason = searchParams.get("reason");
-  const logoutNotice = searchParams.get("logout") === "1";
+  const logoutNotice = searchParams.get("logout") === "1" || recentLogout;
   const checkoutUnavailable =
     reason === "checkout_unavailable" ||
     searchParams.get("checkout_error") === "1";
   const authSessionExpired = reason === "auth_session_expired";
   const authInvalidCallback = reason === "auth_invalid_callback";
   const hasBlockingNotice =
-    logoutNotice || checkoutUnavailable || authInvalidCallback || authSessionExpired;
+    logoutNotice ||
+    checkoutUnavailable ||
+    authInvalidCallback ||
+    authSessionExpired;
   const checkoutUrl = useMemo(
     () => getSafeCheckoutUrl(searchParams.get("checkout_url")),
     [searchParams],
@@ -134,13 +152,27 @@ function LoginClient() {
     () => getSafeReturnTo(searchParams.get("return_to")),
     [searchParams],
   );
+
+  const isCheckoutLoginFlow =
+    typeof checkoutUrl === "string" &&
+    checkoutUrl.includes("logged_in=true");
+
+  const cameFromShopifyCheckoutLogout =
+    typeof checkoutUrl === "string" &&
+    !checkoutUrl.includes("logged_in=true") &&
+    !hasBlockingNotice &&
+    !recentLogout;
+
   const loginHref = useMemo(
     () => buildCustomerLoginHref({ checkoutUrl, returnTo }),
     [checkoutUrl, returnTo],
   );
+  const suppressAutoRedirect =
+    hasBlockingNotice || cameFromShopifyCheckoutLogout;
+
   const autoRedirectToShopify = shouldAutoStartShopifyLogin({
     checkoutUrl,
-    hasBlockingNotice,
+    suppressAutoRedirect,
   });
 
   // if already logged in, send straight to account/checkouts.
@@ -151,15 +183,17 @@ function LoginClient() {
     fetch("/api/customer/session", { credentials: "include" })
       .then((res) => res.json())
       .then((sess) => {
+        console.log("customer session", sess);
         if (sess?.loggedIn) {
-          const destination = checkoutUrl ?? returnTo ?? "/account";
-          if (destination.startsWith("http://") || destination.startsWith("https://")) {
-            window.location.href = destination;
+          if (isCheckoutLoginFlow && checkoutUrl) {
+            router.replace(checkoutUrl);
             return;
           }
-          router.replace(destination);
+
+          router.replace(returnTo ?? "/account/login?logout=1");
           return;
         }
+
         if (autoRedirectToShopify) {
           window.location.replace(loginHref);
         }
@@ -174,6 +208,7 @@ function LoginClient() {
     checkoutUrl,
     hasBlockingNotice,
     loginHref,
+    recentLogout,
     returnTo,
     router,
   ]);
@@ -202,10 +237,14 @@ function LoginClient() {
         </div>
       ) : null}
       <p className="mb-6">
-        {autoRedirectToShopify ? copy.auth.checkoutRedirectHint : copy.auth.redirectHint}
+        {autoRedirectToShopify
+          ? copy.auth.checkoutRedirectHint
+          : copy.auth.redirectHint}
       </p>
       {autoRedirectToShopify ? (
-        <p className="mb-4 text-sm text-gray-500">Weiterleitung zu Shopify...</p>
+        <p className="mb-4 text-sm text-gray-500">
+          Weiterleitung zu Shopify...
+        </p>
       ) : null}
       <a
         href={loginHref}

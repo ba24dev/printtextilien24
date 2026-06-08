@@ -58,6 +58,11 @@ export const PRICE_RANGE_FIELDS = `
 
 export const PRODUCT_CARD_FIELDS = `
   ${COMMON_FIELDS}
+  collections(first: 5) {
+    nodes {
+      title
+    }
+  }
   ${PRINT_ZONE_FIELDS}
   ${PRICE_RANGE_FIELDS}
   ${FEATURED_IMAGE_FIELDS}

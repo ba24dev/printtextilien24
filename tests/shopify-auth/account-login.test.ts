@@ -29,13 +29,13 @@ describe("account login helpers", () => {
     );
   });
 
-  it("prefers checkout_url over return_to in login href", () => {
+  it("falls back to return_to when checkout_url is not sanitizable", () => {
     expect(
       buildCustomerLoginHref({
         checkoutUrl: "/checkouts/cn/123",
         returnTo: "/products",
       }),
-    ).toBe("/api/auth/customer/login?checkout_url=%2Fcheckouts%2Fcn%2F123");
+    ).toBe("/api/auth/customer/login?return_to=%2Fproducts");
   });
 
   it("accepts safe return_to path", () => {
@@ -51,19 +51,19 @@ describe("account login helpers", () => {
     expect(
       shouldAutoStartShopifyLogin({
         checkoutUrl: "/checkouts/cn/123",
-        hasBlockingNotice: false,
+        suppressAutoRedirect: false,
       }),
     ).toBe(true);
     expect(
       shouldAutoStartShopifyLogin({
         checkoutUrl: "/checkouts/cn/123",
-        hasBlockingNotice: true,
+        suppressAutoRedirect: true,
       }),
     ).toBe(false);
     expect(
       shouldAutoStartShopifyLogin({
         checkoutUrl: null,
-        hasBlockingNotice: false,
+        suppressAutoRedirect: false,
       }),
     ).toBe(false);
   });

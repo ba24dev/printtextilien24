@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
     const response = redirectToAccount(request, {
       address_error: copy.account.missingAddress,
     });
-    session.withAuthCookies(response);
+    await session.withAuthCookies(response);
     return response;
   }
 
@@ -64,14 +64,14 @@ export async function POST(request: NextRequest) {
       request,
       errorMessage ? { address_error: errorMessage } : { address_updated: "1" },
     );
-    session.withAuthCookies(response);
+    await session.withAuthCookies(response);
     return response;
   } catch (error) {
     const response = redirectToAccount(request, {
       address_error:
         error instanceof Error ? error.message : copy.account.unknownError,
     });
-    session.withAuthCookies(response);
+    await session.withAuthCookies(response);
     return response;
   }
 }

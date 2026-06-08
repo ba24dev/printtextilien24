@@ -46,16 +46,3 @@ This section captures headless checkout specifics and production hardening decis
 
 - Chunked token cookie cleanup can generate many `Set-Cookie` headers.
 - This repo clears only observed chunks to avoid platform header-size failures in production.
-
-## Source Anchors in Repo
-
-- `components/cart/CartFooter.tsx`
-- `app/account/login/page.tsx`
-- `lib/shopify/customer/redirects.ts`
-- `app/cart/page.tsx`
-- `app/api/auth/customer/login/route.ts`
-- `app/api/auth/customer/logout/route.ts`
-- `docs/dev-log/2026-03-06-login-redirect-loop-www-apex.md`
-- `docs/dev-log/2026-03-06-provider-logout-host-mismatch.md`
-- `docs/dev-log/2026-03-06-prod-logout-500-header-bloat.md`
-

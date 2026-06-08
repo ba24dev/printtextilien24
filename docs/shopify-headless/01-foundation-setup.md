@@ -14,7 +14,7 @@ This section covers project setup from zero to a working local headless shop wit
 ## 2) Clone and Install
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/ba24dev/printtextilien24.git
 cd printtextilien24
 pnpm install
 ```

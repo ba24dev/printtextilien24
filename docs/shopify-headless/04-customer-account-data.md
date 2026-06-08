@@ -52,15 +52,3 @@ All mutation routes:
 - This codebase already includes defensive fallbacks and normalized response shape.
 - Keep UI contracts stable even when provider schema changes.
 
-## Source Anchors in Repo
-
-- `app/api/customer/session/route.ts`
-- `app/api/customer/me/route.ts`
-- `app/api/customer/_auth.ts`
-- `app/api/customer/profile/route.ts`
-- `app/api/customer/address/*`
-- `app/account/page.tsx`
-- `app/account/AddressesPanel.tsx`
-- `app/account/ContactDetailsPanel.tsx`
-- `app/account/BuyAgainButton.tsx`
-

@@ -10,13 +10,13 @@ This guide is for future maintainers of this project who need concrete, implemen
 
 ## Reading Order
 
-1. [00-source-comparison-matrix.md](./00-source-comparison-matrix.md)
 2. [01-foundation-setup.md](./01-foundation-setup.md)
 3. [02-storefront-shop-cart.md](./02-storefront-shop-cart.md)
 4. [03-customer-auth-login-logout.md](./03-customer-auth-login-logout.md)
 5. [04-customer-account-data.md](./04-customer-account-data.md)
 6. [05-checkout-and-edge-cases.md](./05-checkout-and-edge-cases.md)
 7. [06-troubleshooting.md](./06-troubleshooting.md)
+8. [07-collection-visibility-access-control.md](./07-collection-visibility-access-control.md)
 
 ## System Boundaries
 
@@ -39,5 +39,3 @@ This guide is for future maintainers of this project who need concrete, implemen
 - Vercel KB (deploy): <https://vercel.com/kb/guide/deploy-headless-shopify-storefront-with-vercel>
 - Bejamas guide: <https://bejamas.com/hub/guides/how-to-build-an-e-commerce-storefront-with-next-js-and-shopify>
 - Devin article: <https://devin.no/blog/building-a-scalable-headless-shopify-storefront-with-next-js>
-
-See the matrix doc for exact keep/adapt/ignore decisions.

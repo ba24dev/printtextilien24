@@ -1,28 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import {
-  applyCustomerAuthCookies,
-  clearCustomerAuthCookies,
-  readCustomerCookie,
+  applyCustomerAuthSession,
+  clearCustomerAuthSession,
+  isRecentLogoutActive,
+  resolveCustomerAuthTokens,
   refreshCustomerTokens,
 } from "@/lib/shopify/customer/session";
 
 export async function GET(request: NextRequest) {
-  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
-  if (!refreshToken) {
-    const response = NextResponse.json({ error: "No refresh token" }, { status: 401 });
-    clearCustomerAuthCookies(response);
+  if (isRecentLogoutActive(request.cookies)) {
+    const response = NextResponse.json({ error: "Recent logout - reauthentication required" }, { status: 401 });
+    await clearCustomerAuthSession(response, request.cookies);
     return response;
   }
 
-  const tokenData = await refreshCustomerTokens(refreshToken);
+  const tokens = await resolveCustomerAuthTokens(request.cookies);
+  if (!tokens.refreshToken) {
+    const response = NextResponse.json({ error: "No refresh token" }, { status: 401 });
+    await clearCustomerAuthSession(response, request.cookies);
+    return response;
+  }
+
+  const tokenData = await refreshCustomerTokens(tokens.refreshToken);
   if (!tokenData) {
     const response = NextResponse.json({ error: "Refresh failed" }, { status: 401 });
-    clearCustomerAuthCookies(response);
+    await clearCustomerAuthSession(response, request.cookies);
     return response;
   }
 
   const response = NextResponse.json({ ok: true });
-  applyCustomerAuthCookies(response, tokenData);
+  await applyCustomerAuthSession(response, tokenData, { existingSessionId: tokens.sessionId });
   return response;
 }

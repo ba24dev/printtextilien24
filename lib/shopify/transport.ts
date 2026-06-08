@@ -6,6 +6,11 @@ export type ProductSummaryEdge = {
     id: string;
     handle: string;
     title: string;
+    collections?: {
+      nodes: Array<{
+        title: string;
+      }>;
+    };
     printZone?: PrintZoneMetafield | null;
     priceRange: {
       minVariantPrice: {

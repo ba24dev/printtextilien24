@@ -8,8 +8,9 @@ import {
 } from "@/lib/shopify/customer/queries";
 import { isShopifyCustomerAuthV2Enabled } from "@/lib/shopify/customer/feature";
 import {
-  applyCustomerAuthCookies,
-  readCustomerCookie,
+  applyCustomerAuthSession,
+  isRecentLogoutActive,
+  resolveCustomerAuthTokens,
   validateCustomerSession,
 } from "@/lib/shopify/customer/session";
 import { NextRequest, NextResponse } from "next/server";
@@ -64,16 +65,18 @@ async function fetchCustomerBundle(accessToken: string) {
 }
 
 export async function GET(request: NextRequest) {
+  const tokens = await resolveCustomerAuthTokens(request.cookies);
+  const allowRefresh = !isRecentLogoutActive(request.cookies);
+
   if (!isShopifyCustomerAuthV2Enabled()) {
-    const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
-    if (!accessToken) {
+    if (!tokens.accessToken) {
       const response = NextResponse.json({ error: "Not authenticated" }, { status: 401 });
       response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
       return response;
     }
 
     try {
-      const token = formatAccessToken(accessToken);
+      const token = formatAccessToken(tokens.accessToken);
       const data = await fetchCustomerBundle(token);
       const response = NextResponse.json({
         customer: data.customer,
@@ -89,11 +92,11 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const accessToken = readCustomerCookie(request.cookies, "shopify_customer_access_token");
-  const refreshToken = readCustomerCookie(request.cookies, "shopify_customer_refresh_token");
-  const validation = await validateCustomerSession(accessToken, refreshToken);
+  const validation = await validateCustomerSession(tokens.accessToken, tokens.refreshToken, {
+    allowRefresh,
+  });
   if (!validation.authenticated) {
-    if (validation.reason === "provider_unavailable" && accessToken) {
+    if (validation.reason === "provider_unavailable" && tokens.accessToken) {
       const response = NextResponse.json(
         { error: "Customer API temporarily unavailable. Please retry shortly." },
         { status: 503 },
@@ -117,7 +120,9 @@ export async function GET(request: NextRequest) {
       orders: data.orders,
     });
     if (validation.refreshedTokens) {
-      applyCustomerAuthCookies(response, validation.refreshedTokens);
+      await applyCustomerAuthSession(response, validation.refreshedTokens, {
+        existingSessionId: tokens.sessionId,
+      });
     }
     response.headers.set("Cache-Control", NO_STORE_CACHE_CONTROL);
     return response;

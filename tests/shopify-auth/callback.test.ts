@@ -83,6 +83,32 @@ describe("callback route", () => {
     fakeFetch.mockRestore();
   });
 
+  it("redirects to account when recent logout cookie is active", async () => {
+    const { GET } = await importCallbackRoute();
+    const fakeFetch = vi.spyOn(global, "fetch" as any).mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        access_token: "token",
+        refresh_token: "refresh",
+        expires_in: 1234,
+        id_token: "id-token-1",
+      }),
+    } as any);
+
+    const req = makeRequest("https://example.com/?code=abc&state=xyz", {
+      shopify_oauth_state: "xyz",
+      shopify_pkce_verifier: "verifier",
+      shopify_post_login_redirect: "/checkout/somewhere",
+      shopify_recent_logout: "1",
+    });
+
+    const res: any = await GET(req as any);
+    const loc = res.headers.get("location") || "";
+    expect(loc).toBe("https://example.com/account");
+
+    fakeFetch.mockRestore();
+  });
+
   it("forces checkout redirects to the Shopify storefront host", async () => {
     const { GET } = await importCallbackRoute();
     const fakeFetch = vi.spyOn(global, "fetch" as any).mockResolvedValue({
