@@ -1,4 +1,4 @@
-git import { copy } from "@/config/copy";
+import { copy } from "@/config/copy";
 import { cookies, headers } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
@@ -251,7 +251,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
           <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
             <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-4">
               <div>
-                <h2 className="text-2xl font-semibold">{copy.account.contactTitle}</h2>
+                <h2 className="text-2xl font-semibold">
+                  {copy.account.contactTitle}
+                </h2>
               </div>
             </div>
             <div className=" grid grid-cols-2 gap-3">
@@ -266,7 +268,9 @@ export default async function AccountPage({ searchParams }: AccountPageProps) {
 
           <section className="w-full component-radius border border-primary-900/50 bg-background p-6 shadow-lg shadow-primary-900/15 md:p-8">
             <div className="mb-6 flex flex-row flex-wrap items-start justify-between gap-4">
-              <h2 className="text-2xl font-semibold">{copy.account.addressesTitle}</h2>
+              <h2 className="text-2xl font-semibold">
+                {copy.account.addressesTitle}
+              </h2>
               <span className="text-sm text-primary-200/80">
                 {copy.account.addressEntriesLabel(addresses.length)}
               </span>
