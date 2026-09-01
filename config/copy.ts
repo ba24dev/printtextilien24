@@ -85,6 +85,10 @@ export const copy = {
     brandLabel: "Marke",
     handleLabel: "Handle",
     byLabel: "von",
+    unavailableNoticeTitle: "Produkt nicht verfügbar",
+    unavailableNoticeBody:
+      "Dieses Produkt ist momentan nicht in unserem Sortiment oder die Produktdaten konnten nicht geladen werden. Bitte versuche es später erneut oder stöbere in unserem aktuellen Sortiment.",
+    unavailableNoticeCta: "Alle Produkte ansehen",
   },
 
   gallery: {
