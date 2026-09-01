@@ -1,18 +1,13 @@
 import { copy } from "@/config/copy";
-import { ArrowRight, Headset, Truck } from "lucide-react";
+import { ArrowRight, Headset } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 const FEATURE_BULLETS = [
   {
-    icon: Truck,
+    icon: Headset,
     title: copy.marketing.hero.featureBullets[0].title,
     description: copy.marketing.hero.featureBullets[0].description,
-  },
-  {
-    icon: Headset,
-    title: copy.marketing.hero.featureBullets[1].title,
-    description: copy.marketing.hero.featureBullets[1].description,
   },
 ];
 
@@ -57,13 +52,19 @@ export default function Hero() {
         </div>
 
         <div className="flex-1">
-          <div className="relative overflow-hidden site-border-radius border border-primary-900/50 bg-primary-900/20 shadow-lg shadow-primary-900/40">
+          <div className="relative overflow-hidden site-border-radius bg-gradient-to-br from-primary-200/10 to-primary-900/40 shadow-2xl shadow-primary-900/70">
             <Image
-              src="https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80"
-              alt="Custom apparel showcase"
+              src="/hero-textile.webp"
+              alt="Individuell bedruckte Textilien"
               width={720}
               height={540}
               className="h-full w-full object-cover"
+              style={{
+                maskImage:
+                  "radial-gradient(ellipse 85% 95% at center, black 70%, transparent 100%)",
+                WebkitMaskImage:
+                  "radial-gradient(ellipse 85% 95% at center, black 70%, transparent 100%)",
+              }}
               priority
             />
           </div>
