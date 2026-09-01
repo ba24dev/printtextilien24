@@ -33,6 +33,9 @@ export default async function Footer() {
                 {copy.general.businessName}
               </span>
               <p className="mt-3 text-sm text-foreground/70">{copy.footer.description}</p>
+              <p className="mt-4 text-sm font-medium tracking-wide text-primary-200">
+                {copy.footer.brandTagline}
+              </p>
             </div>
           </div>
 

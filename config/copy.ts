@@ -36,6 +36,7 @@ export const copy = {
     productFallbackDescription: "Premium-Qualität – bereit für Ihr Design.",
     productFallbackTitle: "Produktname nicht verfügbar",
     allCollectionsLabel: "Alle",
+    priceVatNote: "inkl. MwSt. - kein Versand",
     sortOptions: {
       relevance: "Relevanz",
       priceAsc: "Preis: Niedrig nach Hoch",
@@ -72,6 +73,7 @@ export const copy = {
     addToCart: "In den Warenkorb",
     addingToCart: "Wird zum Warenkorb hinzugefügt…",
     soldOut: "Ausverkauft",
+    outOfStockNotice: "Größe aktuell nicht auf Lager",
     customizableBadge: "Individualisierbar",
     printSurfacesTitle: "Druckflächen",
     uploadRequired: "Bitte Bild hochladen und platzieren, um fortzufahren",
@@ -83,6 +85,21 @@ export const copy = {
     brandLabel: "Marke",
     handleLabel: "Handle",
     byLabel: "von",
+    unavailableNoticeTitle: "Produkt nicht verfügbar",
+    unavailableNoticeBody:
+      "Dieses Produkt ist momentan nicht in unserem Sortiment oder die Produktdaten konnten nicht geladen werden. Bitte versuche es später erneut oder stöbere in unserem aktuellen Sortiment.",
+    unavailableNoticeCta: "Alle Produkte ansehen",
+  },
+
+  gallery: {
+    noImageAvailable: "Kein Bild verfügbar",
+    openFullscreen: "Bild vergrößern",
+    lightboxPrev: "Vorheriges Bild",
+    lightboxNext: "Nächstes Bild",
+    lightboxClose: "Schließen",
+    lightboxCounter: (current: number, total: number) =>
+      `Bild ${current} von ${total}`,
+    moreImages: (count: number) => `+${count}`,
   },
 
   marketing: {
@@ -95,18 +112,8 @@ export const copy = {
       secondaryCta: "Design anpassen",
       featureBullets: [
         {
-          title: "Schneller Versand",
-          description:
-            "Wir sorgen für eine schnelle Lieferung Ihrer Bestellungen.",
-        },
-        {
           title: "Kundenservice",
           description: "Unser Team steht Ihnen bei Fragen zur Seite.",
-        },
-        {
-          title: "Individuelle Gestaltung",
-          description:
-            "Personalisieren Sie Ihre Kleidung mit einzigartigen Designs.",
         },
       ],
     },
@@ -130,6 +137,7 @@ export const copy = {
     description:
       "Printtextilien24 ist Ihr zuverlässiger Partner für hochwertige, individualisierte Textilien – für Teams, Unternehmen und Events.",
     rightsReserved: "Alle Rechte vorbehalten.",
+    brandTagline: "Eine Marke der Business Solutions",
     columnLinks: {
       shop: [
         { label: "Alle Produkte", href: "/products" },
@@ -137,7 +145,7 @@ export const copy = {
         { label: "Allgemein", href: "/collections/allgemein" },
       ],
       company: [
-        { label: "Busol", href: "https://busol.info" },
+        { label: "Business Solutions", href: "https://busol.info" },
         { label: "Karriere", href: "https://www.busol.info/jobs/" },
         { label: "BusinessApp24", href: "https://www.businessapp24.de/" },
         {

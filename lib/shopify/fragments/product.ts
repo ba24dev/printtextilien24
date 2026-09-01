@@ -72,6 +72,7 @@ export const VARIANT_FIELDS = `
   id
   title
   availableForSale
+  quantityAvailable
   selectedOptions {
     name
     value

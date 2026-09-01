@@ -47,6 +47,9 @@ export default function ProductCard({ product }: ProductCardProps) {
         </p>
         <div className="mt-3 text-sm font-semibold text-foreground">
           <Money data={product.priceRange.minVariantPrice} />
+          <span className="block text-xs font-normal text-foreground/60">
+            {copy.catalog.priceVatNote}
+          </span>
         </div>
       </div>
     </Link>

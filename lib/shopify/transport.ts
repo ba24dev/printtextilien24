@@ -48,6 +48,7 @@ export type ProductVariantEdge = {
     id: string;
     title: string;
     availableForSale: boolean;
+    quantityAvailable: number | null;
     selectedOptions: {
       name: string;
       value: string;

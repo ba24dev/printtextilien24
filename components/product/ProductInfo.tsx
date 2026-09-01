@@ -34,7 +34,11 @@ export default function ProductInfo({
   const hasPrintSurfaces = printSurfaces.length > 0;
   const price =
     selectedVariant?.price ?? product.priceRange?.minVariantPrice ?? null;
-  const available = selectedVariant?.availableForSale ?? false;
+  const quantityAvailable = selectedVariant?.quantityAvailable ?? null;
+  const available =
+    quantityAvailable !== null
+      ? quantityAvailable > 0
+      : (selectedVariant?.availableForSale ?? false);
   const hasCustomization = (customization?.attributes.length ?? 0) > 0;
   const attributes = customization?.attributes ?? [];
 
@@ -105,6 +109,15 @@ export default function ProductInfo({
         ) : null}
 
         <VariantSelector />
+
+        {selectedVariant && !available ? (
+          <p
+            role="status"
+            className="text-sm font-medium text-amber-300"
+          >
+            {copy.product.outOfStockNotice}
+          </p>
+        ) : null}
 
         {selectedVariant ? (
           <AddToCartButton
