@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 const ContactSchema = z.object({
-  name: z.string().min(1),
-  email: z.email(),
-  message: z.string().min(1),
+  name: z.string().trim().min(1).max(100),
+  email: z.email().max(254),
+  message: z.string().trim().min(1).max(5000),
 });
 
 export async function POST(request: NextRequest) {
@@ -32,14 +32,17 @@ export async function POST(request: NextRequest) {
 
   if (!smtpHost || !smtpUser || !smtpPass) {
     console.error("SMTP configuration incomplete");
-    return NextResponse.json({ error: "Email service not configured" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Email service not configured" },
+      { status: 500 },
+    );
   }
 
   const payload = {
     from,
     to,
     subject: `Kontaktanfrage von ${name}`,
-    html: `<p>${message}</p><p>Absender: ${name} &lt;${email}&gt;</p>`,
+    text: `${message}\n\nAbsender: ${name} <${email}>`,
   };
 
   try {
@@ -55,7 +58,10 @@ export async function POST(request: NextRequest) {
     await transporter.sendMail(payload as any);
   } catch (err) {
     console.error("error sending via SMTP", err);
-    return NextResponse.json({ error: "Failed to send email" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to send email" },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true });

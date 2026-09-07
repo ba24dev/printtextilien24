@@ -5,9 +5,13 @@ import { FormEvent, useState } from "react";
 
 export default function ContactPage() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
+  const [status, setStatus] = useState<
+    "idle" | "sending" | "success" | "error"
+  >("idle");
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
@@ -83,12 +87,21 @@ export default function ContactPage() {
                 className={inputClass}
               />
             </div>
+            <p className="text-sm text-foreground/60">
+              Informationen zur Verarbeitung Ihrer Daten finden Sie in unserer{" "}
+              <a href="/privacy" className="underline">
+                Datenschutzerklärung
+              </a>
+              .
+            </p>
             <button
               type="submit"
               disabled={status === "sending"}
               className="btn-primary w-full"
             >
-              {status === "sending" ? copy.actions.sending : copy.actions.submit}
+              {status === "sending"
+                ? copy.actions.sending
+                : copy.actions.submit}
             </button>
             {status === "success" && (
               <p className="text-green-600">{copy.contact?.success}</p>
