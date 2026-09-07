@@ -44,7 +44,7 @@ export default function ContactPage() {
             </p>
           </header>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6" method="post">
             <div>
               <label className="block text-sm font-medium text-foreground">
                 {copy.contact?.nameLabel ?? "Name"}
