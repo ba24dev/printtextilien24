@@ -155,6 +155,7 @@ export const copy = {
       ],
       support: [
         { label: "Datenschutzrichtlinie", href: "/privacy" },
+        { label: "Datenschutz Shopify", href: "/datenschutz/shopify" },
         { label: "Impressum", href: "/imprint" },
       ],
     },
@@ -299,6 +300,7 @@ export const copy = {
       { label: "Kollektion: Allgemein", href: "/collections/allgemein" },
       { label: "Kontakt", href: "/contact" },
       { label: "Datenschutz", href: "/privacy" },
+      { label: "Datenschutz Shopify", href: "/datenschutz/shopify" },
       { label: "Impressum", href: "/imprint" },
       { label: "XML Sitemap (für Suchmaschinen)", href: "/sitemap.xml" },
     ],
