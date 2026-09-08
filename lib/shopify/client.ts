@@ -12,6 +12,9 @@ const STOREFRONT_TOKEN =
   process.env.NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN ??
   process.env.SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN;
 
+const STOREFRONT_LANGUAGE =
+  process.env.NEXT_PUBLIC_SHOPIFY_LANGUAGE_ISO_CODE ?? "de";
+
 if (!STOREFRONT_URL || !STOREFRONT_TOKEN) {
   throw new Error(
     "Missing Shopify Storefront configuration. Set NEXT_PUBLIC_SHOPIFY_STOREFRONT_URL and NEXT_PUBLIC_SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN (or SHOPIFY_STOREFRONT_URL / SHOPIFY_PUBLIC_STOREFRONT_API_TOKEN)."
@@ -27,6 +30,7 @@ const shopifyClient = createStorefrontClient({
 const SHOPIFY_API_URL = shopifyClient.getStorefrontApiUrl();
 const SHOPIFY_HEADERS = {
   "Content-Type": "application/json",
+  "Accept-Language": STOREFRONT_LANGUAGE,
   ...shopifyClient.getPublicTokenHeaders(),
 };
 

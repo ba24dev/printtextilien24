@@ -8,6 +8,7 @@ export async function GET(request: Request) {
     "/collections/allgemein",
     "/contact",
     "/privacy",
+    "/datenschutz/shopify",
     "/imprint",
   ];
 
